@@ -19,8 +19,9 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 ### Setup 
 1. source scripts/setup.csh
 
-### Build and Run Top Level Testbench
-1. ...
+### Build Top Level RTL
+1. cd scripts
+2. vcs -full64 -debug_all -f flist
 
 ### Build and Run Library Testbench
 1. ...
