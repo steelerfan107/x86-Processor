@@ -1,6 +1,20 @@
 # x86-Processor
 Project for Microarchitecture
 
+## Specification
+### Project
+Specification  | Links
+------------- | -------------
+Project Specification  | [Link](http://users.ece.utexas.edu/~patt/22s.382N/problemset/project/spec.html "Specification")
+List of Supported Instructions | [Link](http://users.ece.utexas.edu/~patt/22s.382N/problemset/project/inst.html "List of Instructions") 
+
+### x86
+Specification  | Links
+------------- | -------------
+Volume 1: Basic Arch | [Link](http://users.ece.utexas.edu/~patt/22s.382N/handouts/x86%20Basic%20Architecture.pdf "Volume 1: Basic Arch.") 
+Volume 2: Instruction Set Reference |[Link](http://users.ece.utexas.edu/~patt/22s.382N/handouts/x86%20Instruction%20Set%20Reference.pdf "Volume 2: Instruction Set Reference") 
+Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s.382N/handouts/x86%20System%20Programming%20Guide.pdf "Volume 3: System Programming Guide") 
+
 ## Using the Space
 ### Setup 
 1. source scripts/setup.csh
