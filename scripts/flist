@@ -1,0 +1,10 @@
+../rtl/lib/time.v -v
+../rtl/lib/lib1.v
+../rtl/lib/lib2.v
+../rtl/lib/lib3.v
+../rtl/lib/lib4.v
+../rtl/lib/lib5.v
+../rtl/lib/lib6.v
+../rtl/top/top.v
+../rtl/decode/decode_top.v
+../rtl/fetch/fetch_top.v

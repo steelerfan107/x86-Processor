@@ -1,1 +1,1 @@
-
+module load synopsys/vcs
