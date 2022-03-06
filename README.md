@@ -8,9 +8,9 @@ Project for Microarchitecture
 ### Build and Run Toplevel Testbench
 1. ...
 
-## Library ELements
+## Library Elements
 
-### pipestage
+### pipestage.v
 - Used as a configurable pipe between stages.
 - Inputs :
 - Outputs :
