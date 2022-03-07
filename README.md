@@ -19,13 +19,26 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 ### Setup 
 1. source scripts/setup.csh
 
-### Build and Run Top Level Testbench
-1. ...
+### Build Top Level RTL
+1. cd scripts
+2. vcs -full64 -debug_all -f flist -v2005
 
 ### Build and Run Library Testbench
 1. ...
 
 ## Library Elements
+
+### register.v
+- A register of configurable width.
+- Inputs: clk, reset, din[WIDTH-1:0] , en
+- Outputs : q[WIDTH-1:0], q_bar[WIDTH-1:0]
+- Parameters : WIDTH - Width of register.
+
+### pipestage.v
+- A mux of arbitrary width for 2, 3, or 4 inputs.
+- Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]
+- Outputs : out[WIDTH]
+- Parameters : WIDTH - Width of the selections. (Can only be 2, 3, 4 for now). INPUTS - Number of Selections.
 
 ### pipestage.v
 - Used as a configurable pipe between stages.
