@@ -37,6 +37,7 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 ### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
 - Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]
+- in is packed like {in0, in1, in2, ...}
 - Outputs : out[WIDTH]
 - Parameters : WIDTH - Width of the selections. INPUTS - Number of Selections. (Can only be 2, 3, 4 for now).
 
