@@ -34,11 +34,12 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Outputs : q[WIDTH-1:0], q_bar[WIDTH-1:0]
 - Parameters : WIDTH - Width of register.
 
-### pipestage.v
+### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
 - Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]
+- in is packed like {..., in2, in1, in0}
 - Outputs : out[WIDTH]
-- Parameters : WIDTH - Width of the selections. (Can only be 2, 3, 4 for now). INPUTS - Number of Selections.
+- Parameters : WIDTH - Width of the selections. INPUTS - Number of Selections. (Can only be 2, 3, 4 for now).
 
 ### pipestage.v
 - Used as a configurable pipe between stages.
