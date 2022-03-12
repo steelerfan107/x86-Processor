@@ -8,6 +8,9 @@
 ../rtl/lib/register.v
 ../rtl/lib/mux.v
 ../rtl/lib/pipestage.v
+../rtl/lib/logic_tree.v
+../rtl/lib/logic_tree_bus.v
 ../rtl/top/top.v
 ../rtl/decode/decode_top.v
 ../rtl/fetch/fetch_top.v
+../tb/top_tb.v
