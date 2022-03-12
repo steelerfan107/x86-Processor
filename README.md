@@ -43,9 +43,9 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 
 ### pipestage.v
 - Used as a configurable pipe between stages.
-- Inputs :
-- Outputs :
-- Parameters : 
+- Inputs : in_valid (Indicated in Data is Valid), out_ready (Indicates that data is ready to be accepted from pipe), in_data (data into the pipe), clk, reset
+- Outputs : out_valid (Indicated out Data is Valid), in_ready (Indicates that data is ready to be accepted to pipe), out_data (data out of the pipe)
+- Parameters : BYPASS (0,1) - Makes block pass through, WIDTH - Width of the data
 
 ### ao_mux.v
 - A mux controlled by a onehot signal. 
