@@ -62,9 +62,9 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 
 ### ao_mux.v
 - A mux controlled by a onehot signal. 
-- Inputs :
-- Outputs :
-- Parameters : 
+- Inputs : in[WIDTH*NINPUTS-1:0], sel[NINPUTS-1:0]
+- Outputs : out[WIDTH-1:0]
+- Parameters :  WIDTH - Width of Selection, NINPUTS - Number of Inputs
 
 ### pri_arb.v
 - A priority arbiter.
