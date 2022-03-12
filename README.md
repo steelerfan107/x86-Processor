@@ -59,7 +59,7 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Inputs : in[WIDTH*NINPUTS-1:0]
 - Outputs : out[WIDTH-1:0]
 - Parameters : WIDTH - WIdth of Bus, NINPUTS - Number of Inputs, OPERATION - 0 Add, 1 Or
-- 
+
 ### ao_mux.v
 - A mux controlled by a onehot signal. 
 - Inputs :
