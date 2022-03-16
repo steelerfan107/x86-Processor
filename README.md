@@ -73,20 +73,14 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Outputs : out[TABLESIZE-1:0], match
 - Parameters : TABLESIZE - The amount of entries in the table. WIDTH - The width of the table vectors
 
-### pri_arb.v
-- A priority arbiter.
-- Inputs :
-- Outputs :
-- Parameters : 
+### find_first.v
+- Block that finds the first asserted bit left to right or right to left.
+- Inputs : in[WIDTH-1:0]
+- Outputs : out[WIDTH-1:0]
+- Parameters : WIDTH - Width of Vector, OPERATION - 0 Left to Right, 1 - Right to Left
 
 ### fifo.v
 - A first in first out buffer.
-- Inputs :
-- Outputs :
-- Parameters : 
-
-### stack.v
-- A last in first out buffer.
 - Inputs :
 - Outputs :
 - Parameters : 
