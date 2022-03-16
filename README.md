@@ -66,14 +66,15 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Outputs : out[WIDTH-1:0]
 - Parameters :  WIDTH - Width of Selection, NINPUTS - Number of Inputs
 
+### lut_select.v
+- A lookup table select portion. The input tble can be made either through constants or configurable 
+- registers from outside this block. The input vector will then be compared and out will indicate all matches.
+- Inputs : tble[WIDTH*TABLESIZE - 1:0], vector[WIDTH - 1:0]
+- Outputs : out[TABLESIZE-1:0], match
+- Parameters : TABLESIZE - The amount of entries in the table. WIDTH - The width of the table vectors
+
 ### pri_arb.v
 - A priority arbiter.
-- Inputs :
-- Outputs :
-- Parameters : 
-
-### lut.v
-- A lookup table.
 - Inputs :
 - Outputs :
 - Parameters : 
