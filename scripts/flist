@@ -11,6 +11,7 @@
 ../rtl/lib/logic_tree.v
 ../rtl/lib/logic_tree_bus.v
 ../rtl/lib/ao_mux.v
+../rtl/lib/lut_select.v
 ../rtl/top/top.v
 ../rtl/decode/decode_top.v
 ../rtl/fetch/fetch_top.v
