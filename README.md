@@ -39,13 +39,19 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Inputs: a, b
 - Outputs : out
 - Parameters : WIDTH - Width of inputs
-- 
+
 ### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
 - Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]
 - in is packed like {..., in2, in1, in0}
 - Outputs : out[WIDTH]
 - Parameters : WIDTH - Width of the selections. INPUTS - Number of Selections. (Can only be 2, 3, 4 for now).
+
+### slow_addr.v
+- Slow Addition module used for small adds.
+- Inputs: a, b
+- Outputs : out, carry
+- Parameters : WIDTH - Width of inputs/output/operation
 
 ### pipestage.v
 - Used as a configurable pipe between stages.
