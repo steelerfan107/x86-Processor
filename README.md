@@ -33,7 +33,13 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Inputs: clk, reset, din[WIDTH-1:0] , en
 - Outputs : q[WIDTH-1:0], q_bar[WIDTH-1:0]
 - Parameters : WIDTH - Width of register.
-
+- 
+### compare.v
+- Compares two inputs.
+- Inputs: a, b
+- Outputs : out
+- Parameters : WIDTH - Width of inputs
+- 
 ### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
 - Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]
