@@ -13,6 +13,9 @@ module compare (
 
    parameter WIDTH = 64;
 
+   input [WIDTH-1:0] a, b;
+   output out;
+
    wire [WIDTH-1:0] out_vec; 
    
    genvar i;

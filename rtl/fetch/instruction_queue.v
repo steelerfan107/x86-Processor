@@ -52,82 +52,144 @@ module instruction_queue (
    wire 	  set1;
    wire 	  set2;
    wire 	  set3;
+   
    wire 	  clear0;
    wire 	  clear1;
    wire 	  clear2;
    wire 	  clear3;
 
+   wire 	  valid0, invalid0;
+   wire 	  valid1, invalid1;
+   wire 	  valid2, invalid2;
+   wire 	  valid3, invalid3;
+ 
+   wire 	  eq_i0, eq_o0;
+   wire 	  eq_i1, eq_o1;
+   wire 	  eq_i2, eq_o2;
+   wire 	  eq_i3, eq_o3;
+
+   wire [3:0] 	  tail, tail_in, tail_b;
+   wire [6:0] 	  head, head_in, head_b;
+
+   wire [255:0]   full_data;
+   wire [127:0]   data_upper, data_lower;
+   wire [127:0]   data0, data1, data2, data3;
+   wire [127:0]   data0_b, data1_b, data2_b, data3_b;
+
+   wire [6:0] 	  head_p8;
+   wire [6:0] 	  head_p_br;
+   wire [3:0] 	  tail_p1;
+
+   wire           vb_select;
+
+   wire 	  nc0, nc1, nc2, nc3, nc4, nc5, nc6;
+   
    // Signals indicating data has been accepted or read.
-   and2$ vr_i_and(in_accept, );
-   and2$ vr_o_and(out_accept, );
+   and2$ vr_i_and(in_accept, valid_i, ready_i);
+   and2$ vr_o_and(out_accept, valid_o, ready_o);
 
    // Valid Out if any entry is valid
-   or4$ valid_o_or();
+   or4$ valid_o_or(valid_o, valid0, valid1, valid2, valid3);
    
    // Ready Out if any entry is open
-   nand4$ ready_o_nand();
+   nand4$ ready_o_nand(ready_i, valid0, valid1, valid2, valid3);
    
    // Set indications of each entry
-   and2$ s0_and(set0,);
-   and2$ s1_and(set1,);
-   and2$ s2_and(set2,);
-   and2$ s3_and(set3,);
+   and2$ s0_and(set0,in_accept,eq_i0);
+   and2$ s1_and(set1,in_accept,eq_i1);
+   and2$ s2_and(set2,in_accept,eq_i2);
+   and2$ s3_and(set3,in_accept,eq_i3);
 
    // Clear indications of each entry
-   and2$ c0_and(clear0,);
-   and2$ c1_and(clear1,);
-   and2$ c2_and(clear2,);
-   and2$ c3_and(clear3,);
+   and2$ c0_and(clear0,out_accept,eq_o0);
+   and2$ c1_and(clear1,out_accept,eq_o1);
+   and2$ c2_and(clear2,out_accept,eq_o2);
+   and2$ c3_and(clear3,out_accept,eq_o3);
 
+   // clk, reset, din, q, q_bar, en
    // The head and tail pointers
-   register #(.WIDTH(3)) tail_r ();
-   register #(.WIDTH(7)) head_r ();
+   register #(.WIDTH(4)) tail_r (clk, reset, tail_in, tail, tail_b, in_accept);
+   register #(.WIDTH(7)) head_r (clk, reset, head_in, head, head_b, out_accept);
 
    // Registers to hold each entries data
-   register #(.WIDTH(128)) entry_0_r ();
-   register #(.WIDTH(128)) entry_1_r ();
-   register #(.WIDTH(128)) entry_2_r ();
-   register #(.WIDTH(128)) entry_3_r ();
+   register #(.WIDTH(128)) entry_0_r (clk, reset, data_i, data0, data0_b, set0);
+   register #(.WIDTH(128)) entry_1_r (clk, reset, data_i, data1, data1_b, set1);
+   register #(.WIDTH(128)) entry_2_r (clk, reset, data_i, data2, data2_b, set2);
+   register #(.WIDTH(128)) entry_3_r (clk, reset, data_i, data3, data3_b, set3);
    
    // Registers to hold each entries valid
-   register #(.WIDTH(1)) entry_0_v_r ();
-   register #(.WIDTH(1)) entry_1_v_r ();
-   register #(.WIDTH(1)) entry_2_v_r ();
-   register #(.WIDTH(1)) entry_3_v_r ();
+   register #(.WIDTH(1)) entry_0_v_r (clk, (clear0 | reset), 1'b1, valid0, invalid0, set0);
+   register #(.WIDTH(1)) entry_1_v_r (clk, (clear1 | reset), 1'b1, valid1, invalid1, set1);
+   register #(.WIDTH(1)) entry_2_v_r (clk, (clear2 | reset), 1'b1, valid2, invalid2, set2);
+   register #(.WIDTH(1)) entry_3_v_r (clk, (clear3 | reset), 1'b1, valid3, invalid3, set3);
 
    // Compare to select which entry to set.
-   compare #(.WIDTH(2)) set_0_comp ();
-   compare #(.WIDTH(2)) set_1_comp ();
-   compare #(.WIDTH(2)) set_2_comp ();
-   compare #(.WIDTH(2)) set_3_comp ();
+   compare #(.WIDTH(2)) set_0_comp (2'd0,tail[1:0],eq_i0);
+   compare #(.WIDTH(2)) set_1_comp (2'd1,tail[1:0],eq_i1);
+   compare #(.WIDTH(2)) set_2_comp (2'd2,tail[1:0],eq_i2);
+   compare #(.WIDTH(2)) set_3_comp (2'd3,tail[1:0],eq_i3);
 
    // Compare to select which entry to clear
-   compare #(.WIDTH(2)) clear_0_comp ();
-   compare #(.WIDTH(2)) clear_1_comp ();
-   compare #(.WIDTH(2)) clear_2_comp ();
-   compare #(.WIDTH(2)) clear_3_comp ();
+   compare #(.WIDTH(2)) clear_0_comp (2'd1,head[4:3],eq_o0);
+   compare #(.WIDTH(2)) clear_1_comp (2'd2,head[4:3],eq_o1);
+   compare #(.WIDTH(2)) clear_2_comp (2'd3,head[4:3],eq_o2);
+   compare #(.WIDTH(2)) clear_3_comp (2'd0,head[4:3],eq_o3);
 
    // Muxes to select Upper and Lower halves of the shifter
-   mux #(.INPUTS(4),.WIDTH(128)) data_mux_lower ();
-   mux #(.INPUTS(4),.WIDTH(128)) data_mux_upper ();
+   mux #(.INPUTS(4),.WIDTH(128)) data_mux_lower ({data3, data2, data1, data0}, full_data[127:0], head[4:3]);
+   mux #(.INPUTS(4),.WIDTH(128)) data_mux_upper ({data3, data2, data1, data0}, full_data[255:128], head_p8[4:3]);
 
    // Mux to select what to load into head pointer
-   mux #(.INPUTS(2),.WIDTH(7))   head_mux ();
+   mux #(.INPUTS(2),.WIDTH(7))   head_mux ({{3'b0,load_address[3:0]},head_p8},head_in,load);
 
    // Mux to select how valid bytes is driven
-   mux #(.INPUTS(2),.WIDTH(6))   valid_bytes_mux ();
+   wire [6:0] 	 head_inv;
+   wire [3:0]    tail_inv;
+  
+   wire [6:0] 	 head_m_tail;
+   wire [6:0]    tail_m_head;
 
-   // Head Ptr Plus 1
-   slow_addr #(.WIDTH(7)) ();
+   wire [6:0] 	 head_m_tail_p1;
+   wire [6:0]    tail_m_head_p1;
+   
+   wire 	 inv_tail_3;
+   inv1$ t3_inv (inv_tail_3, tail[3]);
+   and2$ vb_and (vb_select,inv_tail_3,head[6]);
+
+   genvar 	 i;
+   generate
+      for(i = 0; i < 7; i = i+1) begin
+         inv1$ head_inv (head_inv[i], head[i]);	 
+      end
+
+      for(i = 0; i < 4; i = i+1) begin
+         inv1$ tail_inv (tail_inv[i], tail[i]);	 
+      end     
+   endgenerate
+
+   slow_addr #(.WIDTH(7)) sub0 (head       ,{tail_inv,3'b111},head_m_tail, nc3);
+   slow_addr #(.WIDTH(7)) sub1 ({tail,3'b0},         head_inv,tail_m_head, nc4);
+
+   slow_addr #(.WIDTH(7)) p10  (7'd1,head_m_tail,head_m_tail_p1, nc5);
+   slow_addr #(.WIDTH(7)) p20  (7'd1,tail_m_head,tail_m_head_p1, nc6);
+   
+   mux #(.INPUTS(2),.WIDTH(6))   valid_bytes_mux ({head_m_tail_p1[5:0],tail_m_head_p1[5:0]},valid_bytes_o,vb_select);
+   
+   // Head Ptr Plus 8
+   slow_addr #(.WIDTH(7)) hp1 (7'd8,head,head_p8, nc0);
    
    // Head Ptr Plus Bytes Read
-   slow_addr #(.WIDTH(7)) ();
+   slow_addr #(.WIDTH(7)) hpbr ({3'b0,bytes_read_o},head,head_p_br, nc1);
 
    // Tail Ptr Plus 1
-   slow_addr #(.WIDTH(4)) ();
+   slow_addr #(.WIDTH(4)) tp1 (4'd1,tail,tail_p1, nc2);
 
-   // Byte Shifter 
-   byte_shifter #(.WIDTH(256)) ();
+   // Byte Shifter
+   wire [255:0] shifter_o;
+
+   byte_shifter_32B shifter (full_data ,shifter_o, {1'b0,head[3:0]});
+
+   assign intruction_o = shifter_o[127:0];
    
 endmodule
    

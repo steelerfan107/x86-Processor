@@ -18,4 +18,6 @@
 ../rtl/top/top.v
 ../rtl/decode/decode_top.v
 ../rtl/fetch/fetch_top.v
+../rtl/fetch/byte_shifter_32B.v
+../rtl/fetch/instruction_queue.v
 ../tb/top_tb.v
