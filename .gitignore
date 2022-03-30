@@ -1,0 +1,10 @@
+# espresso executable
+espresso.linux
+
+# vcs files
+csrc/
+DVEfiles/
+simv.daidir/
+*.vpd
+*.key
+simv
