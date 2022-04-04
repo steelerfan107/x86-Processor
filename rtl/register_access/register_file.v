@@ -36,9 +36,6 @@ module register_file (
     esi_out,
     edi_out
 
-
-
-
 );
 
     input clk;
@@ -132,13 +129,9 @@ module register_file (
     sib_base_reg_mux (sib_base_value, eax_out, ecx_out, edx_out, ebx_out, esp_out, ebp_out, esi_out, edi_out, sib_base_reg),
     sib_index_reg_mux (sib_index_value, eax_out, ecx_out, edx_out, ebx_out, esp_out, ebp_out, esi_out, edi_out, sib_index_reg);
 
-    // writeback
-    // Register is loaded if load enable is 1 and writeback is its number
-    // wire ld_eax, ld_ecx, ld_edx, ld_ebx, ld_esp, ld_ebp, ld_esi, ld_edi;
-
     // Set register inputs
     wire [31:0] reg_inputs;
-    register_input_size_selector (
+    register_input_size_selector reg_size_sel (
         reg_inputs,
 
         writeback_reg, 
@@ -153,66 +146,96 @@ module register_file (
         ebp_out,
         esi_out,
         edi_out
-    )
+    );
 
-    // determine which is being written to
+    // set writeback for reg
 
+    // i made the writeback en logic block work by outputting a reg number rather than being one hot
+    // now gotta decode the reg number to one hot...
+    // also add an AND gate so it only writes to reg if writeback_en is 1
 
-    // Select register to be loaded
+    wire [2:0] selected_reg;
+    register_writeback_select wb_sel (selected_reg, writeback_reg, writeback_size);
 
-    // wire [2:0] wb_not;
+    // decode the selected reg signal into something useful
+    wire [7:0] wb_en;
 
-    // inv1$ dr_inv0 (wb_not[0], wb_num[0]),
-    //       dr_inv1 (wb_not[1], wb_num[1]),
-    //       dr_inv2 (wb_not[2], wb_num[2]);
+    wire ld_eax;
+    wire ld_ecx;
+    wire ld_edx;
+    wire ld_ebx;
+    wire ld_esp;
+    wire ld_ebp;
+    wire ld_esi;
+    wire ld_edi;
 
-    // // and gates powering register load selection
-    // and4$ and_en0 (ld_eax, wb_not[2], wb_not[1], wb_not[0], writeback_en),
-    //       and_en1 (ld_ecx, wb_not[2], wb_not[1], wb_num[0], writeback_en),
-    //       and_en2 (ld_edx, wb_not[2], wb_num[1], wb_not[0], writeback_en),
-    //       and_en3 (ld_ebx, wb_not[2], wb_num[1], wb_num[0], writeback_en),
-    //       and_en4 (ld_esp, wb_num[2], wb_not[1], wb_not[0], writeback_en),
-    //       and_en5 (ld_ebp, wb_num[2], wb_not[1], wb_num[0], writeback_en),
-    //       and_en6 (ld_esi, wb_num[2], wb_num[1], wb_not[0], writeback_en),
-    //       and_en7 (ld_edi, wb_num[2], wb_num[1], wb_num[0], writeback_en);
+    decoder3_8$ wb_decoder (selected_reg, wb_en, );
+
+    // and gate to enable load only when we actually want to load
+    and2$ 
+    and_ld_eax (ld_eax, wb_en[0], writeback_en),
+    and_ld_ecx (ld_ecx, wb_en[1], writeback_en),
+    and_ld_edx (ld_edx, wb_en[2], writeback_en),
+    and_ld_ebx (ld_ebx, wb_en[3], writeback_en),
+    and_ld_esp (ld_esp, wb_en[4], writeback_en),
+    and_ld_ebp (ld_ebp, wb_en[5], writeback_en),
+    and_ld_esi (ld_esi, wb_en[6], writeback_en),
+    and_ld_edi (ld_edi, wb_en[7], writeback_en);
 
 
     // instantiate the registers
     register_32_reset 
-    eax (eax_out, writeback_data, eax_reset_in, ld_eax, clk, reset),
-    ecx (ecx_out, writeback_data, ecx_reset_in, ld_ecx, clk, reset),
-    edx (edx_out, writeback_data, edx_reset_in, ld_edx, clk, reset),
-    ebx (ebx_out, writeback_data, ebx_reset_in, ld_ebx, clk, reset),
-    esp (esp_out, writeback_data, esp_reset_in, ld_esp, clk, reset),
-    ebp (ebp_out, writeback_data, ebp_reset_in, ld_ebp, clk, reset),
-    esi (esi_out, writeback_data, esi_reset_in, ld_esi, clk, reset),
-    edi (edi_out, writeback_data, edi_reset_in, ld_edi, clk, reset);
-
-        
-
-    
-
-
-
+    eax (eax_out, reg_inputs, eax_reset_in, ld_eax, clk, reset),
+    ecx (ecx_out, reg_inputs, ecx_reset_in, ld_ecx, clk, reset),
+    edx (edx_out, reg_inputs, edx_reset_in, ld_edx, clk, reset),
+    ebx (ebx_out, reg_inputs, ebx_reset_in, ld_ebx, clk, reset),
+    esp (esp_out, reg_inputs, esp_reset_in, ld_esp, clk, reset),
+    ebp (ebp_out, reg_inputs, ebp_reset_in, ld_ebp, clk, reset),
+    esi (esi_out, reg_inputs, esi_reset_in, ld_esi, clk, reset),
+    edi (edi_out, reg_inputs, edi_reset_in, ld_edi, clk, reset);
 
 endmodule
 
-// ------------------ //
+// ---------------- //
 // Writeback Select //
-// ------------------ //
+// ---------------- //
 module register_writeback_select(
     selected_reg,
 
     reg_num, 
     reg_size
-
-    selected_reg
 );
 
     output [2:0] selected_reg;
 
     input [2:0] reg_num;
     input [1:0] reg_size;
+
+    wire [1:0] not_reg_size;
+
+    inv1$ 
+    inv1_0 (not_reg_size[0], reg_size[0]),
+    inv1_1 (not_reg_size[1], reg_size[1]);
+
+    // s2 = (num2&!size1);
+    and2$ and_s2 (selected_reg[2], reg_num[2], not_reg_size[1]);
+
+    // s1 = (num1&!size0) | (num1&!size1);
+    wire [1:0] s1_and_out;
+    and2$ 
+    and_s1_0 (s1_and_out[0], reg_num[1], not_reg_size[0]),
+    and_s1_1 (s1_and_out[1], reg_num[1], not_reg_size[1]);
+
+    or2$ or_s1 (selected_reg[1], s1_and_out[0], s1_and_out[1]);
+
+
+    // s0 = (num0&!size0) | (num0&!size1);
+    wire [1:0] s0_and_out;
+    and2$ 
+    and_s0_0 (s0_and_out[0], reg_num[0], not_reg_size[0]),
+    and_s0_1 (s0_and_out[1], reg_num[0], not_reg_size[1]);
+
+    or2$ or_s0 (selected_reg[0], s0_and_out[0], s0_and_out[1]);
 
 endmodule
 
@@ -310,17 +333,17 @@ module register_input_size_selector (
 
     // 8 muxes, one for each reg
     reg_mux4_32 
-    reg_mux0 (reg_mux_out0, eax, ax, al, unused, size),
-    reg_mux1 (reg_mux_out1, ecx, cx, cl, unused, size),
-    reg_mux2 (reg_mux_out2, edx, dx, dl, unused, size),
-    reg_mux3 (reg_mux_out3, ebx, bx, bl, unused, size),
-    reg_mux4 (reg_mux_out4, esp, sp, ah, unused, size),
-    reg_mux5 (reg_mux_out5, ebp, bp, ch, unused, size),
-    reg_mux6 (reg_mux_out6, esi, si, dh, unused, size),
-    reg_mux7 (reg_mux_out7, edi, di, bh, unused, size);
+    reg_mux0 (reg_mux_out0, data, ax, al, , size),
+    reg_mux1 (reg_mux_out1, data, cx, cl, , size),
+    reg_mux2 (reg_mux_out2, data, dx, dl, , size),
+    reg_mux3 (reg_mux_out3, data, bx, bl, , size),
+    reg_mux4 (reg_mux_out4, data, sp, ah, , size),
+    reg_mux5 (reg_mux_out5, data, bp, ch, , size),
+    reg_mux6 (reg_mux_out6, data, si, dh, , size),
+    reg_mux7 (reg_mux_out7, data, di, bh, , size);
 
     // mux these outputs to the final output
-    reg_mux8_32(
+    reg_mux8_32 mux_final (
         out,
 
         reg_mux_out0,
@@ -332,9 +355,9 @@ module register_input_size_selector (
         reg_mux_out6,
         reg_mux_out7,
 
-        reg_select;
+        reg_select
 
-    )
+    );
 
 
 endmodule
@@ -377,7 +400,7 @@ module register_low_byte_input_mask (
 
     // out = data[7:0] + reg_data[31:8]
     assign out[7:0] = data[7:0];
-    assign out[31:8] = reg_data[31:0];
+    assign out[31:8] = reg_data[31:8];
 
 
 endmodule
@@ -444,7 +467,7 @@ module register_output_size_selector (
     input [31:0] esi;
     input [31:0] edi;
 
-    wire [31:0] unused; // useless wire for parameters that aren't used
+    // wire [31:0] unused; // useless wire for parameters that aren't used
 
     // mask each register to 16 bits
     
@@ -479,15 +502,15 @@ module register_output_size_selector (
 
     register_8_bit_mask 
     al_mask (al, eax),
-    cl_mask (al, ecx),
-    dl_mask (al, edx),
-    bl_mask (al, ebx);
+    cl_mask (cl, ecx),
+    dl_mask (dl, edx),
+    bl_mask (bl, ebx);
 
     register_8_bit_mask_shift 
     ah_mask (ah, eax),
-    ch_mask (ah, ecx),
-    dh_mask (ah, edx),
-    bh_mask (ah, ebx);
+    ch_mask (ch, ecx),
+    dh_mask (dh, edx),
+    bh_mask (bh, ebx);
 
     // muxes for size
     wire [31:0] size_mux_out0;
@@ -500,14 +523,14 @@ module register_output_size_selector (
     wire [31:0] size_mux_out7;
 
     reg_mux4_32 
-    size_mux0 (size_mux_out0, eax, ax, al, unused, size),
-    size_mux1 (size_mux_out1, ecx, cx, cl, unused, size),
-    size_mux2 (size_mux_out2, edx, dx, dl, unused, size),
-    size_mux3 (size_mux_out3, ebx, bx, bl, unused, size),
-    size_mux4 (size_mux_out4, esp, sp, ah, unused, size),
-    size_mux5 (size_mux_out5, ebp, bp, ch, unused, size),
-    size_mux6 (size_mux_out6, esi, si, dh, unused, size),
-    size_mux7 (size_mux_out7, edi, di, bh, unused, size);
+    size_mux0 (size_mux_out0, eax, ax, al, , size),
+    size_mux1 (size_mux_out1, ecx, cx, cl, , size),
+    size_mux2 (size_mux_out2, edx, dx, dl, , size),
+    size_mux3 (size_mux_out3, ebx, bx, bl, , size),
+    size_mux4 (size_mux_out4, esp, sp, ah, , size),
+    size_mux5 (size_mux_out5, ebp, bp, ch, , size),
+    size_mux6 (size_mux_out6, esi, si, dh, , size),
+    size_mux7 (size_mux_out7, edi, di, bh, , size);
 
     // use mux to select output based on register select
     reg_mux8_32 out_mux (
