@@ -47,7 +47,7 @@ module fetch_top (
 		  
 );
    // Instruction Memory Interface Parameters
-   parameter IDATAW = 64;
+   parameter IDATAW = 128;
    parameter ISIZEW = 8;
    parameter IADDRW = 32;
 
@@ -87,24 +87,61 @@ module fetch_top (
    output                f_valid;
    input                 f_ready;
    input [5:0]           f_bytes_read;
-   output [5:0]          f_valid_bytes;
+   output [6:0]          f_valid_bytes;
    output [255:0]        f_instruction;
    output [IADDRW-1:0]   f_pc;
    output                f_branch_taken;
+
+   wire 		 internal_reset;
+
+   wire 		 iq_valid;
+   wire 		 iq_ready;
+   wire [3:0]		 bytes_read_o;
+   
+	
+   
+   or2$ ir (internal_reset, flush, reset);
+   
+   // Instruction Queue
+   instruction_queue iq (
+      .clk(clk),
+      .reset(reset),  
+      .load_address(load_address),
+      .load(load),
+      .flush(flush),			 
+      .valid_i(imem_dp_valid),
+      .ready_i(imem_dp_ready),		  
+      .data_i(imem_dp_read_data),
+      .valid_o(f_valid),
+      .ready_o(f_ready),
+      .bytes_read_o(f_bytes_read[3:0]),
+      .valid_bytes_o(f_valid_bytes),
+      .intruction_o(f_instruction)   
+   );
+
+   //assign f_valid_bytes[5:4] = 'h0;
+
+   // Address Generation
+   address_generation ag (
+       .clk(clk),
+       .reset(reset),
+       .load_address(load_address),
+       .load(load),
+       .cs_register(cs_register), 
+       .imem_valid(imem_valid),
+       .imem_ready(imem_ready),
+       .imem_address(imem_address)				  
+   );
    
    // Wrapper Tieoffs 
-   assign imem_valid = 'h0;
-   assign imem_address = 'h0;
+   assign imem_valid = 1'b1;
    assign imem_wr_en = 'h0;
    assign imem_wr_data = 'h0;
    assign imem_wr_size = 'h0;
-   assign imem_dp_ready = 'h0;
+   
    assign bp_pc = 'h0;
    assign ras_pop = 'h0;
-   assign f_valid = 'h0;
-   assign f_valid_bytes = 'h0;
-   assign f_instruction = 'h0;
-   assign f_pc = 'h0;
+   assign f_pc = imem_address - {26'b0,f_valid_bytes};
    assign f_branch_taken = 'h0;   
    
 endmodule

@@ -11,6 +11,7 @@ module instruction_queue (
    // Control Interface
    load_address,
    load,
+   flush,
 
    // Data Interface In	
    valid_i,
@@ -32,6 +33,7 @@ module instruction_queue (
    // Control Interface
    input [5:0]    load_address;
    input          load;
+   input          flush;
 
    // Data Interface In	
    input          valid_i;
@@ -42,7 +44,7 @@ module instruction_queue (
    output         valid_o;
    input          ready_o;
    input [3:0]    bytes_read_o;
-   output [5:0]   valid_bytes_o;
+   output [6:0]   valid_bytes_o;
    output [127:0] intruction_o;
 
    wire 	  in_accept;
@@ -76,13 +78,15 @@ module instruction_queue (
    wire [127:0]   data0, data1, data2, data3;
    wire [127:0]   data0_b, data1_b, data2_b, data3_b;
 
-   wire [6:0] 	  head_p8;
+   wire [6:0] 	  head_p16;
    wire [6:0] 	  head_p_br;
    wire [3:0] 	  tail_p1;
 
    wire           vb_select;
 
    wire 	  nc0, nc1, nc2, nc3, nc4, nc5, nc6;
+
+   wire 	  int_reset = reset | flush;
    
    // Signals indicating data has been accepted or read.
    and2$ vr_i_and(in_accept, valid_i, ready_i);
@@ -101,27 +105,32 @@ module instruction_queue (
    and2$ s3_and(set3,in_accept,eq_i3);
 
    // Clear indications of each entry
-   and2$ c0_and(clear0,out_accept,eq_o0);
-   and2$ c1_and(clear1,out_accept,eq_o1);
-   and2$ c2_and(clear2,out_accept,eq_o2);
-   and2$ c3_and(clear3,out_accept,eq_o3);
+   wire  c0 = (head[5:4] == 0) && (head_in[5:4] == 1);
+   wire  c1 = (head[5:4] == 1) && (head_in[5:4] == 2);
+   wire  c2 = (head[5:4] == 2) && (head_in[5:4] == 3);
+   wire  c3 = (head[5:4] == 3) && (head_in[5:4] == 0);
+     
+   and2$ c0_and(clear0,out_accept,c0);
+   and2$ c1_and(clear1,out_accept,c1);
+   and2$ c2_and(clear2,out_accept,c2);
+   and2$ c3_and(clear3,out_accept,c3);
 
    // clk, reset, din, q, q_bar, en
    // The head and tail pointers
-   register #(.WIDTH(4)) tail_r (clk, reset, tail_in, tail, tail_b, in_accept);
-   register #(.WIDTH(7)) head_r (clk, reset, head_in, head, head_b, out_accept);
+   register #(.WIDTH(4)) tail_r (clk, int_reset, tail_p1, tail, tail_b, in_accept);
+   register #(.WIDTH(7)) head_r (clk, reset, head_in, head, head_b, (out_accept | load));
 
    // Registers to hold each entries data
-   register #(.WIDTH(128)) entry_0_r (clk, reset, data_i, data0, data0_b, set0);
-   register #(.WIDTH(128)) entry_1_r (clk, reset, data_i, data1, data1_b, set1);
-   register #(.WIDTH(128)) entry_2_r (clk, reset, data_i, data2, data2_b, set2);
-   register #(.WIDTH(128)) entry_3_r (clk, reset, data_i, data3, data3_b, set3);
+   register #(.WIDTH(128)) entry_0_r (clk, int_reset, data_i, data0, data0_b, set0);
+   register #(.WIDTH(128)) entry_1_r (clk, int_reset, data_i, data1, data1_b, set1);
+   register #(.WIDTH(128)) entry_2_r (clk, int_reset, data_i, data2, data2_b, set2);
+   register #(.WIDTH(128)) entry_3_r (clk, int_reset, data_i, data3, data3_b, set3);
    
    // Registers to hold each entries valid
-   register #(.WIDTH(1)) entry_0_v_r (clk, (clear0 | reset), 1'b1, valid0, invalid0, set0);
-   register #(.WIDTH(1)) entry_1_v_r (clk, (clear1 | reset), 1'b1, valid1, invalid1, set1);
-   register #(.WIDTH(1)) entry_2_v_r (clk, (clear2 | reset), 1'b1, valid2, invalid2, set2);
-   register #(.WIDTH(1)) entry_3_v_r (clk, (clear3 | reset), 1'b1, valid3, invalid3, set3);
+   register #(.WIDTH(1)) entry_0_v_r (clk, int_reset, ~clear0, valid0, invalid0, (set0 | clear0));
+   register #(.WIDTH(1)) entry_1_v_r (clk, int_reset, ~clear1, valid1, invalid1, (set1 | clear1));
+   register #(.WIDTH(1)) entry_2_v_r (clk, int_reset, ~clear2, valid2, invalid2, (set2 | clear2));
+   register #(.WIDTH(1)) entry_3_v_r (clk, int_reset, ~clear3, valid3, invalid3, (set3 | clear3));
 
    // Compare to select which entry to set.
    compare #(.WIDTH(2)) set_0_comp (2'd0,tail[1:0],eq_i0);
@@ -130,17 +139,17 @@ module instruction_queue (
    compare #(.WIDTH(2)) set_3_comp (2'd3,tail[1:0],eq_i3);
 
    // Compare to select which entry to clear
-   compare #(.WIDTH(2)) clear_0_comp (2'd1,head[4:3],eq_o0);
-   compare #(.WIDTH(2)) clear_1_comp (2'd2,head[4:3],eq_o1);
-   compare #(.WIDTH(2)) clear_2_comp (2'd3,head[4:3],eq_o2);
-   compare #(.WIDTH(2)) clear_3_comp (2'd0,head[4:3],eq_o3);
+   compare #(.WIDTH(2)) clear_0_comp (2'd1,head[5:4],eq_o0);
+   compare #(.WIDTH(2)) clear_1_comp (2'd2,head[5:4],eq_o1);
+   compare #(.WIDTH(2)) clear_2_comp (2'd3,head[5:4],eq_o2);
+   compare #(.WIDTH(2)) clear_3_comp (2'd0,head[5:4],eq_o3);
 
    // Muxes to select Upper and Lower halves of the shifter
-   mux #(.INPUTS(4),.WIDTH(128)) data_mux_lower ({data3, data2, data1, data0}, full_data[127:0], head[4:3]);
-   mux #(.INPUTS(4),.WIDTH(128)) data_mux_upper ({data3, data2, data1, data0}, full_data[255:128], head_p8[4:3]);
+   mux #(.INPUTS(4),.WIDTH(128)) data_mux_lower ({data3, data2, data1, data0}, full_data[127:0], head[5:4]);
+   mux #(.INPUTS(4),.WIDTH(128)) data_mux_upper ({data3, data2, data1, data0}, full_data[255:128], head_p16[5:4]);
 
    // Mux to select what to load into head pointer
-   mux #(.INPUTS(2),.WIDTH(7))   head_mux ({{3'b0,load_address[3:0]},head_p8},head_in,load);
+   mux #(.INPUTS(2),.WIDTH(7))   head_mux ({{3'b0,load_address[3:0]},head_p_br},head_in,load);
 
    // Mux to select how valid bytes is driven
    wire [6:0] 	 head_inv;
@@ -172,11 +181,16 @@ module instruction_queue (
 
    slow_addr #(.WIDTH(7)) p10  (7'd1,head_m_tail,head_m_tail_p1, nc5);
    slow_addr #(.WIDTH(7)) p20  (7'd1,tail_m_head,tail_m_head_p1, nc6);
+
+   wire [6:0] true_tail = {tail[2:0],4'b0};
    
-   mux #(.INPUTS(2),.WIDTH(6))   valid_bytes_mux ({head_m_tail_p1[5:0],tail_m_head_p1[5:0]},valid_bytes_o,vb_select);
+   wire [6:0] behv_a = true_tail - head[6:0];
+   wire [6:0] behv_b = 64 - head[6:0] - true_tail;
+   
+   mux #(.INPUTS(2),.WIDTH(7))   valid_bytes_mux ({behv_b,behv_a},valid_bytes_o,vb_select);
    
    // Head Ptr Plus 8
-   slow_addr #(.WIDTH(7)) hp1 (7'd8,head,head_p8, nc0);
+   slow_addr #(.WIDTH(7)) hp1 (7'd16,head,head_p16, nc0);
    
    // Head Ptr Plus Bytes Read
    slow_addr #(.WIDTH(7)) hpbr ({3'b0,bytes_read_o},head,head_p_br, nc1);

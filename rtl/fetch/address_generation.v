@@ -21,6 +21,8 @@ module address_generation (
    imem_address			  
 );
 
+   parameter IADDRW = 32;
+   
    // Clock Interface
    input                 clk;
    input                 reset;
