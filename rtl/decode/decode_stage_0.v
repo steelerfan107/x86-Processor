@@ -3,7 +3,7 @@
 //  Top Decode Stage Module
 //
 
-module decode_top (
+module decode_stage_0 (
    // Clock Interface
    clk,
    reset,
@@ -66,7 +66,7 @@ module decode_top (
    output [15:0] 	s0_addressing;   
    output [1:0] 	s0_addressing_bytes;   
    output [3:0] 	s0_displacement_bytes;   
-   output [23:0] 	s0_opcode;   
+   output [15:0] 	s0_opcode;   
    output [1:0] 	s0_opcode_bytes;  
    output [3:0] 	s0_immediete_bytes;   
    output [23:0] 	s0_prefix;   
@@ -74,34 +74,36 @@ module decode_top (
    output [IADDRW-1:0] 	s0_pc;   
    output 		s0_branch_taken;
 
-   wire [23:0]		opcode_aligned;
+   wire [15:0]		opcode_aligned;
    wire [15:0]	        addressing_aligned;
 
-   wire [2:0] 		pre_op_bytes;   
-   wire [3:0] 		po_addressing_bytes;
+   wire [2:0] 		po_bytes;   
+   wire [3:0] 		poa_bytes;
 
    wire [4:0] 		imm_p_disp;
 
    wire 		vr_gate;
+   wire                 have_modrm;
+   wire 		size_prefix;   
    wire 		nc0, nc1;
 
    // Allign Displacement and Immediete
    byte_shifter_16B  disp_n_imm_shift ({16'b0,f_instruction[119:8]}, poa_bytes, s0_displace_n_imm);
 
    // Addressing Processing
-   addressing_disp_size_detect asd (addressing_aligned, s0_addressing, s0_addressing_bytes, s0_displacement_bytes);
+   addressing_disp_size_detect asd (addressing_aligned, s0_addressing, s0_addressing_bytes, s0_displacement_bytes , have_modrm);
    byte_shifter_8B             addressing_shift ({16'b0,f_instruction[55:8]}, po_bytes, addressing_aligned);
 
    // Opcode Processing
-   opcode_imm_size_detect osd              (opcode_aligned, s0_opcode, s0_opcode_bytes, s0_immediete_bytes);
+   opcode_imm_size_detect osd              (opcode_aligned[15:0], s0_opcode, s0_opcode_bytes, s0_immediete_bytes, size_prefix, have_modrm);
    byte_shifter_8B        opcode_shifter   ({24'b0,f_instruction[39:0]}, s0_prefix_bytes, opcode_aligned);
 
    // Prefix Processing
    assign s0_prefix = f_instruction[23:0];
-   prefix_size_detect psd (f_instruction[23:0], s0_prefix_bytes);
+   prefix_size_detect psd (f_instruction[23:0], s0_prefix_bytes, size_prefix);
 
-   // Adds - Can make these faster by doing one hot adds. Or lookahead carry ads. Probable Long Path
-   slow_addr  #(.WIDTH(2))            po_addr  (s0_prefix_bytes, s0_opcode_bytes, pre_op_bytes[1:0], po_bytes[2]);
+   // Adds - Can make these faster by doing one hot adds. or lookahead carry ads. Probable Long Path
+   slow_addr  #(.WIDTH(2))            po_addr  (s0_prefix_bytes, s0_opcode_bytes, po_bytes[1:0], po_bytes[2]);
    slow_addr  #(.WIDTH(3))           poa_addr  (po_bytes, {1'b0,s0_addressing_bytes}, poa_bytes[2:0], poa_bytes[3]);
    slow_addr  #(.WIDTH(4))      imm_disp_addr  (s0_displacement_bytes, s0_immediete_bytes, imm_p_disp[3:0], imm_p_disp[4]);
    slow_addr  #(.WIDTH(5))       ins_len_addr  ({1'b0,poa_bytes}, imm_p_disp, f_bytes_read, nc0);

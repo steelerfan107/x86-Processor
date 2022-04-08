@@ -1,0 +1,23 @@
+.i 5
+.o 3
+.ilb mod1 mod0 rm2 rm1 rm0
+.ob sib disp1 disp0
+
+00100 100 # The first four digits (before the space) correspond
+00101 010 # to the inputs, the three after the space correspond
+01000 001 # to the outputs, both in order specified above.
+01001 001
+01010 001
+01011 001
+01100 101
+01101 001
+01110 001
+01111 001
+11000 010
+11001 010
+11010 010
+11011 010
+11100 110
+11101 010
+11110 010
+11111 010

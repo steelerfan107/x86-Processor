@@ -1,0 +1,11 @@
+.i 4		# .i specifies the number of inputs
+.o 2		# .o specifies the number of outputs
+.ilb f16 size imm1 imm0	# This line specifies the names of the inputs in order
+.ob sel1 sel0	# This line specifies the names of the outputs in order
+
+--01 00	# The first four digits (before the space) correspond
+0010 10	# to the inputs, the three after the space correspond
+0110 01	# to the outputs, both in order specified above.
+1-10 01
+--11 11
+
