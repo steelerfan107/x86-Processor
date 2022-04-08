@@ -87,6 +87,98 @@ module decode_top (
    output [3:0]         d_size_of_txn;
    output               d_branch_taken;
 
+   wire 		s0_valid;   
+   wire 		s0_ready;   
+   wire [63:0] 	        s0_displace_n_imm;   
+   wire [15:0] 	        s0_addressing;   
+   wire [1:0] 	        s0_addressing_bytes;   
+   wire [3:0] 	        s0_displacement_bytes;   
+   wire [15:0] 	        s0_opcode;   
+   wire [1:0] 	        s0_opcode_bytes;  
+   wire [3:0] 	        s0_immediete_bytes;   
+   wire [23:0] 	        s0_prefix;   
+   wire [1:0] 	        s0_prefix_bytes;   
+   wire [IADDRW-1:0] 	s0_pc;   
+   wire 		s0_branch_taken;   
+
+   wire 		s0_valid_r;   
+   wire 		s0_ready_r;   
+   wire [63:0] 	        s0_displace_n_imm_r;   
+   wire [15:0] 	        s0_addressing_r;   
+   wire [1:0] 	        s0_addressing_bytes_r;   
+   wire [3:0] 	        s0_displacement_bytes_r;   
+   wire [15:0] 	        s0_opcode_r;   
+   wire [1:0] 	        s0_opcode_bytes_r;  
+   wire [3:0] 	        s0_immediete_bytes_r;   
+   wire [23:0] 	        s0_prefix_r;   
+   wire [1:0] 	        s0_prefix_bytes_r;   
+   wire [IADDRW-1:0] 	s0_pc_r;   
+   wire 		s0_branch_taken_r;
+
+   localparam PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 +1;
+   
+   decode_stage_0 #(.IADDRW(IADDRW)) ds0 (
+       clk,
+       reset,
+       flush,
+       handle_int,
+       halt,
+       f_valid,
+       f_ready,
+       f_bytes_read,
+       f_valid_bytes,
+       f_instruction,
+       f_pc,
+       f_branch_taken,
+       s0_valid,
+       s0_ready,
+       s0_displace_n_imm,
+       s0_addressing,
+       s0_addressing_bytes,
+       s0_displacement_bytes,
+       s0_opcode,
+       s0_opcode_bytes,
+       s0_immediete_bytes,
+       s0_prefix,
+       s0_prefix_bytes,
+       s0_pc,
+       s0_branch_taken					  
+   );
+
+   wire [PIPEWIDTH-1:0]		s0_data;
+   wire [PIPEWIDTH-1:0]		s0_data_r;
+
+   assign s0_data = {   
+      s0_displace_n_imm,   
+      s0_addressing,  
+      s0_addressing_bytes,   
+      s0_displacement_bytes,   
+      s0_opcode,   
+      s0_opcode_bytes,  
+      s0_immediete_bytes,   
+      s0_prefix,   
+      s0_prefix_bytes,   
+      s0_pc,
+      s0_branch_taken		     
+   };
+   
+   assign {   
+      s0_displace_n_imm_r,   
+      s0_addressing_r,  
+      s0_addressing_bytes_r,   
+      s0_displacement_bytes_r,   
+      s0_opcode_r,   
+      s0_opcode_bytes_r,  
+      s0_immediete_bytes_r,   
+      s0_prefix_r,   
+      s0_prefix_bytes_r,   
+      s0_pc_r,
+      s0_branch_taken_r 
+   } = s0_data_r;     
+   
+   pipestage #(.WIDTH(PIPEWIDTH)) ( clk, reset, s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
+   
+
    assign halt = 'h0;
    assign ras_address = 'h0;
    assign ras_push = 'h0;
