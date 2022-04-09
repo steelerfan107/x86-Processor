@@ -73,6 +73,7 @@ endmodule
 // ------ //
 
 // Generates address based on modrm
+// TODO: Base needs segment register
 module mod_rm (
 
 );
@@ -82,11 +83,11 @@ module mod_rm (
     input [7:0] mod_rm_byte;
     input [7:0] sib_byte;
 
-    // no esp
     input [31:0] eax;
     input [31:0] ecx;
     input [31:0] edx;
     input [31:0] ebx;
+    input [31:0] esp;
     input [31:0] ebp;
     input [31:0] esi;
     input [31:0] edi;
@@ -104,6 +105,28 @@ endmodule
 // --- //
 
 module sib (
+    sib_out,
+
+    sib_byte,
+
+    // no esp
+    eax,
+    ecx,
+    edx,
+    ebx,
+    esp,
+    ebp,
+    esi,
+    edi,
+
+    seg_sel,
+
+    es,
+    cs,
+    ss,
+    ds,
+    fs,
+    gs
 
 );
 
@@ -116,9 +139,19 @@ module sib (
     input [31:0] ecx;
     input [31:0] edx;
     input [31:0] ebx;
+    input [31:0] esp;
     input [31:0] ebp;
     input [31:0] esi;
     input [31:0] edi;
+
+    input [2:0] seg_sel;
+
+    input [15:0] es;
+    input [15:0] cs;
+    input [15:0] ss;
+    input [15:0] ds;
+    input [15:0] fs;
+    input [15:0] gs;
 
     wire [2:0] base = sib_byte[2:0];
     wire [1:0] ss = sib_byte[7:6];
@@ -276,14 +309,78 @@ module sib (
         base
     );
 
+    wire [31:0] base_scaled_index;
+
     // add base to scaled index
-    address_generation_32_bit_adder (
-        sib_out,
+    address_generation_32_bit_adder base_index_adder (
+        base_scaled_index,
 
         base_mux_out,
         ss_mux_out
-    )
+    );
 
+    // add value in segment register
+    // if base is ESP then Segment is SS
+    // Else use the segment register value
+
+    // AND gate toggling a mux that selects segment as being either SS or the segment register
+    // Output of this mux goes to another mux selecting the segment register value
+    // Adder adding the shifted segment register value to the output of the previous adder
+    wire [2:0] base_not;
+
+    inv1$ 
+    base_inv0 (base[0], base_not[0]),
+    base_inv1 (base[1], base_not[1]),
+    base_inv2 (base[2], base_not[2]);
+
+    wire is_ss; // toggled when base is esp, 100
+    and3$ ss_seg_sel (is_ss, base[0], base_not[1], base_not[2]);
+
+    // 3 bit mux selecting if it is ss or seg_sel value
+    wire [5:0] seg_sel_mux_in;
+    wire [2:0] seg_sel_mux_out;
+
+    assign seg_sel_mux_in[2:0] = seg_sel;
+    assign seg_sel_mux_in[5:3] = 3'b010;
+
+    mux_3_2 seg_sel_mux (
+        seg_sel_mux_in,
+        seg_sel_mux_out,
+        is_ss
+    );
+
+    // Use output of this mux to select the segment register
+
+    wire [95:0] seg_select_in;
+    wire [15:0] seg_select_out;
+
+    assign [15:0] seg_sel_mux_in = es;
+    assign [31:16] seg_sel_mux_in = cs;
+    assign [47:32] seg_sel_mux_in = ss;
+    assign [63:48] seg_sel_mux_in = ds;
+    assign [79:64] seg_sel_mux_in = fs;
+    assign [95:80] seg_sel_mux_in = gs;
+
+    mux_16_6 seg_select (
+        seg_select_in,
+        seg_select_out,
+        seg_sel_mux_out
+    );
+
+    // shift output of segment select mux
+    wire [31:0] shifted_seg_value;
+    segment_shifter seg_shift (
+        shifted_seg_value,
+        seg_select_out
+    );
+
+    // add segment register to base_scaled_index and output that value
+    address_generation_32_bit_adder seg_adder (
+        sib_out,
+
+        seg_select_out,
+        base_scaled_index
+    );
 
 
 endmodule
@@ -327,6 +424,23 @@ module sib_shifter_8 (
     assign in[31:2] = out[29:0];
     assign in[2:0] = 0;
     
+endmodule
+
+// --------------- //
+// Segment Shifter //
+// --------------- //
+
+// Shifts Segment Register by 16 bits
+module segment_shifter (
+    out,
+    in
+);
+    output [31:0] out;
+    input [15:0] in;
+
+    assign out[31:16] = in;
+    assign out[15:0] = 0;
+
 endmodule
 
 
