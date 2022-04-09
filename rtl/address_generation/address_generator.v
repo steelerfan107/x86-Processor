@@ -5,6 +5,332 @@
 //
 //  Holds components for address generator
 
+module address_generator (
+    address_1,
+    address_1_valid,
+    address_2,
+    address_2_valid,
+
+    op1_mode,
+    op2_mode,
+
+    mod_rm_byte,
+
+    sib_byte,
+
+    op1_reg,
+    op2_reg,
+
+    immediate,
+
+    displacement,
+
+    eax,
+    ecx,
+    edx,
+    ebx,
+    esp,
+    ebp,
+    esi,
+    edi
+);
+
+    output [31:0] address_1;
+    output address_1_valid;
+    output [31:0] address_2;
+    output address_2_valid;
+
+    input [2:0] op1_mode;
+    input [2:0] op2_mode;
+
+    input [7:0] mod_rm_byte;
+
+    input [7:0] sib_byte;
+
+    input [7:0] op1_reg;
+    input [7:0] op2_reg;
+
+    input [7:0] immediate;
+
+    input [31:0] displacement;
+
+    input [31:0] eax;
+    input [31:0] ecx;
+    input [31:0] edx;
+    input [31:0] ebx;
+    input [31:0] esp;
+    input [31:0] ebp;
+    input [31:0] esi;
+    input [31:0] edi;
+
+    
+
+endmodule
+
+
+// ------ //
+// Mod RM //
+// ------ //
+
+// Generates address based on modrm
+module mod_rm (
+
+);
+
+    output [31:0] address;
+    
+    input [7:0] mod_rm_byte;
+    input [7:0] sib_byte;
+
+    // no esp
+    input [31:0] eax;
+    input [31:0] ecx;
+    input [31:0] edx;
+    input [31:0] ebx;
+    input [31:0] ebp;
+    input [31:0] esi;
+    input [31:0] edi;
+
+    input [31:0] displacement;
+
+    wire [31:0] sib_out;
+
+    // mod 00
+
+endmodule
+
+// --- //
+// SIB //
+// --- //
+
+module sib (
+
+);
+
+    output [31:0] sib_out;
+
+    input [7:0] sib_byte;
+
+    // no esp
+    input [31:0] eax;
+    input [31:0] ecx;
+    input [31:0] edx;
+    input [31:0] ebx;
+    input [31:0] ebp;
+    input [31:0] esi;
+    input [31:0] edi;
+
+    wire [2:0] base = sib_byte[2:0];
+    wire [1:0] ss = sib_byte[7:6];
+    wire [2:0] index = sib_byte[5:3];
+
+    wire [31:0] none = 0;
+
+    // SS = 00
+    wire [255:0] index_00_mux_in;
+    assign index_00_mux_in[31:0] = eax;
+    assign index_00_mux_in[63:32] = ecx;
+    assign index_00_mux_in[95:64] = edx;
+    assign index_00_mux_in[127:96] = ebx;
+    assign index_00_mux_in[159:128] = none;
+    assign index_00_mux_in[191:160] = ebp;
+    assign index_00_mux_in[223:192] = esi;
+    assign index_00_mux_in[255:224] = edi;
+
+    wire [31:0] index_00_mux_out;
+
+    mux_8_32 index_00_mux (index_00_mux_in, index_00_mux_out, index);
+
+    // SS = 01
+
+    wire [31:0] eax_2;
+    wire [31:0] ecx_2;
+    wire [31:0] edx_2;
+    wire [31:0] ebx_2;
+    wire [31:0] ebp_2;
+    wire [31:0] esi_2;
+    wire [31:0] edi_2;
+
+    sib_shifter_2 
+    eax_shift_2 (eax_2, eax),
+    ecx_shift_2 (ecx_2, ecx),
+    edx_shift_2 (edx_2, edx),
+    ebx_shift_2 (ebx_2, ebx),
+    ebp_shift_2 (ebp_2, ebp),
+    esi_shift_2 (esi_2, esi),
+    edi_shift_2 (edi_2, edi);
+
+    wire [255:0] index_01_mux_in;
+    assign index_01_mux_in[31:0] = eax_2;
+    assign index_01_mux_in[63:32] = ecx_2;
+    assign index_01_mux_in[95:64] = edx_2;
+    assign index_01_mux_in[127:96] = ebx_2;
+    assign index_01_mux_in[159:128] = none;
+    assign index_01_mux_in[191:160] = ebp_2;
+    assign index_01_mux_in[223:192] = esi_2;
+    assign index_01_mux_in[255:224] = edi_2;
+
+    wire [31:0] index_01_mux_out;
+
+    mux_8_32 index_01_mux (index_01_mux_in, index_01_mux_out, index);
+
+    // SS = 10
+
+    wire [31:0] eax_4;
+    wire [31:0] ecx_4;
+    wire [31:0] edx_4;
+    wire [31:0] ebx_4;
+    wire [31:0] ebp_4;
+    wire [31:0] esi_4;
+    wire [31:0] edi_4;
+
+    sib_shifter_4 
+    eax_shift_4 (eax_4, eax),
+    ecx_shift_4 (ecx_4, ecx),
+    edx_shift_4 (edx_4, edx),
+    ebx_shift_4 (ebx_4, ebx),
+    ebp_shift_4 (ebp_4, ebp),
+    esi_shift_4 (esi_4, esi),
+    edi_shift_4 (edi_4, edi);
+
+    wire [255:0] index_10_mux_in;
+    assign index_10_mux_in[31:0] = eax_4;
+    assign index_10_mux_in[63:32] = ecx_4;
+    assign index_10_mux_in[95:64] = edx_4;
+    assign index_10_mux_in[127:96] = ebx_4;
+    assign index_10_mux_in[159:128] = none;
+    assign index_10_mux_in[191:160] = ebp_4;
+    assign index_10_mux_in[223:192] = esi_4;
+    assign index_10_mux_in[255:224] = edi_4;
+
+    wire [31:0] index_10_mux_out;
+
+    mux_8_32 index_10_mux (index_10_mux_in, index_10_mux_out, index);
+
+
+    // SS = 11
+
+    wire [31:0] eax_8;
+    wire [31:0] ecx_8;
+    wire [31:0] edx_8;
+    wire [31:0] ebx_8;
+    wire [31:0] ebp_8;
+    wire [31:0] esi_8;
+    wire [31:0] edi_8;
+
+    sib_shifter_8 
+    eax_shift_8 (eax_8, eax),
+    ecx_shift_8 (ecx_8, ecx),
+    edx_shift_8 (edx_8, edx),
+    ebx_shift_8 (ebx_8, ebx),
+    ebp_shift_8 (ebp_8, ebp),
+    esi_shift_8 (esi_8, esi),
+    edi_shift_8 (edi_8, edi);
+
+    wire [255:0] index_11_mux_in;
+    assign index_11_mux_in[31:0] = eax_8;
+    assign index_11_mux_in[63:32] = ecx_8;
+    assign index_11_mux_in[95:64] = edx_8;
+    assign index_11_mux_in[127:96] = ebx_8;
+    assign index_11_mux_in[159:128] = none;
+    assign index_11_mux_in[191:160] = ebp_8;
+    assign index_11_mux_in[223:192] = esi_8;
+    assign index_11_mux_in[255:224] = edi_8;
+
+    wire [31:0] index_11_mux_out;
+
+    mux_8_32 index_11_mux (index_11_mux_in, index_11_mux_out, index);
+
+    // mux controlled by ss signal
+    wire [127:0] ss_mux_in;
+    wire [31:0] ss_mux_out;
+
+    assign ss_mux_in[31:0] = index_00_mux_out;
+    assign ss_mux_in[63:32] = index_01_mux_out;
+    assign ss_mux_in[95:64] = index_10_mux_out;
+    assign ss_mux_in[127:96] = index_11_mux_out;
+
+    mux_4_32 ss_mux (
+        ss_mux_in,
+        ss_mux_out,
+        ss
+    );
+
+    // determine base
+    wire [255:0] base_mux_in;
+    wire [31:0] base_mux_out;
+
+    assign base_mux_in[31:0] = eax;
+    assign base_mux_in[63:32] = ecx;
+    assign base_mux_in[95:64] = edx;
+    assign base_mux_in[127:96] = ebx;
+    assign base_mux_in[159:128] = esp;
+    assign base_mux_in[191:160] = none;     // TODO: Verify that this is correct. Should it be none with this selection?
+    assign base_mux_in[223:192] = esi;
+    assign base_mux_in[255:224] = edi;
+
+
+    mux_8_32 base_mux (
+        base_mux_in,
+        base_mux_out,
+        base
+    );
+
+    // add base to scaled index
+    address_generation_32_bit_adder (
+        sib_out,
+
+        base_mux_out,
+        ss_mux_out
+    )
+
+
+
+endmodule
+
+
+// ----------- //
+// SIB Shifter //
+// ----------- //
+
+module sib_shifter_2 (
+    out,
+    in
+);
+    output [31:0] out;
+    input [31:0] in;
+
+    assign in[31:1] = out[30:0];
+    assign in[0] = 0;
+
+endmodule
+
+module sib_shifter_4 (
+    out,
+    in
+);
+    output [31:0] out;
+    input [31:0] in;
+
+    assign in[31:2] = out[29:0];
+    assign in[1:0] = 0;
+    
+endmodule
+
+module sib_shifter_8 (
+    out,
+    in
+);
+    output [31:0] out;
+    input [31:0] in;
+
+    assign in[31:2] = out[29:0];
+    assign in[2:0] = 0;
+    
+endmodule
+
+
+
 // possible addresses needed:
     // op1 and op2 are both immediates and do not need address generation
         // pass op1 and op2 with no modification
@@ -21,7 +347,7 @@
     // op1 and op2 are addresses but need no modification (like for MOVS)
         // add segment register value to op1 and op2 (with shift) and mark them as addresses
 
-module address_generator (
+module address_generator_old (
     mode,
 
     op_1,
