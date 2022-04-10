@@ -75,6 +75,22 @@ endmodule
 // Generates address based on modrm
 // TODO: Base needs segment register
 module mod_rm (
+    address,
+    
+    mod_rm_byte,
+    sib_byte,
+
+    eax,
+    ecx,
+    edx,
+    ebx,
+    esp,
+    ebp,
+    esi,
+    edi,
+
+    displacement
+
 
 );
 
@@ -154,7 +170,7 @@ module sib (
     input [15:0] gs;
 
     wire [2:0] base = sib_byte[2:0];
-    wire [1:0] ss = sib_byte[7:6];
+    wire [1:0] segment_scale = sib_byte[7:6];
     wire [2:0] index = sib_byte[5:3];
 
     wire [31:0] none = 0;
@@ -283,10 +299,10 @@ module sib (
     assign ss_mux_in[95:64] = index_10_mux_out;
     assign ss_mux_in[127:96] = index_11_mux_out;
 
-    mux_4_32 ss_mux (
+    mux_4_32 segment_scale_mux (
         ss_mux_in,
         ss_mux_out,
-        ss
+        segment_scale
     );
 
     // determine base
@@ -329,9 +345,9 @@ module sib (
     wire [2:0] base_not;
 
     inv1$ 
-    base_inv0 (base[0], base_not[0]),
-    base_inv1 (base[1], base_not[1]),
-    base_inv2 (base[2], base_not[2]);
+    base_inv0 (base_not[0], base[0]),
+    base_inv1 (base_not[1], base[1]),
+    base_inv2 (base_not[2], base[2]);
 
     wire is_ss; // toggled when base is esp, 100
     and3$ ss_seg_sel (is_ss, base[0], base_not[1], base_not[2]);
@@ -354,12 +370,12 @@ module sib (
     wire [95:0] seg_select_in;
     wire [15:0] seg_select_out;
 
-    assign [15:0] seg_sel_mux_in = es;
-    assign [31:16] seg_sel_mux_in = cs;
-    assign [47:32] seg_sel_mux_in = ss;
-    assign [63:48] seg_sel_mux_in = ds;
-    assign [79:64] seg_sel_mux_in = fs;
-    assign [95:80] seg_sel_mux_in = gs;
+    assign seg_select_in[15:0] = es[15:0];
+    assign seg_select_in[31:16] = cs[15:0];
+    assign seg_select_in[47:32] = ss[15:0];
+    assign seg_select_in[63:48] = ds[15:0];
+    assign seg_select_in[79:64] = fs[15:0];
+    assign seg_select_in[95:80] = gs[15:0];
 
     mux_16_6 seg_select (
         seg_select_in,
@@ -378,7 +394,7 @@ module sib (
     address_generation_32_bit_adder seg_adder (
         sib_out,
 
-        seg_select_out,
+        shifted_seg_value,
         base_scaled_index
     );
 
@@ -397,8 +413,8 @@ module sib_shifter_2 (
     output [31:0] out;
     input [31:0] in;
 
-    assign in[31:1] = out[30:0];
-    assign in[0] = 0;
+    assign out[31:1] = in[30:0];
+    assign out[0] = 0;
 
 endmodule
 
@@ -409,8 +425,8 @@ module sib_shifter_4 (
     output [31:0] out;
     input [31:0] in;
 
-    assign in[31:2] = out[29:0];
-    assign in[1:0] = 0;
+    assign out[31:2] = in[29:0];
+    assign out[1:0] = 0;
     
 endmodule
 
@@ -421,8 +437,8 @@ module sib_shifter_8 (
     output [31:0] out;
     input [31:0] in;
 
-    assign in[31:2] = out[29:0];
-    assign in[2:0] = 0;
+    assign out[31:2] = in[29:0];
+    assign out[2:0] = 0;
     
 endmodule
 
@@ -461,112 +477,112 @@ endmodule
     // op1 and op2 are addresses but need no modification (like for MOVS)
         // add segment register value to op1 and op2 (with shift) and mark them as addresses
 
-module address_generator_old (
-    mode,
+// module address_generator_old (
+//     mode,
 
-    op_1,
-    op_2,
-    op_size,
+//     op_1,
+//     op_2,
+//     op_size,
     
 
-    sib_enable,
-    sib_scale,
-    sib_base,
-    sib_index,
+//     sib_enable,
+//     sib_scale,
+//     sib_base,
+//     sib_index,
 
-    address_displacement,
+//     address_displacement,
 
-    segment_register_value,
+//     segment_register_value,
 
-    op_1_out,
-    op_1_read_enable,
+//     op_1_out,
+//     op_1_read_enable,
 
-    op_2_out,
-    op_2_read_enable
+//     op_2_out,
+//     op_2_read_enable
 
-);
+// );
 
-    input [2:0] mode;
+//     input [2:0] mode;
 
-    input [31:0] op_1;
-    input [31:0] op_2;
-    input [1:0] op_size;
+//     input [31:0] op_1;
+//     input [31:0] op_2;
+//     input [1:0] op_size;
     
 
-    input sib_enable;
-    input [1:0] sib_scale;
-    input [31:0] sib_base;
-    input [31:0] sib_index;
+//     input sib_enable;
+//     input [1:0] sib_scale;
+//     input [31:0] sib_base;
+//     input [31:0] sib_index;
 
-    input [31:0] address_displacement;
+//     input [31:0] address_displacement;
 
-    input [15:0] segment_register_value;
+//     input [15:0] segment_register_value;
 
-    output [31:0] op_1_out;
-    output op_1_read_enable;
+//     output [31:0] op_1_out;
+//     output op_1_read_enable;
 
-    output [31:0] op_2_out;
-    output op_2_read_enable;
+//     output [31:0] op_2_out;
+//     output op_2_read_enable;
 
-    // outputs will have mux with selection done by the mode input
-    // read enable controlled by digital logic block with output determined by mode input
+//     // outputs will have mux with selection done by the mode input
+//     // read enable controlled by digital logic block with output determined by mode input
 
-    // any address will need segment address added to it
-    wire [31:0] op_1_seg, op_2_seg;
-    wire [31:0] shifted_seg;
+//     // any address will need segment address added to it
+//     wire [31:0] op_1_seg, op_2_seg;
+//     wire [31:0] shifted_seg;
 
-    assign shifted_seg[31:16] = segment_register_value[15:0];
-    assign shifted_seg[15:0] = 0;
+//     assign shifted_seg[31:16] = segment_register_value[15:0];
+//     assign shifted_seg[15:0] = 0;
 
-    address_generation_32_bit_adder 
-    op_1_seg_adder (op_1_seg, op_1, shifted_seg),
-    op_2_seg_adder (op_2_seg, op_2, shifted_seg);
+//     address_generation_32_bit_adder 
+//     op_1_seg_adder (op_1_seg, op_1, shifted_seg),
+//     op_2_seg_adder (op_2_seg, op_2, shifted_seg);
 
 
-    // op1 is an effective address plus displacement
-    wire [31:0] op1_addr_disp;
-    modrm_addr_disp modrm_1 (op1_addr_disp, op_1_seg, address_displacement);
+//     // op1 is an effective address plus displacement
+//     wire [31:0] op1_addr_disp;
+//     modrm_addr_disp modrm_1 (op1_addr_disp, op_1_seg, address_displacement);
 
-    // op2 is an effective address plus displacement
-    wire [31:0] op2_addr_disp;
-    modrm_addr_disp modrm_2 (op2_addr_disp, op_2_seg, address_displacement);
+//     // op2 is an effective address plus displacement
+//     wire [31:0] op2_addr_disp;
+//     modrm_addr_disp modrm_2 (op2_addr_disp, op_2_seg, address_displacement);
 
-    // next, instantiate the SIB block
-    wire [31:0] sib_out;
+//     // next, instantiate the SIB block
+//     wire [31:0] sib_out;
 
-    sib_calculation sib_calculation (sib_out, sib_base, sib_index, sib_scale, address_displacement);
+//     sib_calculation sib_calculation (sib_out, sib_base, sib_index, sib_scale, address_displacement);
 
-    // create mux selecting proper output
-    // TODO: Condense this mux down to 3 inputs lol
-    wire [255:0] op1_mux_in;
-    assign [31:0] op1_mux_in = op_1;            // no generation needed
-    assign [63:32] op1_mux_in = op1_addr_disp;  // ModR/M
-    assign [95:64] op1_mux_in = op_1;           // no generation needed
-    assign [127:96] op1_mux_in = sib_out;       // sib
-    assign [159:128] op1_mux_in = op_1;         // no generation needed
-    assign [191:160] op1_mux_in = op_1;         // no generation needed
+//     // create mux selecting proper output
+//     // TODO: Condense this mux down to 3 inputs lol
+//     wire [255:0] op1_mux_in;
+//     assign [31:0] op1_mux_in = op_1;            // no generation needed
+//     assign [63:32] op1_mux_in = op1_addr_disp;  // ModR/M
+//     assign [95:64] op1_mux_in = op_1;           // no generation needed
+//     assign [127:96] op1_mux_in = sib_out;       // sib
+//     assign [159:128] op1_mux_in = op_1;         // no generation needed
+//     assign [191:160] op1_mux_in = op_1;         // no generation needed
 
-    mux_8_32 op1_mux (op1_mux_in, op_1_out, mode);
+//     mux_8_32 op1_mux (op1_mux_in, op_1_out, mode);
 
-    wire [255:0] op2_mux_in;
+//     wire [255:0] op2_mux_in;
 
-    wire [255:0] op2_mux_in;
-    assign [31:0] op2_mux_in = op_2;            // no generation needed
-    assign [63:32] op2_mux_in = op_2;  // ModR/M
-    assign [95:64] op2_mux_in = op2_addr_disp;           // no generation needed
-    assign [127:96] op2_mux_in = op_2;       // sib
-    assign [159:128] op2_mux_in = sib_out;         // no generation needed
-    assign [191:160] op2_mux_in = op_2;         // no generation needed
+//     wire [255:0] op2_mux_in;
+//     assign [31:0] op2_mux_in = op_2;            // no generation needed
+//     assign [63:32] op2_mux_in = op_2;  // ModR/M
+//     assign [95:64] op2_mux_in = op2_addr_disp;           // no generation needed
+//     assign [127:96] op2_mux_in = op_2;       // sib
+//     assign [159:128] op2_mux_in = sib_out;         // no generation needed
+//     assign [191:160] op2_mux_in = op_2;         // no generation needed
 
-    mux_8_32 op2_mux (op2_mux_in, op_2_out, mode);
+//     mux_8_32 op2_mux (op2_mux_in, op_2_out, mode);
 
-    // TODO: create digital logic block for read enable
+//     // TODO: create digital logic block for read enable
 
 
     
 
 
-endmodule
+// endmodule
 
 
 // --------------- //
@@ -626,7 +642,7 @@ module modrm_addr_disp (
     effective_address,
 
     op_value,
-    displacement,
+    displacement
 
 );
 
