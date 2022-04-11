@@ -25,7 +25,17 @@ module mux (
       end else if (INPUTS == 4) begin
 	 for(i = 0; i < WIDTH; i=i+1) begin	 	 
 	    mux4$ mux(out[i],in[i],in[WIDTH+i],in[2*WIDTH+i],in[3*WIDTH+i],select[0], select[1]);	
-         end	 	 
+         end
+      end else if (INPUTS == 8) begin
+            wire [WIDTH-1:0] l,u;
+	 
+	    for(i = 0; i < WIDTH; i=i+1) begin	 	 	
+	       mux4$ mux_l(l[i],in[        i] ,in[  WIDTH+i] ,in[2*WIDTH+i] ,in[3*WIDTH+i] ,select[0], select[1]);  	
+	       mux4$ mux_u(u[i],in[4*WIDTH+i] ,in[5*WIDTH+i] ,in[6*WIDTH+i] ,in[7*WIDTH+i] ,select[0], select[1]);
+
+	       mux2$ mux(out[i],l[i],u[i],select[2]);	       
+	    end
+      end    	 	 
       end else if (INPUTS == 32) begin
             wire [WIDTH-1:0] lll, llu,lul,luu,ull,ulu,uul,uuu,u,l;
 	 
