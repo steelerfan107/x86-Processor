@@ -394,15 +394,9 @@ module sib (
     assign seg_select_in[79:64] = fs[15:0];
     assign seg_select_in[95:80] = gs[15:0];
 
-    // TODO: Use 32 bit 8-1 mux instead
-    // mux #(.WIDTH(16), .INPUTS(6)) seg_select (
-    //     seg_select_in,
-    //     seg_select_out,
-    //     seg_sel_mux_out
-    // );
-    address_generator_mux_8_32 seg_select (
+    mux #(.WIDTH(16), .INPUTS(8)) seg_select (
+        {16'h0, 16'h0, gs, fs, ds, ss, cs, es},
         seg_select_out,
-        es, cs, ss, ds, fs, gs, , ,
         seg_sel_mux_out
     );
 
