@@ -444,9 +444,35 @@ module TOP;
         
     
         // TODO: test changing Segment registers
-        $display("***SEGMENT REGISTER TEST NOT YET IMPLEMENTED***");
+        $display("Testing Segment Registers");
 
+        // switch back to using SIB of 00
+        sib_byte = 8'h20;
 
+        seg_sel = 0;
+        #5
+        if (sib_out != ((es << 16) + eax)) $display("SEG SELECT %X FAIL: SIB_OUT = %X", seg_sel, sib_out);
+
+        seg_sel = 1;
+        #5
+        if (sib_out != ((cs << 16) + eax)) $display("SEG SELECT %X FAIL", seg_sel);
+        
+        seg_sel = 2;
+        #5
+        if (sib_out != ((ss << 16) + eax)) $display("SEG SELECT %X FAIL", seg_sel);
+        
+        seg_sel = 3;
+        #5
+        if (sib_out != ((ds << 16) + eax)) $display("SEG SELECT %X FAIL", seg_sel);
+        
+        seg_sel = 4;
+        #5
+        if (sib_out != ((fs << 16) + eax)) $display("SEG SELECT %X FAIL", seg_sel);
+        
+        seg_sel = 5;
+        #5
+        if (sib_out != ((gs << 16) + eax)) $display("SEG SELECT %X FAIL", seg_sel);
+    
 
 
         $display("==========\n End Test \n==========");
