@@ -188,7 +188,11 @@ module sib (
 
     wire [31:0] index_00_mux_out;
 
-    mux_8_32 index_00_mux (index_00_mux_in, index_00_mux_out, index);
+    address_generator_mux_8_32 index_00_mux (
+        index_00_mux_out, 
+        eax, ecx, edx, ebx, none, ebp, esi, edi, 
+        index
+    );
 
     // SS = 01
 
@@ -221,7 +225,11 @@ module sib (
 
     wire [31:0] index_01_mux_out;
 
-    mux_8_32 index_01_mux (index_01_mux_in, index_01_mux_out, index);
+    address_generator_mux_8_32 index_01_mux (
+        index_01_mux_out, 
+        eax_2, ecx_2, edx_2, ebx_2, none, ebp_2, esi_2, edi_2, 
+        index
+    );
 
     // SS = 10
 
@@ -254,7 +262,11 @@ module sib (
 
     wire [31:0] index_10_mux_out;
 
-    mux_8_32 index_10_mux (index_10_mux_in, index_10_mux_out, index);
+    address_generator_mux_8_32 index_10_mux (
+        index_10_mux_out, 
+        eax_4, ecx_4, edx_4, ebx_4, none, ebp_4, esi_4, edi_4, 
+        index
+    );
 
 
     // SS = 11
@@ -288,7 +300,11 @@ module sib (
 
     wire [31:0] index_11_mux_out;
 
-    mux_8_32 index_11_mux (index_11_mux_in, index_11_mux_out, index);
+    address_generator_mux_8_32 index_11_mux (
+        index_11_mux_out, 
+        eax_8, ecx_8, edx_8, ebx_8, none, ebp_8, esi_8, edi_8, 
+        index
+    );
 
     // mux controlled by ss signal
     wire [127:0] ss_mux_in;
@@ -299,7 +315,8 @@ module sib (
     assign ss_mux_in[95:64] = index_10_mux_out;
     assign ss_mux_in[127:96] = index_11_mux_out;
 
-    mux_4_32 segment_scale_mux (
+    
+    mux #(.WIDTH(32), .INPUTS(4)) segment_scale_mux (
         ss_mux_in,
         ss_mux_out,
         segment_scale
@@ -319,9 +336,9 @@ module sib (
     assign base_mux_in[255:224] = edi;
 
 
-    mux_8_32 base_mux (
-        base_mux_in,
+    address_generator_mux_8_32 base_mux (
         base_mux_out,
+        eax, ecx, edx, ebx, esp, none, esi, edi,
         base
     );
 
@@ -359,7 +376,7 @@ module sib (
     assign seg_sel_mux_in[2:0] = seg_sel;
     assign seg_sel_mux_in[5:3] = 3'b010;
 
-    mux_3_2 seg_sel_mux (
+    mux #(.WIDTH(3), .INPUTS(2)) seg_sel_mux (
         seg_sel_mux_in,
         seg_sel_mux_out,
         is_ss
@@ -377,9 +394,15 @@ module sib (
     assign seg_select_in[79:64] = fs[15:0];
     assign seg_select_in[95:80] = gs[15:0];
 
-    mux_16_6 seg_select (
-        seg_select_in,
+    // TODO: Use 32 bit 8-1 mux instead
+    // mux #(.WIDTH(16), .INPUTS(6)) seg_select (
+    //     seg_select_in,
+    //     seg_select_out,
+    //     seg_sel_mux_out
+    // );
+    address_generator_mux_8_32 seg_select (
         seg_select_out,
+        es, cs, ss, ds, fs, gs, , ,
         seg_sel_mux_out
     );
 
@@ -437,7 +460,7 @@ module sib_shifter_8 (
     output [31:0] out;
     input [31:0] in;
 
-    assign out[31:2] = in[29:0];
+    assign out[31:3] = in[28:0];
     assign out[2:0] = 0;
     
 endmodule
@@ -456,6 +479,31 @@ module segment_shifter (
 
     assign out[31:16] = in;
     assign out[15:0] = 0;
+
+endmodule
+
+// -------------- //
+// 32 bit 8-1 mux //
+// -------------- //
+module address_generator_mux_8_32 (
+    out,
+    a, b, c, d, e, f, g, h,
+    s
+);
+    output [31:0] out;
+    input [31:0] a, b, c, d, e, f, g, h;
+    input [2:0] s;
+
+    // abcd
+    wire [31:0] abcd_out, efgh_out;
+
+    mux #(.WIDTH(32), .INPUTS(4)) 
+    mux_abcd ({d, c, b, a}, abcd_out, s[1:0]),
+    mux_efgh ({h, g, f, e}, efgh_out, s[1:0]);
+
+    mux #(.WIDTH(32), .INPUTS(2)) 
+    mux_output ({efgh_out, abcd_out}, out, s[2]);
+
 
 endmodule
 
@@ -562,7 +610,7 @@ endmodule
 //     assign [159:128] op1_mux_in = op_1;         // no generation needed
 //     assign [191:160] op1_mux_in = op_1;         // no generation needed
 
-//     mux_8_32 op1_mux (op1_mux_in, op_1_out, mode);
+//     mux #(.WIDTH(32), .INPUTS(8)) op1_mux (op1_mux_in, op_1_out, mode);
 
 //     wire [255:0] op2_mux_in;
 
@@ -574,7 +622,7 @@ endmodule
 //     assign [159:128] op2_mux_in = sib_out;         // no generation needed
 //     assign [191:160] op2_mux_in = op_2;         // no generation needed
 
-//     mux_8_32 op2_mux (op2_mux_in, op_2_out, mode);
+//     mux #(.WIDTH(32), .INPUTS(8)) op2_mux (op2_mux_in, op_2_out, mode);
 
 //     // TODO: create digital logic block for read enable
 
@@ -621,7 +669,11 @@ module sib_calculation (
     assign scale_select_in[63:32] = scale_2;
     assign scale_select_in[95:64] = scale_4;
     assign scale_select_in[127:96] = scale_8;
-    mux_4_32 scale_select (scale_select_in, scale_select_out, scale);
+    mux #(.WIDTH(32), .INPUTS(4)) scale_select (
+        scale_select_in, 
+        scale_select_out, 
+        scale
+    );
 
     // add base, scale out, and displacement
     wire [31:0] base_index;

@@ -109,7 +109,7 @@ module TOP;
         #5
         if (sib_out != ((es << 16) + eax + esi)) $display("SIB %X FAIL", sib_byte);
 
-        sib_byte = 8'h08;
+        sib_byte = 8'h38;
         #5
         if (sib_out != ((es << 16) + eax + edi)) $display("SIB %X FAIL", sib_byte);
 
@@ -183,7 +183,7 @@ module TOP;
 
 
         // scale of *8
-        sib_byte = 8'hC0;
+        sib_byte = 8'hC0;   // aa00_0000 + 0000_aa00 + 0005_5000 = aa05_fa00
         #5
         if (sib_out != ((es << 16) + eax + 8*eax)) $display("SIB %X FAIL", sib_byte);
 
