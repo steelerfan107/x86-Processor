@@ -77,7 +77,7 @@ module TOP;
         #12.5
 
         // Test each ss and index with eax as base
-        $display("Testing each SS and Index with EAX as base");
+        $display("Testing each SS and Index with Base 1");
         eax = 32'h0000_aa00;
 
         // eax as base
@@ -215,11 +215,236 @@ module TOP;
         #5
         if (sib_out != ((es << 16) + eax + 8*edi)) $display("SIB %X FAIL", sib_byte);
 
-        // TODO: Finish numbering the sib bytes for *4 and *8
-        // run to make sure it works properly
+        eax = 32'h0000_00aa;
 
-        // copy and paste to test each other base?
-        // test changing Segment registers
+        $display("Testing SS 00 with Base 1");
+        ecx = 32'h0000_cc00;
+
+        sib_byte = 8'h01;
+        #5
+        if (sib_out != ((es << 16) + ecx + eax)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h09;
+        #5
+        if (sib_out != ((es << 16) + ecx + ecx)) $display("SIB %X FAIL", sib_byte);
+
+        sib_byte = 8'h11;
+        #5
+        if (sib_out != ((es << 16) + ecx + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h19;
+        #5
+        if (sib_out != ((es << 16) + ecx + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h21;
+        #5
+        if (sib_out != ((es << 16) + ecx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h29;
+        #5
+        if (sib_out != ((es << 16) + ecx + ebp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h31;
+        #5
+        if (sib_out != ((es << 16) + ecx + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h39;
+        #5
+        if (sib_out != ((es << 16) + ecx + edi)) $display("SIB %X FAIL", sib_byte);
+
+        ecx = 32'h0000_00cc;
+
+        $display("Testing SS 00 with Base 2");
+        edx = 32'h0000_dd00;
+
+        sib_byte = 8'h02;
+        #5
+        if (sib_out != ((es << 16) + edx + eax)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h0A;
+        #5
+        if (sib_out != ((es << 16) + edx + ecx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h12;
+        #5
+        if (sib_out != ((es << 16) + edx + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h1A;
+        #5
+        if (sib_out != ((es << 16) + edx + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h22;
+        #5
+        if (sib_out != ((es << 16) + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h2A;
+        #5
+        if (sib_out != ((es << 16) + edx + ebp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h32;
+        #5
+        if (sib_out != ((es << 16) + edx + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h3A;
+        #5
+        if (sib_out != ((es << 16) + edx + edi)) $display("SIB %X FAIL", sib_byte);
+
+        edx = 32'h0000_00dd;
+
+        $display("Testing SS 00 with Base 3");
+        ebx = 32'h0000_bb00;
+
+        sib_byte = 8'h03;
+        #5
+        if (sib_out != ((es << 16) + ebx + eax)) $display("SIB %X FAIL", sib_byte);
+
+        sib_byte = 8'h0B;
+        #5
+        if (sib_out != ((es << 16) + ebx + ecx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h13;
+        #5
+        if (sib_out != ((es << 16) + ebx + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h1B;
+        #5
+        if (sib_out != ((es << 16) + ebx + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h23;
+        #5
+        if (sib_out != ((es << 16) + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h2B;
+        #5
+        if (sib_out != ((es << 16) + ebx + ebp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h33;
+        #5
+        if (sib_out != ((es << 16) + ebx + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h3B;
+        #5
+        if (sib_out != ((es << 16) + ebx + edi)) $display("SIB %X FAIL", sib_byte);
+
+        ebx = 32'h0000_00bb;
+
+        $display("Testing SS 00 with Base 4");
+        esp = 32'h0000_1100;
+
+        sib_byte = 8'h04;
+        #5
+        if (sib_out != ((ss << 16) + esp + eax)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h0C;
+        #5
+        if (sib_out != ((ss << 16) + esp + ecx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h14;
+        #5
+        if (sib_out != ((ss << 16) + esp + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h1C;
+        #5
+        if (sib_out != ((ss << 16) + esp + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h24;
+        #5
+        if (sib_out != ((ss << 16) + esp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h2C;
+        #5
+        if (sib_out != ((ss << 16) + esp + ebp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h34;
+        #5
+        if (sib_out != ((ss << 16) + esp + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h3C;
+        #5
+        if (sib_out != ((ss << 16) + esp + edi)) $display("SIB %X FAIL", sib_byte);
+
+        esp = 32'h0000_0011;
+
+        $display("*** SKIPPING BASE 5 TEST FOR NOW ***");
+        
+        $display("Testing SS 00 with Base 6");
+        esi = 32'h0000_3300;
+
+        sib_byte = 8'h06;
+        #5
+        if (sib_out != ((es << 16) + esi + eax)) $display("SIB %X FAIL", sib_byte);
+
+        sib_byte = 8'h0E;
+        #5
+        if (sib_out != ((es << 16) + esi + ecx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h16;
+        #5
+        if (sib_out != ((es << 16) + esi + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h1E;
+        #5
+        if (sib_out != ((es << 16) + esi + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h26;
+        #5
+        if (sib_out != ((es << 16) + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h2E;
+        #5
+        if (sib_out != ((es << 16) + esi + ebp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h36;
+        #5
+        if (sib_out != ((es << 16) + esi + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h3E;
+        #5
+        if (sib_out != ((es << 16) + esi + edi)) $display("SIB %X FAIL", sib_byte);
+
+        esi = 32'h0000_0033;
+
+        $display("Testing SS 00 with Base 7");
+        edi = 32'h0000_4400;
+
+        sib_byte = 8'h07;
+        #5
+        if (sib_out != ((es << 16) + edi + eax)) $display("SIB %X FAIL", sib_byte);
+
+        sib_byte = 8'h0F;
+        #5
+        if (sib_out != ((es << 16) + edi + ecx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h17;
+        #5
+        if (sib_out != ((es << 16) + edi + edx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h1F;
+        #5
+        if (sib_out != ((es << 16) + edi + ebx)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h27;
+        #5
+        if (sib_out != ((es << 16) + edi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h2F;
+        #5
+        if (sib_out != ((es << 16) + edi + ebp)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h37;
+        #5
+        if (sib_out != ((es << 16) + edi + esi)) $display("SIB %X FAIL", sib_byte);
+        
+        sib_byte = 8'h3F;
+        #5
+        if (sib_out != ((es << 16) + edi + edi)) $display("SIB %X FAIL", sib_byte);
+
+        edi = 32'h0000_0044;
+        
+        
+    
+        // TODO: test changing Segment registers
+        $display("***SEGMENT REGISTER TEST NOT YET IMPLEMENTED***");
 
 
 

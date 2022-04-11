@@ -367,7 +367,7 @@ module sib (
     base_inv2 (base_not[2], base[2]);
 
     wire is_ss; // toggled when base is esp, 100
-    and3$ ss_seg_sel (is_ss, base[0], base_not[1], base_not[2]);
+    and3$ ss_seg_sel (is_ss, base[2], base_not[1], base_not[0]);
 
     // 3 bit mux selecting if it is ss or seg_sel value
     wire [5:0] seg_sel_mux_in;
