@@ -30,6 +30,7 @@ for i in range(len(logic_string_array)):
     products = var_logic.replace('(', "")
     products = products.replace(')', "")
     products = products.replace(' ', '')
+    products = products.replace("\n",'');
     products = products.split('|')
     for j in products:
         product_terms = j.split('&')
