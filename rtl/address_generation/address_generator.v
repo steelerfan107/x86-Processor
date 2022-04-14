@@ -72,10 +72,11 @@ endmodule
 // Mod RM //
 // ------ //
 
-// Generates address based on modrm
-// TODO: Base needs segment register
+// Generates effective address based on modrm
 module mod_rm (
-    address,
+    value,
+
+    is_address,
     
     mod_rm_byte,
     sib_byte,
@@ -89,12 +90,32 @@ module mod_rm (
     esi,
     edi,
 
-    displacement
+    reg_0,
+    reg_1,
+    reg_2,
+    reg_3,
+    reg_4,
+    reg_5,
+    reg_6,
+    reg_7,
+
+    displacement,
+
+    seg_sel,
+
+    es,
+    cs,
+    ss,
+    ds,
+    fs,
+    gs
 
 
 );
 
-    output [31:0] address;
+    output [63:0] value;
+
+    output is_address;  // 1 if an address and needs mem read, 0 if its a reg value
     
     input [7:0] mod_rm_byte;
     input [7:0] sib_byte;
@@ -108,17 +129,215 @@ module mod_rm (
     input [31:0] esi;
     input [31:0] edi;
 
+    input [63:0] reg_0;
+    input [63:0] reg_1;
+    input [63:0] reg_2;
+    input [63:0] reg_3;
+    input [63:0] reg_4;
+    input [63:0] reg_5;
+    input [63:0] reg_6;
+    input [63:0] reg_7;
+
     input [31:0] displacement;
+
+    input [2:0] seg_sel;
+
+    input [15:0] es;
+    input [15:0] cs;
+    input [15:0] ss;
+    input [15:0] ds;
+    input [15:0] fs;
+    input [15:0] gs;
+
+    wire [1:0] mod = mod_rm_byte[7:6];
+    wire [2:0] reg_opcode = mod_rm_byte[5:3];
+    wire [2:0] rm = mod_rm_byte[2:0];
+
 
     wire [31:0] sib_out;
 
+    // sib value
+    sib sib_block (
+        sib_out,
+
+        sib_byte,
+
+        eax,
+        ecx,
+        edx,
+        ebx,
+        esp,
+        ebp,
+        esi,
+        edi,
+
+        seg_sel,
+
+        es,
+        cs,
+        ss,
+        ds,
+        fs,
+        gs
+    );
+
+    // displacements
+    wire [31:0] eax_disp;
+    wire [31:0] ecx_disp;
+    wire [31:0] edx_disp;
+    wire [31:0] ebx_disp;
+    // wire [31:0] esp_disp;
+    wire [31:0] ebp_disp;
+    wire [31:0] esi_disp;
+    wire [31:0] edi_disp;
+    wire [31:0] sib_disp;
+
+    // Assume displacement is passed in as either 8 bit or 32 bit correctly
+    address_generation_32_bit_adder 
+    eax_disp_adder (eax_disp, eax, displacement),
+    ecx_disp_adder (ecx_disp, ecx, displacement),
+    edx_disp_adder (edx_disp, edx, displacement),
+    ebx_disp_adder (ebx_disp, ebx, displacement),
+    // esp_disp_adder (esp_disp, esp, displacement),
+    ebp_disp_adder (ebp_disp, ebp, displacement),
+    esi_disp_adder (esi_disp, esi, displacement),
+    edi_disp_adder (edi_disp, edi, displacement),
+    sib_disp_adder (sib_disp, sib_out, displacement);
+    
+
     // mod 00
+    wire [31:0] mod_00_out;
+
+    mux #(.WIDTH(32), .INPUTS(8)) mod_00_mux (
+        {edi, esi, displacement, sib_out, ebx, edx, ecx, eax},
+        mod_00_out,
+        rm
+    );
+
+    // mod 01 and 10
+    wire [31:0] mod_disp_out;
+
+    mux #(.WIDTH(32), .INPUTS(8)) mod_01_mux (
+        {edi_disp, esi_disp, ebp_disp, sib_disp, ebx_disp, edx_disp, ecx_disp, eax_disp},
+        mod_disp_out,
+        rm
+    );
+
+    // mod 11
+    // can be 32 bit register, 16 bit regiter, 8 bit register, or 64 bit register
+    
+    wire [63:0] mod_11_out;
+    mux #(.WIDTH(64), .INPUTS(8)) mod_11_mux (
+        {reg_7, reg_6, reg_5, reg_4, reg_3, reg_2, reg_1, reg_0},
+        mod_11_out,
+        rm
+    );
+
+    // select output
+    wire [63:0] mod_mux_out;
+
+    mux #(.WIDTH(64), .INPUTS(4)) mod_mux (
+        {mod_11_out, {32'h0000_0000, mod_disp_out}, {32'h0000_0000, mod_disp_out}, {32'h0000_0000, mod_00_out}},
+        mod_mux_out,
+        mod
+    );
+    // add segment register but only if its mod 00, 01, 10 and its not rm 100
+    // needs_seg = (!mod0&!rm2) | (!mod1&!rm2) | (!mod0&rm1) | (!mod1&rm1) | (
+    // !mod0&rm0) | (!mod1&rm0);
+
+    wire need_seg;  // 1 if needs segment register; 0 if does not need segment register
+
+    wire mod0_not;
+    wire rm2_not;
+    wire and0;
+    wire mod1_not;
+    wire and1;
+    wire and2;
+    wire and3;
+    wire and4;
+    wire and5;
+    // wire or0;
+
+    // wire mod0 = mod[0];
+    // wire mod1 = mod[1];
+
+    inv1$ mod0_inv (.out(mod0_not), .in(mod[0]));
+    inv1$ rm2_inv (.out(rm2_not), .in(rm[2]));
+    inv1$ mod1_inv (.out(mod1_not), .in(mod[1]));
+
+    and2$ and_gate0(.out(and0), .in0(mod0_not), .in1(rm2_not));
+    and2$ and_gate1(.out(and1), .in0(mod1_not), .in1(rm2_not));
+    and2$ and_gate2(.out(and2), .in0(mod0_not), .in1(rm[1]));
+    and2$ and_gate3(.out(and3), .in0(mod1_not), .in1(rm[1]));
+    and2$ and_gate4(.out(and4), .in0(mod0_not), .in1(rm[0]));
+    and2$ and_gate5(.out(and5), .in0(mod1_not), .in1(rm[0]));
+
+    wire or_out_0, or_out_1;
+
+    or3$ 
+    or_gate0(.out(or_out_0), .in0(and0), .in1(and1), .in2(and2)),
+    or_gate1(.out(or_out_1), .in0(and3), .in1(and4), .in2(and5));
+
+    or2$ or_gate2(needs_seg, or_out_0, or_out_1);
+
+
+    // assign needs_seg = or0;
+
+    // mux that if 1, adds segment register to output
+
+    // have mux selecting desired segment
+    wire [15:0] seg_select_out;
+
+    mux #(.WIDTH(16), .INPUTS(8)) seg_select_mux (
+        {16'h0, 16'h0, gs, fs, ds, ss, cs, es},
+        seg_select_out,
+        seg_sel
+    );
+
+    // shift
+    wire [31:0] seg_shift;
+
+    segment_shifter shifter (
+        seg_shift,
+        seg_select_out
+    );
+
+    // add it to value
+    wire [31:0] address_plus_segment;
+    address_generation_32_bit_adder seg_adder (
+        address_plus_segment[31:0],
+        mod_mux_out[31:0],
+        seg_shift
+    );
+
+    // use mux to select the addition, or the regular value, 
+    mux #(.WIDTH(64), .INPUTS(2)) seg_or_no_seg (
+        {{32'h0000_0000, address_plus_segment}, mod_mux_out},
+        value,
+        needs_seg
+    );
+
+    // set is_address if its 00, 01, or 10
+    // wire mod[0]_not;
+    // wire mod[1]_not;
+    wire [1:0] mod_not;
+    wire or3;
+
+    inv1$ mod2_inv (.out(mod_not[0]), .in(mod[0]));
+    inv1$ mod3_inv (.out(mod_not[1]), .in(mod[1]));
+
+
+    or2$ or_gate3(.out(or3), .in0(mod_not[0]), .in1(mod_not[1]));
+
+    assign is_address = or3;
 
 endmodule
 
 // --- //
 // SIB //
 // --- //
+
+
 
 module sib (
     sib_out,
