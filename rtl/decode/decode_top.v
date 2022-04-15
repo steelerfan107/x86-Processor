@@ -29,19 +29,25 @@ module decode_top (
 
    // Pipestage Interface
    d_valid,
-   d_ready,		  
-   d_mmr,
-   d_rega,
-   d_regb,
+   d_ready,		       
+   d_size,
+   d_set_d_flag,
+   d_clear_d_flag,
+   d_op0,
+   d_op1,
+   d_op0_reg,
+   d_op1_reg,
+   d_modrm,
+   d_sib,
    d_imm,
    d_disp,
-   d_seg_ov,
-   d_sib,
-   d_op,
-   d_opsize,
-   d_alu,
-   d_repeat,
-   d_size_of_txn,
+   d_alu_op,
+   d_flag_0,
+   d_flag_1,
+   d_stack_op,
+   d_seg_override,
+   d_seg_override_valid,
+   d_pc,
    d_branch_taken	  		  
 		  
 );
@@ -71,20 +77,26 @@ module decode_top (
    input                f_branch_taken;
 
    // Pipestage Interface
-   output               d_valid;
-   input                d_ready;
-   output               d_mmr;
-   output [2:0] 	d_rega;
-   output [2:0] 	d_regb;
-   output [31:0] 	d_imm;
-   output [31:0] 	d_disp;
-   output [5:0] 	d_seg_ov; // One Hot {CS, SS, DS, ES, FS, GS}
-   output [7:0] 	d_sib;
-   output [3:0] 	d_op;
-   output               d_opsize;
-   output [5:0] 	d_alu;
-   output               d_repeat;
-   output [3:0]         d_size_of_txn;
+   output 		d_valid;   
+   input 		d_ready;	       
+   output [2:0]		d_size;   
+   output 		d_set_d_flag;  
+   output 		d_clear_d_flag;   
+   output [2:0]         d_op0;   
+   output [2:0]         d_op1;   
+   output [2:0]         d_op0_reg;   
+   output [2:0]         d_op1_reg;   
+   output [7:0]	        d_modrm;  
+   output [7:0]         d_sib;   
+   output [47:0]        d_imm;   
+   output [31:0]        d_disp;   
+   output [3:0]		d_alu_op;   
+   output [2:0]         d_flag_0;   
+   output [2:0]         d_flag_1;   
+   output [1:0]         d_stack_op;   
+   output [2:0]		d_seg_override;   
+   output 		d_seg_override_valid;
+   output [IADDRW-1:0]  d_pc;
    output               d_branch_taken;
 
    wire 		s0_valid;   
@@ -114,8 +126,36 @@ module decode_top (
    wire [1:0] 	        s0_prefix_bytes_r;   
    wire [IADDRW-1:0] 	s0_pc_r;   
    wire 		s0_branch_taken_r;
+   wire                 s0_size_override_r;
+   
+   localparam S0_PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 + 1 + 1;
 
-   localparam PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 +1;
+   // Stage 1 Pipe  
+   wire 		s1_valid;   
+   wire 		s1_ready;	       
+   wire [2:0]		s1_size;   
+   wire 		s1_set_d_flag;  
+   wire 		s1_clear_d_flag;   
+   wire [2:0]           s1_op0;   
+   wire [2:0]           s1_op1;   
+   wire [2:0]           s1_op0_reg;   
+   wire [2:0]           s1_op1_reg;   
+   wire [7:0]	        s1_modrm;  
+   wire [7:0]           s1_sib;   
+   wire [47:0]          s1_imm;   
+   wire [31:0]          s1_disp;   
+   wire [3:0]		s1_alu_op;   
+   wire [2:0]           s1_flag_0;   
+   wire [2:0]           s1_flag_1;   
+   wire [1:0]           s1_stack_op;   
+   wire [2:0]		s1_seg_override;   
+   wire 	        s1_seg_override_valid;
+   wire [IADDRW-1:0]    s1_pc;
+   wire                 s1_branch_taken;
+   
+   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3;   
+
+   // Stage 0 and Pipe
    
    decode_stage_0 #(.IADDRW(IADDRW)) ds0 (
        clk,
@@ -142,11 +182,12 @@ module decode_top (
        s0_prefix,
        s0_prefix_bytes,
        s0_pc,
-       s0_branch_taken					  
+       s0_branch_taken,
+       s0_size_override					  
    );
 
-   wire [PIPEWIDTH-1:0]		s0_data;
-   wire [PIPEWIDTH-1:0]		s0_data_r;
+   wire [S0_PIPEWIDTH-1:0]		s0_data;
+   wire [S0_PIPEWIDTH-1:0]		s0_data_r;
 
    assign s0_data = {   
       s0_displace_n_imm,   
@@ -159,7 +200,8 @@ module decode_top (
       s0_prefix,   
       s0_prefix_bytes,   
       s0_pc,
-      s0_branch_taken		     
+      s0_branch_taken,
+      s0_size_override	     
    };
    
    assign {   
@@ -173,30 +215,101 @@ module decode_top (
       s0_prefix_r,   
       s0_prefix_bytes_r,   
       s0_pc_r,
-      s0_branch_taken_r 
+      s0_branch_taken_r,
+      s0_size_override_r
    } = s0_data_r;     
    
-   pipestage #(.WIDTH(PIPEWIDTH)) ( clk, reset, s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
+   pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, reset, s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
    
+   // Stage 0 and Pipe
+   
+   decode_stage_1 #(.IADDRW(IADDRW)) ds1 (
+       clk,
+       reset,
+       flush,
+       handle_int,
+       halt,
+       s0_valid,
+       s0_ready,
+       s0_displace_n_imm,
+       s0_addressing,
+       s0_addressing_bytes,
+       s0_displacement_bytes,
+       s0_opcode,
+       s0_opcode_bytes,
+       s0_immediete_bytes,
+       s0_prefix,
+       s0_prefix_bytes,
+       s0_pc,
+       s0_branch_taken,
+       s0_size_override,
+       s1_ready,		       
+       s1_size,
+       s1_set_d_flag,
+       s1_clear_d_flag,
+       s1_op0,
+       s1_op1,
+       s1_op0_reg,
+       s1_op1_reg,
+       s1_modrm,
+       s1_sib,
+       s1_imm,
+       s1_disp,
+       s1_alu_op,
+       s1_flag_0,
+       s1_flag_1,
+       s1_stack_op,
+       s1_seg_override,
+       s1_seg_override_valid,
+       s1_pc,
+       s1_branch_taken					  
+   );
 
-   assign halt = 'h0;
-   assign ras_address = 'h0;
-   assign ras_push = 'h0;
-   assign f_ready = 'h0;
-   assign f_bytes_read = 'h0;
-   assign d_valid = 'h0;
-   assign d_mmr = 'h0;
-   assign d_rega = 'h0;
-   assign d_regb = 'h0;
-   assign d_imm = 'h0;
-   assign d_disp = 'h0;
-   assign d_seg_ov = 'h0;
-   assign d_sib = 'h0;
-   assign d_op = 'h0;
-   assign d_opsize = 'h0;
-   assign d_alu = 'h0;
-   assign d_repeat = 'h0;
-   assign d_size_of_txn = 'h0;
-   assign d_branch_taken = 'h0; 
+   wire [S1_PIPEWIDTH-1:0]		s1_data;
+   wire [S1_PIPEWIDTH-1:0]		s1_data_r;
+
+   assign s1_data = { 
+       s1_set_d_flag,
+       s1_clear_d_flag,
+       s1_op0,
+       s1_op1,
+       s1_op0_reg,
+       s1_op1_reg,
+       s1_modrm,
+       s1_sib,
+       s1_imm,
+       s1_disp,
+       s1_alu_op,
+       s1_flag_0,
+       s1_flag_1,
+       s1_stack_op,
+       s1_seg_override,
+       s1_seg_override_valid,
+       s1_pc,
+       s1_branch_taken      
+   };
+   
+   assign {  
+       d_set_d_flag,
+       d_clear_d_flag,
+       d_op0,
+       d_op1,
+       d_op0_reg,
+       d_op1_reg,
+       d_modrm,
+       d_sib,
+       d_imm,
+       d_disp,
+       d_alu_op,
+       d_flag_0,
+       d_flag_1,
+       d_stack_op,
+       d_seg_override,
+       d_seg_override_valid,
+       d_pc,
+       d_branch_taken
+   } = s1_data_r;     
+   
+   pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, reset, s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);
 
 endmodule  

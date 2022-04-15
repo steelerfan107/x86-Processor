@@ -27,7 +27,8 @@ module decode_stage_1 (
    s0_prefix_bytes,
    s0_pc,
    s0_branch_taken,
-
+   s0_size_override,
+		       
    // Stage 1 Pipe
    s1_valid,
    s1_ready,		       
@@ -40,7 +41,7 @@ module decode_stage_1 (
    s1_op1_reg,
    s1_modrm,
    s1_sib,
-   s1_imm,'
+   s1_imm,
    s1_disp,
    s1_alu_op,
    s1_flag_0,
@@ -78,6 +79,7 @@ module decode_stage_1 (
    input[1:0]          s0_prefix_bytes;
    input [IADDRW-1:0]  s0_pc;
    input               s0_branch_taken;
+   input               s0_size_override;
 
    // Stage 1 Pipe  
    output 		s1_valid;   
@@ -162,8 +164,8 @@ module decode_stage_1 (
         pre_seg_override_valid,
         pre_repeat,
         pre_size_override			
-   )
-
+   );
+   
    assign dec_seg_override = pre_seg_override;
    assign dec_seg_override_valid = pre_seg_override_valid;   
 
@@ -171,7 +173,7 @@ module decode_stage_1 (
    op_and_rm_decode op_and_rm_decode(
       	mask_op,
         dec_modrm,
-        pre_size_override,
+        s0_size_override,
         rom_control,
         dec_size,  
         dec_set_d_flag,
@@ -186,33 +188,40 @@ module decode_stage_1 (
         dec_flag_0,  
         dec_flag_1,  
         dec_stack_op        			     
-   )
+   );
+ 
    
    // Output Muxes
-   mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_ready,s1_ready},s0_ready, rom_in_control)     
-   mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},s1_valid, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  size_mux({rom_size,dec_size},s1_size, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(1))  clear_d_flag_mux({rom_clear_d_flag,dec_clear_d_flag},s1_clear_d_flag, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  op0_mux({rom_op0,dec_op0},s1_op0, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  op1_mux({rom_op1,dec_op1},s1_op1, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  op0_reg_mux({rom_op0_reg,dec_op0_reg},s1_op0_reg, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  op1_reg_mux({rom_op1_reg,dec_op1_reg},s1_op1_reg, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({rom_modrm,dec_modrm},s1_modrm, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(8))  sib_mux({rom_sib,dec_sib},s1_sib, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(32)) imm_mux({rom_imm,dec_imm},s1_imm, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(32)) disp_mux({rom_disp,dec_disp},s1_disp, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(4))  alu_op_mux({rom_alu_op,dec_alu_op},s1_alu_op, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  flag_0_mux({rom_flag_0,dec_flag_0},s1_flag_0, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({rom_seg_override,dec_seg_override},s1_seg_override, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({rom_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control)
-   mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control)
+   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,s1_ready},s0_ready, rom_in_control);     
+   mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},s1_valid, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  size_mux({rom_size,dec_size},s1_size, rom_in_control);  
+   mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control);  
+   mux #(.INPUTS(2),.WIDTH(1))  clear_d_flag_mux({rom_clear_d_flag,dec_clear_d_flag},s1_clear_d_flag, rom_in_control);  
+   mux #(.INPUTS(2),.WIDTH(3))  op0_mux({rom_op0,dec_op0},s1_op0, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  op1_mux({rom_op1,dec_op1},s1_op1, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  op0_reg_mux({rom_op0_reg,dec_op0_reg},s1_op0_reg, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  op1_reg_mux({rom_op1_reg,dec_op1_reg},s1_op1_reg, rom_in_control);  
+   mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({rom_modrm,dec_modrm},s1_modrm, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(8))  sib_mux({rom_sib,dec_sib},s1_sib, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(32)) imm_mux({rom_imm,dec_imm},s1_imm, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(32)) disp_mux({rom_disp,dec_disp},s1_disp, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(4))  alu_op_mux({rom_alu_op,dec_alu_op},s1_alu_op, rom_in_control);  
+   mux #(.INPUTS(2),.WIDTH(3))  flag_0_mux({rom_flag_0,dec_flag_0},s1_flag_0, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({rom_seg_override,dec_seg_override},s1_seg_override, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({rom_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 
    // ROM Block
-   rom_block rom_block (
+   rom_block #(.IADDRW(IADDRW)) rom_block (
+      clk,
+      reset,
+      s0_ready,
+      s0_valid,
+      s1_valid,
+      s1_ready,
       rom_valid,   
       rom_ready,	       
       rom_size,   

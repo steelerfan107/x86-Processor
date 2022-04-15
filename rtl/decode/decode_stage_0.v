@@ -35,7 +35,8 @@ module decode_stage_0 (
    s0_prefix,
    s0_prefix_bytes,
    s0_pc,
-   s0_branch_taken
+   s0_branch_taken,
+   s0_size_override		       
 );
 
    // Instruction Memory Interface Parameters
@@ -73,6 +74,7 @@ module decode_stage_0 (
    output [1:0] 	s0_prefix_bytes;   
    output [IADDRW-1:0] 	s0_pc;   
    output 		s0_branch_taken;
+   output               s0_size_override;
 
    wire [15:0]		opcode_aligned;
    wire [15:0]	        addressing_aligned;
@@ -100,6 +102,8 @@ module decode_stage_0 (
 
    // Prefix Processing
    assign s0_prefix = f_instruction[23:0];
+   assign s0_size_override = size_prefix;
+   
    prefix_size_detect psd (f_instruction[23:0], s0_prefix_bytes, size_prefix);
 
    // Adds - Can make these faster by doing one hot adds. or lookahead carry ads. Probable Long Path

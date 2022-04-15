@@ -1,6 +1,6 @@
-module (
+module op_and_rm_decode (
      	mask_op,
-        dec_modrm,
+        mask_modrm,
         pre_size_override,
         rom_control,
         dec_size,  
@@ -16,10 +16,10 @@ module (
         dec_flag_0,  
         dec_flag_1,  
         dec_stack_op   	
-)
+);  
 
    input    [15:0]       mask_op;  
-   input    [7:0]        dec_modrm; 
+   input    [7:0]        mask_modrm; 
    input 		 pre_size_override;   
    output   [2:0] 	 rom_control;
    output   [2:0]	 dec_size;   
@@ -30,9 +30,7 @@ module (
    output   [2:0]        dec_op0_reg;   
    output   [2:0]        dec_op1_reg;   
    output   [7:0]	 dec_modrm;  
-   output   [7:0]        dec_sib;   
-   output   [31:0]       dec_imm;   
-   output   [31:0]       dec_disp;   
+   output   [7:0]        dec_sib;     
    output   [3:0]        dec_alu_op;   
    output   [2:0]        dec_flag_0;   
    output   [2:0]        dec_flag_1;   
@@ -44,18 +42,18 @@ module (
    wire [2:0] 		 reg0_cloud;
    wire [2:0] 		 reg1_cloud;
    
-   mux #(.WIDTH(3), .INPUTS(4)) ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg0_cloud},dec_op0_reg,reg0_sel);
-   mux #(.WIDTH(3), .INPUTS(4)) ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg1_cloud},dec_op1_reg,reg0_sel);   
+   mux #(.WIDTH(3), .INPUTS(4)) mr0 ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg0_cloud},dec_op0_reg,reg0_sel);
+   mux #(.WIDTH(3), .INPUTS(4)) mr1 ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg1_cloud},dec_op1_reg,reg0_sel);   
    
-   opcode_modrm_control_cloud opcode_modrm_control_cloud(
-     .modrm7(dec_modrm[7]), 
-     .modrm6(dec_modrm[6]), 
-     .modrm5(dec_modrm[5]), 
-     .modrm4(dec_modrm[4]), 
-     .modrm3(dec_modrm[3]), 
-     .modrm2(dec_modrm[2]), 
-     .modrm1(dec_modrm[1]), 
-     .modrm0(dec_modrm[0]), 
+   opcode_modrm_control_cloud opcode_modrm_control_cloud (
+     .modrm7(mask_modrm[7]), 
+     .modrm6(mask_modrm[6]), 
+     .modrm5(mask_modrm[5]), 
+     .modrm4(mask_modrm[4]), 
+     .modrm3(mask_modrm[3]), 
+     .modrm2(mask_modrm[2]), 
+     .modrm1(mask_modrm[1]), 
+     .modrm0(mask_modrm[0]), 
      .op15(mask_op[15]), 
      .op14(mask_op[14]), 
      .op13(mask_op[13]), 

@@ -181,6 +181,96 @@ module  and8$(out, in0, in1, in2, in3, in4, in5, in6, in7);
 endmodule
 `endcelldefine 
 
+   `celldefine
+module  and9$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8;
+	output out;
+
+       logic_tree #(.WIDTH(9)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8},out);   
+endmodule
+`endcelldefine 
+
+`celldefine
+module  and10$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9;
+	output out;
+
+       logic_tree #(.WIDTH(10)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9},out);   
+endmodule
+`endcelldefine
+
+`celldefine
+module  and11$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10;
+	output out;
+
+       logic_tree #(.WIDTH(11)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10},out);   
+endmodule
+`endcelldefine
+  
+`celldefine
+module  and17$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16;
+	output out;
+
+       logic_tree #(.WIDTH(17)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16},out);   
+endmodule
+`endcelldefine
+  
+`celldefine
+module  and18$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17;
+	output out;
+
+       logic_tree #(.WIDTH(18)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17},out);   
+endmodule
+`endcelldefine
+
+`celldefine
+module  and12$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11;
+	output out;
+
+       logic_tree #(.WIDTH(12)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11},out);   
+endmodule
+`endcelldefine
+
+`celldefine
+module  and13$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12;
+	output out;
+
+       logic_tree #(.WIDTH(13)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12},out);   
+endmodule
+`endcelldefine
+  
+`celldefine
+module  and19$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18;
+	output out;
+
+       logic_tree #(.WIDTH(19)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18},out);   
+endmodule
+`endcelldefine  
+
+`celldefine
+module  and20$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19;
+	output out;
+
+       logic_tree #(.WIDTH(20)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19},out);   
+endmodule
+`endcelldefine
+  
+`celldefine
+module  and24$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23);
+	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23;
+	output out;
+
+       logic_tree #(.WIDTH(24)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23},out);   
+endmodule
+`endcelldefine
+  
 `celldefine
 module  and23$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22);
 	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22;
@@ -267,43 +357,304 @@ module  or2$(out, in0, in1);
 	endspecify
 endmodule
 `endcelldefine
- 
-  `celldefine
-module  or25$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25);
-	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25;
-	output out;
 
-       logic_tree #(.WIDTH(25),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25},out);   
-endmodule
-`endcelldefine  
+`celldefine
+module or3$(out,in0, in1, in2);
+ input in0, in1, in2;
+ output out;
 
-
-  `celldefine
-module  or13$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12);
-	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12;
-	output out;
-
-       logic_tree #(.WIDTH(13),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12},out);   
-endmodule
-`endcelldefine 
-
-     `celldefine
-module  or12$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11);
-	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11;
-	output out;
-
-       logic_tree #(.WIDTH(12),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11},out);   
+ logic_tree #(.WIDTH(3),.OPERATION(1)) lt ({in0, in1, in2}, out);
 endmodule
 `endcelldefine
+`celldefine
+module or4$(out,in0, in1, in2, in3);
+ input in0, in1, in2, in3;
+ output out;
 
-  `celldefine
-module  or11$(out, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10);
-	input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10;
-	output out;
-
-       logic_tree #(.WIDTH(11),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10},out);   
+ logic_tree #(.WIDTH(4),.OPERATION(1)) lt ({in0, in1, in2, in3}, out);
 endmodule
-`endcelldefine    
+`endcelldefine
+`celldefine
+module or5$(out,in0, in1, in2, in3, in4);
+ input in0, in1, in2, in3, in4;
+ output out;
+
+ logic_tree #(.WIDTH(5),.OPERATION(1)) lt ({in0, in1, in2, in3, in4}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or6$(out,in0, in1, in2, in3, in4, in5);
+ input in0, in1, in2, in3, in4, in5;
+ output out;
+
+ logic_tree #(.WIDTH(6),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or7$(out,in0, in1, in2, in3, in4, in5, in6);
+ input in0, in1, in2, in3, in4, in5, in6;
+ output out;
+
+ logic_tree #(.WIDTH(7),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or8$(out,in0, in1, in2, in3, in4, in5, in6, in7);
+ input in0, in1, in2, in3, in4, in5, in6, in7;
+ output out;
+
+ logic_tree #(.WIDTH(8),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or9$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8;
+ output out;
+
+ logic_tree #(.WIDTH(9),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or10$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9;
+ output out;
+
+ logic_tree #(.WIDTH(10),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or11$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10;
+ output out;
+
+ logic_tree #(.WIDTH(11),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or12$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11;
+ output out;
+
+ logic_tree #(.WIDTH(12),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or13$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12;
+ output out;
+
+ logic_tree #(.WIDTH(13),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or14$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13;
+ output out;
+
+ logic_tree #(.WIDTH(14),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or15$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14;
+ output out;
+
+ logic_tree #(.WIDTH(15),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or16$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15;
+ output out;
+
+ logic_tree #(.WIDTH(16),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or17$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16;
+ output out;
+
+ logic_tree #(.WIDTH(17),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or18$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17;
+ output out;
+
+ logic_tree #(.WIDTH(18),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or19$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18;
+ output out;
+
+ logic_tree #(.WIDTH(19),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or20$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19;
+ output out;
+
+ logic_tree #(.WIDTH(20),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or21$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20;
+ output out;
+
+ logic_tree #(.WIDTH(21),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or22$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21;
+ output out;
+
+ logic_tree #(.WIDTH(22),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or23$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22;
+ output out;
+
+ logic_tree #(.WIDTH(23),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or24$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23;
+ output out;
+
+ logic_tree #(.WIDTH(24),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or25$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24;
+ output out;
+
+ logic_tree #(.WIDTH(25),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or26$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25;
+ output out;
+
+ logic_tree #(.WIDTH(26),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or27$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26;
+ output out;
+
+ logic_tree #(.WIDTH(27),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or28$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27;
+ output out;
+
+ logic_tree #(.WIDTH(28),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or29$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28;
+ output out;
+
+ logic_tree #(.WIDTH(29),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or30$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29;
+ output out;
+
+ logic_tree #(.WIDTH(30),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or31$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30;
+ output out;
+
+ logic_tree #(.WIDTH(31),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or32$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31;
+ output out;
+
+ logic_tree #(.WIDTH(32),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or33$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32;
+ output out;
+
+ logic_tree #(.WIDTH(33),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or34$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33;
+ output out;
+
+ logic_tree #(.WIDTH(34),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or35$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34;
+ output out;
+
+ logic_tree #(.WIDTH(35),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or36$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35;
+ output out;
+
+ logic_tree #(.WIDTH(36),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or37$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36;
+ output out;
+
+ logic_tree #(.WIDTH(37),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or38$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36, in37);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36, in37;
+ output out;
+
+ logic_tree #(.WIDTH(38),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36, in37}, out);
+endmodule
+`endcelldefine
+`celldefine
+module or39$(out,in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36, in37, in38);
+ input in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36, in37, in38;
+ output out;
+
+ logic_tree #(.WIDTH(39),.OPERATION(1)) lt ({in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, in17, in18, in19, in20, in21, in22, in23, in24, in25, in26, in27, in28, in29, in30, in31, in32, in33, in34, in35, in36, in37, in38}, out);
+endmodule
+`endcelldefine  
+    
 //-----------------------------------------------------------
 `celldefine
 module  or3$(out, in0, in1, in2);
