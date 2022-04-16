@@ -1,0 +1,12 @@
+.i 3
+.o 1
+.ilb op0_2 op0_1, op0_0
+.ob op0_is_address
+000 0
+001 0
+010 0 #specified above.
+011 0
+100 0
+101 0
+110 1
+111 0

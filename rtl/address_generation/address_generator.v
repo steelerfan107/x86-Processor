@@ -109,8 +109,6 @@ module mod_rm (
     ds,
     fs,
     gs
-
-
 );
 
     output [63:0] value;

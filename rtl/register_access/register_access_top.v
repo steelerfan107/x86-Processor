@@ -15,36 +15,70 @@ module register_access_top (
     // Decode Interface
     d_valid,
     d_ready,
-    d_mmr,
-    d_rega,
-    d_regb,
+    d_size,
+    d_set_d_flag,
+    d_clear_d_flag,
+    d_op0,
+    d_op1,
+    d_op0_reg,
+    d_op1_reg,
+    d_modrm,
+    d_sib,
     d_imm,
     d_disp,
-    d_seg_ov,
-    d_sib,
-    d_op,
-    d_opsize,
-    d_alu,
-    d_repeat,
-    d_size_of_txn,
+    d_alu_op,
+    d_flag_0,
+    d_flag_1,
+    d_stack_op,
+    d_seg_override,
+    d_seg_override_valid,
+    d_pc,
     d_branch_taken
 
-    // Pipestage Interface
+    // Address Generation Inferface
     r_valid,
     r_ready,
-    r_mmr,
-    r_reg_a_value,
-    r_reg_b_value,
-    r_sib_index,
+    r_size,
+    r_set_d_flag,
+    r_clear_d_flag,
+    r_op0,
+    r_op1,
+    r_op0_reg,
+    r_op1_reg,
+    r_modrm,
     r_sib,
+    r_imm,
     r_disp,
-    r_mem_seg,
-    r_stack_ptr,
-    r_op,
-    r_opsize,
-    r_size_of_txn,
+    r_alu_op,
+    r_flag_0,
+    r_flag_1,
+    r_stack_op,
+    r_seg_override,
+    r_seg_override_valid,
+    r_eax,
+    r_ecx,
+    r_edx,
+    r_ebx,
+    r_esp,
+    r_ebp,
+    r_esi,
+    r_edi,
+    r_cs,
+    r_ds,
+    r_es,
+    r_fs,
+    r_gs,
+    r_ss,
+    r_mm0,
+    r_mm1,
+    r_mm2,
+    r_mm3,
+    r_mm4,
+    r_mm5,
+    r_mm6,
+    r_mm7,
+    r_pc,
     r_branch_taken
-
 );
 
     // Clock Interface
@@ -55,37 +89,77 @@ module register_access_top (
     input flush;
 
     // Decode Interface
-    input               d_valid;
-    output                d_ready;
-    input               d_mmr;
-    input [2:0] 	d_rega;
-    input [2:0] 	d_regb;
-    input [31:0] 	d_imm;
-    input [31:0] 	d_disp;
-    input [5:0] 	d_seg_ov; // One Hot {CS, SS, DS, ES, FS, GS}
-    input [7:0] 	d_sib;
-    input [3:0] 	d_op;
-    input               d_opsize;
-    input [5:0] 	d_alu;
-    input               d_repeat;
-    input [3:0]         d_size_of_txn;
-    input               d_branch_taken;
+    input d_valid;
+    output d_ready;
+    input [2:0] d_size;
+    input d_set_d_flag;
+    input d_clear_d_flag;
+    input [2:0] d_op0;
+    input [2:0] d_op1;
+    input [2:0] d_op0_reg;
+    input [2:0] d_op1_reg;
+    input [7:0] d_modrm;
+    input [7:0] d_sib;
+    input [47:0] d_imm;
+    input [31:0] d_disp;
+    input [3:0] d_alu_op;
+    input [2:0] d_flag_0;
+    input [2:0] d_flag_1;
+    input [1:0] d_stack_op;
+    input [2:0] d_seg_override;
+    input d_seg_override_valid;
+    input [31:0] d_pc;
+    input d_branch_taken;
 
-    // Pipestage Interface
+    // Address Generation Inferface
     output r_valid;
     input r_ready;
-    output r_mmr;
-    output [63:0] r_reg_a_value;
-    output [63:0] r_reg_b_value;
-    output [31:0] r_sib_index;
+    output [2:0] r_size;
+    output r_set_d_flag;
+    output r_clear_d_flag;
+    output [2:0] r_op0;
+    output [2:0] r_op1;
+    output [2:0] r_op0_reg;
+    output [2:0] r_op1_reg;
+    output [7:0] r_modrm;
     output [7:0] r_sib;
+    output [47:0] r_imm;
     output [31:0] r_disp;
-    output [15:0] r_mem_seg;
-    output [31:0] r_stack_ptr;
-    output [3:0] r_op;
-    output r_opsize;
-    output [5:0] r_alu;
-    output r_size_of_txn;
+    output [3:0] r_alu_op;
+    output [2:0] r_flag_0;
+    output [2:0] r_flag_1;
+    output [1:0] r_stack_op;
+    output [2:0] r_seg_override;
+    output r_seg_override_valid;
+    output [31:0] r_eax;
+    output [31:0] r_ecx;
+    output [31:0] r_edx;
+    output [31:0] r_ebx;
+    output [31:0] r_esp;
+    output [31:0] r_ebp;
+    output [31:0] r_esi;
+    output [31:0] r_edi;
+    output [15:0] r_cs;
+    output [15:0] r_ds;
+    output [15:0] r_es;
+    output [15:0] r_fs;
+    output [15:0] r_gs;
+    output [15:0] r_ss;
+    output [63:0] r_mm0;
+    output [63:0] r_mm1;
+    output [63:0] r_mm2;
+    output [63:0] r_mm3;
+    output [63:0] r_mm4;
+    output [63:0] r_mm5;
+    output [63:0] r_mm6;
+    output [63:0] r_mm7;
+    output [31:0] r_pc;
     output r_branch_taken;
+
+    // ------ //
+    // Stalls //
+    // ------ //
+    
+    // Read after write for all registers
 
 endmodule
