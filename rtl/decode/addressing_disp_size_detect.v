@@ -8,6 +8,8 @@ module addressing_disp_size_detect (
 
    wire  disp1, disp0;
 
+   assign addressing = addressing_aligned;
+
    mux #(.WIDTH(4), .INPUTS(4)) disp_size_mux ({4'd4, 4'd4, 4'd1, 4'd0}, displacement_bytes, {disp1, disp0});
    
    mux #(.WIDTH(2), .INPUTS(4)) addr_size_mux ({2'd2, 2'd2, 2'd1, 2'd0}, addressing_bytes, {sib_byte, have_modrm});

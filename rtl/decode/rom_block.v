@@ -50,7 +50,7 @@ module rom_block (
 
    parameter IADDRW = 64;
    
-   localparam ROM_WIDTH = 130;
+   localparam ROM_WIDTH = 129;
 
    input                  clk;
    input                  reset;
@@ -103,7 +103,9 @@ module rom_block (
    or2$ ric (rom_in_control, state, rom_control_or);
 
    // State Machine
+   wire state_not;
    mux #(.WIDTH(1),.INPUTS(2)) ns_mux ({in_accept,rom_control_or}, next_state, state);
+   register  #(.WIDTH(1)) state_reg (clk, reset, next_state, state, state_not, 1'b1);
 
    // Micro Count
    slow_addr #(.WIDTH(5)) sac (5'd1, micro_count, micro_count_next, nc0);
@@ -111,25 +113,25 @@ module rom_block (
 
    // Control Select
    mux #(.WIDTH(5),.INPUTS(8)) cs_mux ( {
-                                   PROGRAM0_7,
-                                   PROGRAM0_6,
-                                   PROGRAM0_5,
-                                   PROGRAM0_4,
-                                   PROGRAM0_3,
-                                   PROGRAM0_2,
-                                   PROGRAM0_1,
-                                   PROGRAM0_0
+                                   PROGRAM7_LENGTH,
+                                   PROGRAM6_LENGTH,
+                                   PROGRAM5_LENGTH,
+                                   PROGRAM4_LENGTH,
+                                   PROGRAM3_LENGTH,
+                                   PROGRAM2_LENGTH,
+                                   PROGRAM1_LENGTH,
+                                   PROGRAM0_LENGTH
                                   }, micro_length, rom_control);
    
    mux #(.WIDTH(5),.INPUTS(8)) mo_mux ( {
-                                   PROGRAM0_OFFSET7,
-                                   PROGRAM0_OFFSET6,
-                                   PROGRAM0_OFFSET5,
-                                   PROGRAM0_OFFSET4,
-                                   PROGRAM0_OFFSET3,
-                                   PROGRAM0_OFFSET2,
-                                   PROGRAM0_OFFSET1,
-                                   PROGRAM0_OFFSET0
+                                   PROGRAM7_OFFSET,
+                                   PROGRAM6_OFFSET,
+                                   PROGRAM5_OFFSET,
+                                   PROGRAM4_OFFSET,
+                                   PROGRAM3_OFFSET,
+                                   PROGRAM2_OFFSET,
+                                   PROGRAM1_OFFSET,
+                                   PROGRAM0_OFFSET
                                   },
                                   micro_offset, rom_control);
 
@@ -145,8 +147,8 @@ module rom_block (
    rom64b32w$ b2 (micro_address, 1'b1, rom_data[191:128]);
       
    // Assign Outputs from ROM Data
+   assign rom_valid = 1'b1;
    assign {
-              rom_valid,  	       
               rom_size,   
               rom_set_d_flag,  
               rom_clear_d_flag,   

@@ -35,7 +35,6 @@ module mux (
 
 	       mux2$ mux(out[i],l[i],u[i],select[2]);	       
 	    end
-      end    	 	 
       end else if (INPUTS == 32) begin
             wire [WIDTH-1:0] lll, llu,lul,luu,ull,ulu,uul,uuu,u,l;
 	 

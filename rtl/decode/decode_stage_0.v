@@ -90,15 +90,15 @@ module decode_stage_0 (
    wire 		nc0, nc1;
 
    // Allign Displacement and Immediete
-   byte_shifter_16B  disp_n_imm_shift ({16'b0,f_instruction[119:8]}, poa_bytes, s0_displace_n_imm);
+   byte_shifter_16B  disp_n_imm_shift ({16'b0,f_instruction[119:8]}, s0_displace_n_imm , poa_bytes);
 
    // Addressing Processing
    addressing_disp_size_detect asd (addressing_aligned, s0_addressing, s0_addressing_bytes, s0_displacement_bytes , have_modrm);
-   byte_shifter_8B             addressing_shift ({16'b0,f_instruction[55:8]}, po_bytes, addressing_aligned);
+   byte_shifter_8B             addressing_shift ({16'b0,f_instruction[55:8]}, addressing_aligned , po_bytes);
 
    // Opcode Processing
    opcode_imm_size_detect osd              (opcode_aligned[15:0], s0_opcode, s0_opcode_bytes, s0_immediete_bytes, size_prefix, have_modrm);
-   byte_shifter_8B        opcode_shifter   ({24'b0,f_instruction[39:0]}, s0_prefix_bytes, opcode_aligned);
+   byte_shifter_8B        opcode_shifter   ({24'b0,f_instruction[39:0]}, opcode_aligned, s0_prefix_bytes);
 
    // Prefix Processing
    assign s0_prefix = f_instruction[23:0];

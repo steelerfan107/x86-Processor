@@ -134,8 +134,8 @@ or12$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(a
 or4$ or_gate1(.out(or1), .in0(and12), .in1(and13), .in2(and14), .in3(and15));
 or11$ or_gate2(.out(or2), .in0(and16), .in1(and17), .in2(and18), .in3(and19), .in4(and20), .in5(and21), .in6(and22), .in7(and23), .in8(and24), .in9(and25), .in10(and26));
 
-assign b1 = or0;
-assign b2 = or1;
+assign s1 = or0;
+assign s0 = or1;
 assign size_prefix = or2;
    
 

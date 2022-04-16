@@ -190,7 +190,8 @@ module decode_stage_1 (
         dec_stack_op        			     
    );
  
-   
+   assign dec_valid = s0_valid;   
+
    // Output Muxes
    mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,s1_ready},s0_ready, rom_in_control);     
    mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},s1_valid, rom_in_control);   
