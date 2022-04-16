@@ -197,6 +197,52 @@ module address_generation_top (
         r_mm7
     );
 
+    // ------- //
+    // OP1 Mux //
+    // ------- //
+    op1_generator op1_generator0 (
+    a_op1,
+    a_op1_is_address,
+
+    r_size,
+
+    r_op1,
+    r_op1_reg,
+    
+    r_modrm,
+    r_sib,
+    r_imm,
+    r_disp,
+    r_seg_override,
+    r_seg_override_valid,
+
+    r_eax,
+    r_ecx,
+    r_edx,
+    r_ebx,
+    r_esp,
+    r_ebp,
+    r_esi,
+    r_edi,
+
+    r_cs,
+    r_ds,
+    r_es,
+    r_fs,
+    r_gs,
+    r_ss,
+
+    r_mm0,
+    r_mm1,
+    r_mm2,
+    r_mm3,
+    r_mm4,
+    r_mm5,
+    r_mm6,
+    r_mm7
+
+);
+
 
 endmodule
 
@@ -436,8 +482,87 @@ module op0_generator (
 endmodule
 
 module op1_generator (
+    a_op1,
+    a_op1_is_address,
+
+    r_size,
+
+    r_op1,
+    r_op1_reg,
+    
+    r_modrm,
+    r_sib,
+    r_imm,
+    r_disp,
+    r_seg_override,
+    r_seg_override_valid,
+
+    r_eax,
+    r_ecx,
+    r_edx,
+    r_ebx,
+    r_esp,
+    r_ebp,
+    r_esi,
+    r_edi,
+
+    r_cs,
+    r_ds,
+    r_es,
+    r_fs,
+    r_gs,
+    r_ss,
+
+    r_mm0,
+    r_mm1,
+    r_mm2,
+    r_mm3,
+    r_mm4,
+    r_mm5,
+    r_mm6,
+    r_mm7
 
 );
+
+    output [63:0] a_op1;
+    output a_op1_is_address;
+
+    input [2:0] r_size;
+
+    input [2:0] r_op1;
+    input [2:0] r_op1_reg;
+
+    input [7:0] r_modrm;
+    input [7:0] r_sib;
+    input [47:0] r_imm;
+    input [31:0] r_disp;
+    input [2:0] r_seg_override;
+    input r_seg_override_valid;
+
+    input [31:0] r_eax;
+    input [31:0] r_ecx;
+    input [31:0] r_edx;
+    input [31:0] r_ebx;
+    input [31:0] r_esp;
+    input [31:0] r_ebp;
+    input [31:0] r_esi;
+    input [31:0] r_edi;
+
+    input [15:0] r_cs;
+    input [15:0] r_ds;
+    input [15:0] r_es;
+    input [15:0] r_fs;
+    input [15:0] r_gs;
+    input [15:0] r_ss;
+
+    input [63:0] r_mm0;
+    input [63:0] r_mm1;
+    input [63:0] r_mm2;
+    input [63:0] r_mm3;
+    input [63:0] r_mm4;
+    input [63:0] r_mm5;
+    input [63:0] r_mm6;
+    input [63:0] r_mm7;
 
     // ------- //
     // OP1 Mux //
@@ -452,21 +577,163 @@ module op1_generator (
     // "memory"      : "6"
 
     // register
+    // select register
+    wire [63:0] reg_file_0;
+    wire [63:0] reg_file_1;
+    wire [63:0] reg_file_2;
+    wire [63:0] reg_file_3;
+    wire [63:0] reg_file_4;
+    wire [63:0] reg_file_5;
+    wire [63:0] reg_file_6;
+    wire [63:0] reg_file_7;
+
+   // set the register size input for modr/m since it can be 8, 16, 32, or 64 bit
+    reg_size_selector reg_file_size_sel_0 (
+        r_size, 
+
+        r_eax,
+        r_ecx,
+        r_edx,
+        r_ebx,
+        r_esp,
+        r_ebp,
+        r_esi,
+        r_edi,
+
+        r_mm0,
+        r_mm1,
+        r_mm2,
+        r_mm3,
+        r_mm4,
+        r_mm5,
+        r_mm6,
+        r_mm7,
 
 
-    // mux #(.WIDTH(64), .INPUTS(8)) op1_mux (
-    //     {
-    //         64'h0000_0000_0000_0000,                // n/a
-    //         ...,                // memory
-    //         ...,                // immediate
-    //         ...,                // mod r/m
-    //         ...,                // mm register
-    //         ...,                // segment
-    //         ...,                // register
-    //         64'h0000_0000_0000_0000                 // none
-    //     }
-    // );
+        reg_file_0,
+        reg_file_1,
+        reg_file_2,
+        reg_file_3,
+        reg_file_4,
+        reg_file_5,
+        reg_file_6,
+        reg_file_7
+    );
 
+    wire [63:0] op1_register;
+    mux #(.WIDTH(64), .INPUTS(8)) op0_register_mux (
+        {reg_file_7, reg_file_6, reg_file_5, reg_file_4, reg_file_3, reg_file_2, reg_file_1, reg_file_0},
+        op1_register,
+        r_op1_reg
+    );
+
+    // select segment register
+    wire [15:0] op1_segment;
+    mux #(.WIDTH(16), .INPUTS(8)) op0_segment_mux (
+        {16'h0000, 16'h0000, r_gs, r_fs, r_ds, r_ss, r_cs, r_es},
+        op1_segment,
+        r_op1_reg
+    );
+
+    // select mmx register
+    wire [63:0] op1_mmx;
+    mux #(.WIDTH(64), .INPUTS(8)) op0_mmx_mux (
+        {r_mm7, r_mm6, r_mm5, r_mm4, r_mm3, r_mm2, r_mm1, r_mm0},
+        op1_mmx,
+        r_op1_reg
+    );
+
+    // calculate mod_rm
+    wire [63:0] op1_mod_rm;
+    wire op1_mod_rm_is_address;
+    mod_rm op1_mod_rm_calculator(
+        op1_mod_rm,
+
+        op1_mod_rm_is_address,
+        
+        r_modrm,
+        r_sib,
+
+        r_eax,
+        r_ecx,
+        r_edx,
+        r_ebx,
+        r_esp,
+        r_ebp,
+        r_esi,
+        r_edi,
+
+        reg_file_0,
+        reg_file_1,
+        reg_file_2,
+        reg_file_3,
+        reg_file_4,
+        reg_file_5,
+        reg_file_6,
+        reg_file_7,
+
+        r_disp,
+
+        r_seg_override,
+
+        r_es,
+        r_cs,
+        r_ss,
+        r_ds,
+        r_fs,
+        r_gs
+    );
+
+    // memory address in DS:ESI
+    // If segment override is zero, use DS
+    // If 1, use a value from a mux based on segement override
+
+    wire [15:0] seg_override_mux_out;
+    mux #(.WIDTH(16), .INPUTS(8)) seg_override_mux (
+        {16'd0, 16'd0, r_gs, r_fs, r_ds, r_ss, r_cs, r_es},
+        seg_override_mux_out,
+        r_seg_override
+    );
+
+    wire [15:0] selected_seg;
+    mux #(.WIDTH(16), .INPUTS(2)) is_seg_override_mux (
+        {seg_override_mux_out, r_ds},
+        selected_seg,
+        r_seg_override_valid
+    );
+
+    // add selected seg
+    wire [31:0] shifted_seg;
+    segment_shifter op1_shifter (shifted_seg, selected_seg);
+
+    wire [31:0] op1_memory;
+
+    slow_addr #(.WIDTH(32)) op1_memory_adder (shifted_seg, r_esi, op1_memory, );
+
+
+    mux #(.WIDTH(64), .INPUTS(8)) op1_mux (
+        {
+            64'h0000_0000_0000_0000,                // n/a
+            {32'd0, op1_memory},                    // memory
+            {16'd0, r_imm},                         // immediate
+            op1_mod_rm,                             // mod r/m
+            op1_mmx,                                // mm register
+            {48'd0, op1_segment},                   // segment
+            op1_register,                           // register
+            64'h0000_0000_0000_0000                 // none
+        },
+        a_op1,
+        r_op1
+    );
+
+    wire op1_mux_is_address;
+    // same logic as op0. for now at least
+    op0_is_address op1_is_address0 (
+        r_op1[2], r_op1[1], r_op1[0],
+        op1_mux_is_address
+    );
+
+    or2$ is_address_combine (a_op1_is_address, op1_mux_is_address, op1_mod_rm_is_address);
 
 endmodule
 
