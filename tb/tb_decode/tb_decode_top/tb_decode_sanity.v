@@ -101,24 +101,30 @@ module TOP;
 
         flush = 'h0;
         handle_int = 'h0;
-        f_valid = 'h0;
-        f_valid_bytes = 'h0;
-        f_instruction = 'h0;
+        f_valid_bytes = 9;
+        f_instruction = 256'h26814411EEAABBCCDD0000000000000000000000000000000000000000000000;
         f_pc = 'h0;
         f_branch_taken = 'h0;
-        d_ready = 'h0;
+        d_ready = 'h1;
    
-        #25
+        #55
 
         reset = 0;
 
-        #10
+        #20
 
         $display("==========\n End Test \n==========");
     end
 
     initial #2000 $finish;
 
+   always @(posedge clk) begin
+      if (reset) begin
+	 f_valid <= 1'b1;
+      end else begin
+	 f_valid <= (f_valid) ? ~f_ready : 1'b0;
+      end
+   end
    
    always #10  clk          = ~clk;
    
