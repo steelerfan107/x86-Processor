@@ -5,6 +5,7 @@
 //
 //  Holds components for address generator
 
+// no longer used. Address generation logic now contained in address_generation_top module
 module address_generator (
     address_1,
     address_1_valid,
@@ -102,6 +103,7 @@ module mod_rm (
     displacement,
 
     seg_sel,
+    seg_override_valid,
 
     es,
     cs,
@@ -139,6 +141,7 @@ module mod_rm (
     input [31:0] displacement;
 
     input [2:0] seg_sel;
+    input seg_override_valid;
 
     input [15:0] es;
     input [15:0] cs;
@@ -170,6 +173,7 @@ module mod_rm (
         edi,
 
         seg_sel,
+        seg_override_valid,
 
         es,
         cs,
@@ -353,6 +357,7 @@ module sib (
     edi,
 
     seg_sel,
+    seg_override_valid,
 
     es,
     cs,
@@ -378,6 +383,7 @@ module sib (
     input [31:0] edi;
 
     input [2:0] seg_sel;
+    input seg_override_valid;
 
     input [15:0] es;
     input [15:0] cs;
@@ -576,45 +582,103 @@ module sib (
     // AND gate toggling a mux that selects segment as being either SS or the segment register
     // Output of this mux goes to another mux selecting the segment register value
     // Adder adding the shifted segment register value to the output of the previous adder
+
+    // wire [2:0] base_not;
+
+    // inv1$ 
+    // base_inv0 (base_not[0], base[0]),
+    // base_inv1 (base_not[1], base[1]),
+    // base_inv2 (base_not[2], base[2]);
+
+    // wire is_ss; // toggled when base is esp, 100
+    // and3$ ss_seg_sel (is_ss, base[2], base_not[1], base_not[0]);
+
+    // // 3 bit mux selecting if it is ss or seg_sel value
+    // wire [5:0] seg_sel_mux_in;
+    // wire [2:0] seg_sel_mux_out;
+
+    // assign seg_sel_mux_in[2:0] = seg_sel;
+    // assign seg_sel_mux_in[5:3] = 3'b010;
+
+    // mux #(.WIDTH(3), .INPUTS(2)) seg_sel_mux (
+    //     seg_sel_mux_in,
+    //     seg_sel_mux_out,
+    //     is_ss
+    // );
+
+    // // Use output of this mux to select the segment register
+
+    // wire [95:0] seg_select_in;
+    // wire [15:0] seg_select_out;
+
+    // add value in segment register
+    // if base is esp then segment is ss
+    // is base is any other register, it is ds
+    // if segment override is 1, then base is value in segment select
+
+    // mux selecting value based on segment select value
+    // wire [15:0] segment_override_mux_out;
+
+    // mux #(.WIDTH(16), .INPUTS(8)) segment_override_mux (
+    //     {16'd0, 16'd0, gs, fs, ds, ss, cs, es},
+    //     segment_override_mux_out,
+    //     seg_sel
+    // );
+
+    // check if base is esp and assign to wire
     wire [2:0] base_not;
+    genvar i;
+    generate
+        for (i = 0; i < 3; i = i+1) begin
+            inv1$ base_inv (base_not[i], base[i]);
+        end
+    endgenerate
 
-    inv1$ 
-    base_inv0 (base_not[0], base[0]),
-    base_inv1 (base_not[1], base[1]),
-    base_inv2 (base_not[2], base[2]);
+    wire base_is_esp;
+    and3$ and_is_base_esp (base_is_esp, base[2], base_not[1], base_not[0]);
 
-    wire is_ss; // toggled when base is esp, 100
-    and3$ ss_seg_sel (is_ss, base[2], base_not[1], base_not[0]);
+    wire base_not_esp;
+    inv1$ is_base_esp_inv (base_not_esp, base_is_esp);
+    
+    // one hot mux with input selection being based on segment override, if base is esp, and if base is not esp
+    // wire [2:0] the_seg_with_the_value;
+    // ao_mux #(.WIDTH(3), .NINPUTS(3)) segment_select_mux (
+    //     {seg_sel, 3'b010, 3'b011},     // 010 is ss, 011 is ds
+    //     the_seg_with_the_value,
+    //     {seg_override_valid, base_is_esp, base_not_esp}
+    // );
 
-    // 3 bit mux selecting if it is ss or seg_sel value
-    wire [5:0] seg_sel_mux_in;
-    wire [2:0] seg_sel_mux_out;
-
-    assign seg_sel_mux_in[2:0] = seg_sel;
-    assign seg_sel_mux_in[5:3] = 3'b010;
-
-    mux #(.WIDTH(3), .INPUTS(2)) seg_sel_mux (
-        seg_sel_mux_in,
-        seg_sel_mux_out,
-        is_ss
+    // select the normal segment
+    wire [2:0] normal_segment;
+    ao_mux #(.WIDTH(3), .NINPUTS(2)) normal_segment_mux (
+        {3'b010, 3'b011},
+        normal_segment,
+        {base_is_esp, base_not_esp}
     );
 
-    // Use output of this mux to select the segment register
+    // is there a segment override?
+    wire [2:0] the_seg_with_the_value;
+    mux #(.WIDTH(3), .INPUTS(2)) another_segment_mux (
+        {seg_sel, normal_segment},
+        the_seg_with_the_value,
+        seg_override_valid
+    );
 
-    wire [95:0] seg_select_in;
+    
+
+    // get value of the segment selection
+    // wire [15:0] seg_sel_mux_out;
+    // mux #(.WIDTH(16), .INPUTS(8)) segment_value_mux (
+    //     {16'd0, 16'd0, gs, fs, ds, ss, cs, es},
+    //     seg_sel_mux_out,
+    //     the_seg_with_the_value
+    // );
+
     wire [15:0] seg_select_out;
-
-    assign seg_select_in[15:0] = es[15:0];
-    assign seg_select_in[31:16] = cs[15:0];
-    assign seg_select_in[47:32] = ss[15:0];
-    assign seg_select_in[63:48] = ds[15:0];
-    assign seg_select_in[79:64] = fs[15:0];
-    assign seg_select_in[95:80] = gs[15:0];
-
     mux #(.WIDTH(16), .INPUTS(8)) seg_select (
         {16'h0, 16'h0, gs, fs, ds, ss, cs, es},
         seg_select_out,
-        seg_sel_mux_out
+        the_seg_with_the_value
     );
 
     // shift output of segment select mux

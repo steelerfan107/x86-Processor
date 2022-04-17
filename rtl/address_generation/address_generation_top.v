@@ -170,6 +170,7 @@ module address_generation_top (
         r_imm,
         r_disp,
         r_seg_override,
+        r_seg_override_valid,
 
         r_eax,
         r_ecx,
@@ -260,6 +261,7 @@ module op0_generator (
     r_imm,
     r_disp,
     r_seg_override,
+    r_seg_override_valid,
 
     r_eax,
     r_ecx,
@@ -300,6 +302,7 @@ module op0_generator (
     input [47:0] r_imm;
     input [31:0] r_disp;
     input [2:0] r_seg_override;
+    input r_seg_override_valid;
 
     input [31:0] r_eax;
     input [31:0] r_ecx;
@@ -435,6 +438,7 @@ module op0_generator (
         r_disp,
 
         r_seg_override,
+        r_seg_override_valid,
 
         r_es,
         r_cs,
@@ -675,6 +679,7 @@ module op1_generator (
         r_disp,
 
         r_seg_override,
+        r_seg_override_valid,
 
         r_es,
         r_cs,
