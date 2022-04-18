@@ -6,5 +6,9 @@
 ../../../rtl/lib/lib5.v
 ../../../rtl/lib/lib6.v
 ../../../rtl/lib/mux.v
+../../../rtl/lib/slow_addr.v
+../../../rtl/lib/ao_mux.v
+../../../rtl/lib/logic_tree_bus.v
+../../../rtl/lib/logic_tree.v
 ../../../rtl/address_generation/address_generator.v
 tb_mod_rm.v

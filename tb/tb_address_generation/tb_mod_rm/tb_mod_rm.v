@@ -33,6 +33,7 @@ module TOP;
     reg [31:0] displacement;
 
     reg [2:0] seg_sel;
+    reg seg_override_valid;
 
     reg [15:0] es;
     reg [15:0] cs;
@@ -71,6 +72,7 @@ module TOP;
         displacement,
 
         seg_sel,
+        seg_override_valid,
 
         es,
         cs,
@@ -108,6 +110,7 @@ module TOP;
         displacement = 32'h0000_FFFF;
 
         seg_sel = 0;
+        seg_override_valid = 0;
 
         es = 1;
         cs = 2;
@@ -123,107 +126,107 @@ module TOP;
 
         mod_rm_byte = 8'h00;
         #5
-        if ((value != ((es << 16) + eax)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + eax)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
 
         mod_rm_byte = 8'h01;
         #5
-        if ((value != ((es << 16) + ecx)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + ecx)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h02;
         #5
-        if ((value != ((es << 16) + edx)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + edx)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h03;
         #5
-        if ((value != ((es << 16) + ebx)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + ebx)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h04;    // sib
         #5
-        if ((value != ((es << 16) + eax + eax)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + eax + eax)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h05;
         #5
-        if ((value != ((es << 16) + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h06;
         #5
-        if ((value != ((es << 16) + esi)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + esi)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h07;
         #5
-        if ((value != ((es << 16) + edi)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + edi)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         // Mod 01
         
         mod_rm_byte = 8'h40;
         #5
-        if ((value != ((es << 16) + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
 
         mod_rm_byte = 8'h41;
         #5
-        if ((value != ((es << 16) + ecx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + ecx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h42;
         #5
-        if ((value != ((es << 16) + edx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + edx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h43;
         #5
-        if ((value != ((es << 16) + ebx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + ebx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h44;    // sib
         #5
-        if ((value != ((es << 16) + eax + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + eax + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h45;
-        seg_sel = 2;
+        // seg_sel = 2;
         #5
         if ((value != ((ss << 16) + ebp + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h46;
-        seg_sel = 0;
+        // seg_sel = 0;
         #5
-        if ((value != ((es << 16) + esi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + esi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h47;
         #5
-        if ((value != ((es << 16) + edi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + edi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
 
         // Mod 10
 
         mod_rm_byte = 8'h80;
         #5
-        if ((value != ((es << 16) + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
 
         mod_rm_byte = 8'h81;
         #5
-        if ((value != ((es << 16) + ecx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + ecx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h82;
         #5
-        if ((value != ((es << 16) + edx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + edx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h83;
         #5
-        if ((value != ((es << 16) + ebx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + ebx + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h84;    // sib
         #5
-        if ((value != ((es << 16) + eax + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + eax + eax + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h85;
-        seg_sel = 2;
+        // seg_sel = 2;
         #5
         if ((value != ((ss << 16) + ebp + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h86;
-        seg_sel = 0;
+        // seg_sel = 0;
         #5
-        if ((value != ((es << 16) + esi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + esi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
         
         mod_rm_byte = 8'h87;
         #5
-        if ((value != ((es << 16) + edi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
+        if ((value != ((ds << 16) + edi + displacement)) || is_address != 1) $display("MOD_RM %X FAIL, value: %X, is_address: %X", mod_rm_byte, value, is_address);
 
         // Mod 11
 
@@ -264,6 +267,7 @@ module TOP;
         $display("Testing Segment Register Selection");
         mod_rm_byte = 8'h00;
 
+        seg_override_valid = 1;
         seg_sel = 0;
         #5
         if ((value != ((es << 16) + eax)) || is_address != 1) $display("SEG %X FAIL, value: %X", seg_sel, value);

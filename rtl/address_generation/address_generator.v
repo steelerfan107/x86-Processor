@@ -288,12 +288,72 @@ module mod_rm (
     // mux that if 1, adds segment register to output
 
     // have mux selecting desired segment
+    
+
+    // mux #(.WIDTH(16), .INPUTS(8)) seg_select_mux (
+    //     {16'h0, 16'h0, gs, fs, ds, ss, cs, es},
+    //     seg_select_out,
+    //     seg_sel
+    // );
+
+    // // shift
+    // wire [31:0] seg_shift;
+
+    // segment_shifter shifter (
+    //     seg_shift,
+    //     seg_select_out
+    // );
+
+    // If r/m is ebp, use ss. else use ds
+    wire [2:0] rm_not;
+    genvar i;
+    generate
+        for (i = 0; i < 3; i = i + 1) begin
+            inv1$ rm_inv (rm_not[i], rm[i]);
+        end
+    endgenerate
+
+    // it is ebp if rm is 101 and mod is not 00
+    wire rm_is_ebp;
+    and3$ and_rm_is_ebp (rm_is_ebp, rm[2], rm_not[1], rm[0]);
+
+    wire [1:0] mod_not;
+    inv1$ 
+    inv_mod0 (mod_not[0], mod[0]),
+    inv_mod1 (mod_not[1], mod[1]);
+    
+    // is mod not 00
+    wire mod_not_00;
+    or2$ or_mod_not_00 (mod_not_00, mod[0], mod[1]);
+
+    // is mod not 00 and is rm 101
+    wire is_accessing_stack;
+    and2$ and_is_accessing_stack (is_accessing_stack, rm_is_ebp, mod_not_00);
+
+    // select segment
+    wire [2:0] normal_segment;
+    mux #(.WIDTH(3), .INPUTS(2)) normal_segment_mux (
+        {3'b010, 3'b011},
+        normal_segment,
+        is_accessing_stack
+    );
+
+    // pick what to use based on seg override
+    wire [2:0] selected_seg_id;
+
+    mux #(.WIDTH(3), .INPUTS(2)) seg_override_mux (
+        {seg_sel, normal_segment},
+        selected_seg_id,
+        seg_override_valid
+    );
+
+    // get segment value from reg
     wire [15:0] seg_select_out;
 
     mux #(.WIDTH(16), .INPUTS(8)) seg_select_mux (
         {16'h0, 16'h0, gs, fs, ds, ss, cs, es},
         seg_select_out,
-        seg_sel
+        selected_seg_id
     );
 
     // shift
@@ -322,11 +382,11 @@ module mod_rm (
     // set is_address if its 00, 01, or 10
     // wire mod[0]_not;
     // wire mod[1]_not;
-    wire [1:0] mod_not;
-    wire or3;
+    // wire [1:0] mod_not;
+    // wire or3;
 
-    inv1$ mod2_inv (.out(mod_not[0]), .in(mod[0]));
-    inv1$ mod3_inv (.out(mod_not[1]), .in(mod[1]));
+    // inv1$ mod2_inv (.out(mod_not[0]), .in(mod[0]));
+    // inv1$ mod3_inv (.out(mod_not[1]), .in(mod[1]));
 
 
     or2$ or_gate3(.out(or3), .in0(mod_not[0]), .in1(mod_not[1]));
