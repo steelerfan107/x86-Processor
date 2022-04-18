@@ -20,7 +20,8 @@ module byte_shifter_16B (
       for(i = 0; i < 16; i=i+1) begin
 	 wire [3:0] sel;
 	 wire 	    nc;	 
-	 slow_addr #(.WIDTH(4)) shft_add (i, shift_amount, sel, nc);	 
+	 //slow_addr #(.WIDTH(4)) shft_add (i, shift_amount, sel, nc);
+         assign sel = i - shift_amount;	 
          mux #(.WIDTH(8), .INPUTS(16)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);	 
       end
    endgenerate

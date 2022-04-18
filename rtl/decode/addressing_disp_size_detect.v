@@ -15,11 +15,11 @@ module addressing_disp_size_detect (
    mux #(.WIDTH(2), .INPUTS(4)) addr_size_mux ({2'd2, 2'd2, 2'd1, 2'd0}, addressing_bytes, {sib_byte, have_modrm});
   
    modrm_size_map msm (
-      addressing_aligned[7],
-      addressing_aligned[6],
-      addressing_aligned[2],		       
-      addressing_aligned[1],		       
-      addressing_aligned[0],		       
+      addressing_aligned[15],
+      addressing_aligned[14],
+      addressing_aligned[10],		       
+      addressing_aligned[9],		       
+      addressing_aligned[8],		       
       sib_byte,
       disp1,
       disp0	       
