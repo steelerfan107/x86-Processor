@@ -30,6 +30,8 @@
 ../../../rtl/decode/op_and_rm_decode.v
 ../../../rtl/decode/prefix_decode.v
 ../../../rtl/decode/opcode_modrm_control_cloud.v
+../../../rtl/decode/opcode_rom_control.v
+../../../rtl/decode/opcode_rom_control_cloud.v
 ../../../rtl/decode/rom_block.v
 ../../../rtl/decode/decode_top.v
 ../../../rtl/fetch/fetch_top.v
