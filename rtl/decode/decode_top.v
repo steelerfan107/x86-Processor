@@ -167,7 +167,7 @@ module decode_top (
        f_ready,
        f_bytes_read,
        f_valid_bytes,
-       f_instruction,
+       f_instruction[255:128],
        f_pc,
        f_branch_taken,
        s0_valid,
@@ -272,6 +272,7 @@ module decode_top (
    assign s1_data = { 
        s1_set_d_flag,
        s1_clear_d_flag,
+       s1_size,
        s1_op0,
        s1_op1,
        s1_op0_reg,
@@ -293,6 +294,7 @@ module decode_top (
    assign {  
        d_set_d_flag,
        d_clear_d_flag,
+       d_size,
        d_op0,
        d_op1,
        d_op0_reg,

@@ -138,12 +138,12 @@ module decode_stage_1 (
         dec_disp	    
    );
    
-   assign dec_modrm = s0_addressing[7:0];
-   assign dec_sib = s0_addressing[15:8];
+   assign dec_modrm = s0_addressing[15:8];
+   assign dec_sib = s0_addressing[7:0];
 
    wire [15:0] 		mask_op;
    
-   mux #(.INPUTS(2),.WIDTH(1)) op_mask_mux( {s0_opcode, {s0_opcode[7:0], 8'b0} }, mask_op, s0_opcode_bytes[0]);
+   mux #(.INPUTS(2),.WIDTH(16)) op_mask_mux( {s0_opcode, {s0_opcode[15:8], 8'b0} }, mask_op, s0_opcode_bytes[1]);
 
    // Prefix Decode
    wire [23:0] 		mask_prefix;
@@ -153,7 +153,7 @@ module decode_stage_1 (
    wire                 pre_size_override;
 
    mux #(.INPUTS(4),.WIDTH(24)) prefix_mask_mux( 
-           {s0_prefix, {8'b0,s0_prefix[15:0]}, {16'b0 ,s0_prefix[7:0]}, 24'b0}, 
+           {s0_prefix, {s0_prefix[23:8],8'b0}, {s0_prefix[23:16], 16'b0}, 24'b0}, 
             mask_prefix, 
             s0_prefix_bytes
    );  
@@ -215,6 +215,10 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 
+   
+   assign rom_in_control = 0;
+   wire 		nc_ric;
+   
    // ROM Block
    rom_block #(.IADDRW(IADDRW)) rom_block (
       clk,
@@ -244,7 +248,7 @@ module decode_stage_1 (
       rom_seg_override_valid,
       rom_pc,
       rom_branch_taken,  
-      rom_in_control,
+      nc_ric,
       rom_control		
    );
  
