@@ -66,7 +66,7 @@ module segment_register_file (
     endgenerate
 
     // 6 registers
-    register_16 
+    register #(.WIDTH(16)) 
     es (clk, reset, write_data, es_out, ,write_register[0]),
     cs (clk, reset, write_data, cs_out, ,write_register[1]),
     ss (clk, reset, write_data, ss_out, ,write_register[2]),
