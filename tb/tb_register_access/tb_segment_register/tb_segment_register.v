@@ -5,8 +5,9 @@ module TOP;
     reg clk;
     reg reset;
 
-    reg [5:0] write_select;
+    reg [2:0] write_select;
     reg [15:0] write_data;
+    reg write_enable;
 
     wire [15:0] cs_out;
     wire [15:0] ds_out;
@@ -21,6 +22,7 @@ module TOP;
 
         write_select,
         write_data,
+        write_enable,
 
         cs_out,
         ds_out,
@@ -45,43 +47,46 @@ module TOP;
         clk = 0;
         write_select = 0;
         write_data = 0;
+        write_enable = 0;
 
         #12.5
 
         reset = 0;
+        write_enable = 1;
 
 
         write_data = cs_data;
-        write_select = 6'b000_001;
+        write_select = 1;
         #10
         if (cs_out != cs_data) $display("FAIL: Write CS");
 
         write_data = ds_data;
-        write_select = 6'b000_010;
+        write_select = 3;
         #10
         if (ds_out != ds_data) $display("FAIL: Write DS");
 
         write_data = es_data;
-        write_select = 6'b000_100;
+        write_select = 0;
         #10
         if (es_out != es_data) $display("FAIL: Write ES");
 
         write_data = fs_data;
-        write_select = 6'b001_000;
+        write_select = 4;
         #10
         if (fs_out != fs_data) $display("FAIL: Write FS");
 
         write_data = gs_data;
-        write_select = 6'b010_000;
+        write_select = 5;
         #10
         if (gs_out != gs_data) $display("FAIL: Write GS");
 
         write_data = ss_data;
-        write_select = 6'b100_000;
+        write_select = 2;
         #10
         if (ss_out != ss_data) $display("FAIL: Write SS");
 
         write_data = 16'hFFFF;
+        write_enable = 0;
         write_select = 0;
 
         #10
