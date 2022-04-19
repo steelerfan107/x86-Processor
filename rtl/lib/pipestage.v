@@ -58,8 +58,12 @@ module pipestage (
 	 // - Indicates if each register is valid.
 	 // - Set : When entry is accepted and head points to that entry. or reset.
 	 // - Clear : When entry is taken and tail points to that entry. or reset.
-         register #(.WIDTH(1)) v0_reg (clk, clear0, 1'b1, reg0_valid, reg0_invalid, en0);
-         register #(.WIDTH(1)) v1_reg (clk, clear1, 1'b1, reg1_valid, reg1_invalid, en1);
+	 
+         wire cl0 = not_tail & out_accept;
+         wire cl1 = tail & out_accept;
+
+         register #(.WIDTH(1)) v0_reg (clk, reset, ~clear0, reg0_valid, reg0_invalid, (en0 | cl0));
+         register #(.WIDTH(1)) v1_reg (clk, reset, ~clear1, reg1_valid, reg1_invalid, (en1 | cl1));
 
 	 // Head/Tail Registers
 	 // - Since there is only two entries the head and tail just need to be
