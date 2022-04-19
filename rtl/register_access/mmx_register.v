@@ -42,7 +42,7 @@ module mmx_register_file (
 
     // decode writeback signal
     wire [7:0] wb_decoded;
-    decoder3_8$ (writeback_select, wb_decoded, );
+    decoder3_8$ wb_decoder (writeback_select, wb_decoded, );
 
     wire [7:0] wb_decoded_enabled;
 

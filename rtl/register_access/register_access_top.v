@@ -33,7 +33,7 @@ module register_access_top (
     d_seg_override,
     d_seg_override_valid,
     d_pc,
-    d_branch_taken
+    d_branch_taken,
 
     // Address Generation Inferface
     r_valid,
@@ -78,7 +78,20 @@ module register_access_top (
     r_mm6,
     r_mm7,
     r_pc,
-    r_branch_taken
+    r_branch_taken,
+
+    wb_reg_number,
+    wb_reg_en,
+    wb_reg_size,
+    wb_reg_data,
+
+    wb_seg_number,
+    wb_seg_en,
+    wb_seg_data,
+
+    wb_mmx_number,
+    wb_mmx_en,
+    wb_mmx_data
 );
 
     // Clock Interface
@@ -156,10 +169,114 @@ module register_access_top (
     output [31:0] r_pc;
     output r_branch_taken;
 
+    // --------- //
+    // Writeback //
+    // --------- //
+
+    // register file writeback
+    input [2:0] wb_reg_number;
+    input wb_reg_en;
+    input [2:0] wb_reg_size;
+    input [31:0] wb_reg_data;
+
+    // segment register writeback
+    input [2:0] wb_seg_number;
+    input wb_seg_en;
+    input [15:0] wb_seg_data;
+
+    // mmx register writeback
+    input [2:0] wb_mmx_number;
+    input wb_mmx_en;
+    input [63:0] wb_mmx_data;
+
     // ------ //
     // Stalls //
     // ------ //
     
     // Read after write for all registers
+
+
+
+    // ------------- //
+    // Register File //
+    // ------------- //
+
+    register_file register_file0 (
+        .clk(clk),
+        .reset(reset),
+
+        // no longer used
+        .register_size(),
+
+        // no longer used
+        .op_1(),
+        .op_1_value(),
+
+        // no longer used
+        .op_2(),
+        .op_2_value(),
+
+        // no longer used
+        .sib_base_reg(),
+        .sib_base_value(),
+        .sib_index_reg(),
+        .sib_index_value(),
+        
+        .writeback_reg(wb_reg_number),
+        .writeback_en(wb_reg_en),
+        .writeback_size(wb_reg_size),
+        .writeback_data(wb_reg_data),
+
+        .eax_out(r_eax),
+        .ecx_out(r_ecx),
+        .edx_out(r_edx),
+        .ebx_out(r_ebx),
+        .esp_out(r_esp),
+        .ebp_out(r_ebp),
+        .esi_out(r_esi),
+        .edi_out(r_edi)
+    );
+
+    // --------------------- //
+    // Segment Register File //
+    // --------------------- //
+
+    segment_register_file segment_register_file0 (
+        .clk(clk),
+        .reset(reset),
+
+        .write_select(wb_seg_number),
+        .write_data(wb_seg_data),
+        .write_enable(wb_seg_en),
+
+        .cs_out(r_cs),
+        .ds_out(r_ds),
+        .es_out(r_es),
+        .fs_out(r_fs),
+        .gs_out(r_gs),
+        .ss_out(r_ss)
+    );
+
+    // ----------------- //
+    // MMX Register File //
+    // ----------------- //
+
+    mmx_register_file mmx_register_file0 (
+        .clk(clk),
+        .reset(reset),
+
+        .writeback_data(wb_mmx_data),
+        .writeback_select(wb_mmx_number),
+        .writeback_enable(wb_mmx_en),
+
+        .mm0_out(r_mm0),
+        .mm1_out(r_mm1),
+        .mm2_out(r_mm2),
+        .mm3_out(r_mm3),
+        .mm4_out(r_mm4),
+        .mm5_out(r_mm5),
+        .mm6_out(r_mm6),
+        .mm7_out(r_mm7)
+    );
 
 endmodule
