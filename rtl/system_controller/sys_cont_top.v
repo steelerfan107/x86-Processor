@@ -1,4 +1,7 @@
 module sys_cont_top (
+     clk,
+     reset,
+     int_vec,		     
      mem_valid,
      mem_ready,
      mem_address,
@@ -23,6 +26,9 @@ module sys_cont_top (
      reg_cs		  
 );
 
+           input      clk;
+           input      reset;
+           input      [3:0] int_vec;
            output     mem_valid;
 	   input      mem_ready;  
 	   output     [31:0] mem_address; 
@@ -46,24 +52,70 @@ module sys_cont_top (
 	   output     reg_load_cs;  
 	   output     [15:0] reg_cs;
     
-           assign mem_valid = 'h0;
-	   assign mem_ready = 'h0;  
-	   assign mem_wr_en = 'h0;  
-	   assign mem_wr_data = 'h0;  
-	   assign mem_wr_size = 'h0;  
-	   assign mem_dp_valid = 'h0;  
-           assign mem_dp_ready = 'h0;     
-	   assign flush_fetch = 'h0;   
-	   assign flush_decode_0 = 'h0;   
-	   assign flush_decode_1 = 'h0;   
-	   assign flush_register = 'h0;   
-	   assign flush_address = 'h0;   
-	   assign flush_execute = 'h0;   
-	   assign flush_writeback = 'h0;   
-	   assign fetch_load = 'h0;  
-	   assign fetch_load_address = 'h0;  
-	   assign decode_start_int = 'h0;   
-	   assign reg_load_cs = 'h0;  
-	   assign reg_cs = 'h0;
+           wire [1:0] int_serviced;
+           wire [3:0] int_serviced_oh;
+           wire       or_int_vec;
+           wire       int_clear;
+
+           wire [3:0] int_vec_r, n_int_vec_r;
+           
+           parameter IDT_ADDRESS0 = 32'h4000;
+           parameter IDT_ADDRESS1 = 32'h8000;
+           parameter IDT_ADDRESS2 = 32'hc000;
+           parameter IDT_ADDRESS3 = 32'hf000;   
+
+           ////////////////////////////////
+           // 
+           // Interrupt Handling
+           //
+   
+           register #(.WIDTH(4)) int_reg (
+               clk,
+               reset,
+               int_vec,
+               int_vec_r,
+               n_int_vec_r,
+               1'b1				    
+           );
+
+           logic_tree #(.WIDTH(4),.OPERATION(1)) vec_or (int_vec_r, or_int_vec);
+
+           mux  #(.WIDTH(32),.INPUTS(4)) idt_select ( {IDT_ADDRESS3, IDT_ADDRESS2, IDT_ADDRESS1, IDT_ADDRESS0}, mem_address, int_serviced);
+
+           find_first #(.WIDTH(4),.OPERATION(1)) ff (int_vec_r, int_serviced_oh);
+
+           pencoder8_3$ (1'b0, {4'b0, int_vec_r}, {nc0, int_serviced});
+
+           assign  fetch_load_address = mem_dp_read_data;
+   
+           int_controller ic (
+                clk,
+                reset,
+                mem_valid,
+                mem_ready,
+                mem_address,
+                mem_wr_en,
+                mem_wr_data,
+                mem_wr_size,
+                mem_dp_valid,
+                mem_dp_ready,
+                mem_dp_read_data,
+                flush_fetch,
+                flush_decode_0,
+                flush_decode_1,
+                flush_register,
+                flush_address,
+                flush_execute,
+                flush_writeback,
+     		fetch_load,
+                fetch_load_address,
+                decode_start_int,
+                decode_end_int,
+                reg_load_cs,
+                reg_cs,
+                int_clear,
+                or_int_vec		       
+           );
+   
 endmodule
    
