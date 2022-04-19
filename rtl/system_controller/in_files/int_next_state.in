@@ -1,11 +1,15 @@
 .i 7
 .o 3
-.ilb curr_state2 curr_state1 curr_state0 or_int_vec dec_end_int mem_ready mem_dp_ready
+.ilb curr_state2 curr_state1 curr_state0 or_int_vec dec_end_int mem_ready mem_dp_valid
 .ob next_state2 next_state1 next_state0 
 
-1011--- 000
-000---- 001
-001-1-- 010 # to the outputs, both in order specified above.
-010--1- 011
-011---1 100
-100---- 101
+101---- 000
+0001--- 001
+0000--- 000
+001---- 010 # to the outputs, both in order specified above.
+010-1-- 011
+010-0-- 010
+011--1- 100
+011--0- 011
+100---1 101
+100---0 100
