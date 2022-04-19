@@ -65,7 +65,7 @@ module mux (
 
 	       mux2$ mux(out[i],l[i],u[i],select[4]);	       
 	    end
-      end    
+      end 
    endgenerate 
    
 endmodule
