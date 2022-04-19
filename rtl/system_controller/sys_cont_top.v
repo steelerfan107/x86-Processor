@@ -57,7 +57,7 @@ module sys_cont_top (
            wire       or_int_vec;
            wire       int_clear;
 
-           wire [3:0] int_vec_r, n_int_vec_r;
+           wire [3:0] int_vec_r, n_int_vec_r, int_clear_vec, int_clear_mask, int_clear_mask_inv, int_vec_in, int_vec_or;
            
            parameter IDT_ADDRESS0 = 32'h4000;
            parameter IDT_ADDRESS1 = 32'h8000;
@@ -68,16 +68,28 @@ module sys_cont_top (
            // 
            // Interrupt Handling
            //
+
+           assign int_clear_vec = {int_clear, int_clear, int_clear, int_clear};
    
+           logic_tree_bus #(.WIDTH(4),.OPERATION(0)) ltb_mask ({int_clear_vec, int_serviced_oh}, int_clear_mask);
+
+           inv1$ (int_clear_mask_inv[3], int_clear_mask[3]);
+           inv1$ (int_clear_mask_inv[2], int_clear_mask[2]);
+           inv1$ (int_clear_mask_inv[1], int_clear_mask[1]);
+           inv1$ (int_clear_mask_inv[0], int_clear_mask[0]);
+
+           logic_tree_bus #(.WIDTH(4),.OPERATION(1)) ltb_or  ({int_vec, int_vec_r}, int_vec_or);
+           logic_tree_bus #(.WIDTH(4),.OPERATION(0)) ltb_in  ({int_clear_mask_inv, int_vec_or}, int_vec_in);   
+      
            register #(.WIDTH(4)) int_reg (
                clk,
                reset,
-               int_vec,
+               int_vec_in,
                int_vec_r,
                n_int_vec_r,
                1'b1				    
            );
-
+   
            logic_tree #(.WIDTH(4),.OPERATION(1)) vec_or (int_vec_r, or_int_vec);
 
            mux  #(.WIDTH(32),.INPUTS(4)) idt_select ( {IDT_ADDRESS3, IDT_ADDRESS2, IDT_ADDRESS1, IDT_ADDRESS0}, mem_address, int_serviced);
