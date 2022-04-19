@@ -1,0 +1,11 @@
+.i 3
+.o 12
+.ilb curr_state2 curr_state1 curr_state0
+.ob flush_fetch	flush_dec_0 flush_dec_1	flush_reg flush_addr flush_ex flush_wb dec_start_int mem_valid fetch_load reg_load_cs int_clear
+
+000 000000000000
+001 111111100000
+010 110000010000 # to the outputs, both in order specified above.
+011 100000001000
+100 100000000000
+101 100000000111
