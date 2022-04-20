@@ -1,14 +1,14 @@
 module int_next_state_cloud (
-       input  curr_state_2,
-       input  curr_state_1,
-       input  curr_state_0,
+       input  curr_state2,
+       input  curr_state1,
+       input  curr_state0,
        input  or_int_vec,
        input  dec_end_int,
        input  mem_ready,
        input  mem_dp_valid,	     
-       output next_state_2,
-       output next_state_1,
-       output next_state_0			     
+       output next_state2,
+       output next_state1,
+       output next_state0			     
 );
    
 wire curr_state2_not;

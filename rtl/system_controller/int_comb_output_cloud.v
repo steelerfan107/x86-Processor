@@ -1,7 +1,7 @@
 module int_comb_output_cloud (
-       input curr_state_2,
-       input curr_state_1,
-       input curr_state_0,			      
+       input curr_state2,
+       input curr_state1,
+       input curr_state0,			      
        output flush_fetch,
        output flush_dec_0,
        output flush_dec_1,

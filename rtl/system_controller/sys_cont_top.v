@@ -71,15 +71,15 @@ module sys_cont_top (
 
            assign int_clear_vec = {int_clear, int_clear, int_clear, int_clear};
    
-           logic_tree_bus #(.WIDTH(4),.OPERATION(0)) ltb_mask ({int_clear_vec, int_serviced_oh}, int_clear_mask);
+           logic_tree_bus #(.WIDTH(4),.OPERATION(0),.NINPUTS(2)) ltb_mask ({int_clear_vec, int_serviced_oh}, int_clear_mask);
 
            inv1$ (int_clear_mask_inv[3], int_clear_mask[3]);
            inv1$ (int_clear_mask_inv[2], int_clear_mask[2]);
            inv1$ (int_clear_mask_inv[1], int_clear_mask[1]);
            inv1$ (int_clear_mask_inv[0], int_clear_mask[0]);
 
-           logic_tree_bus #(.WIDTH(4),.OPERATION(1)) ltb_or  ({int_vec, int_vec_r}, int_vec_or);
-           logic_tree_bus #(.WIDTH(4),.OPERATION(0)) ltb_in  ({int_clear_mask_inv, int_vec_or}, int_vec_in);   
+           logic_tree_bus #(.WIDTH(4),.OPERATION(1),.NINPUTS(2)) ltb_or  ({int_vec, int_vec_r}, int_vec_or);
+           logic_tree_bus #(.WIDTH(4),.OPERATION(0),.NINPUTS(2)) ltb_in  ({int_clear_mask_inv, int_vec_or}, int_vec_in);   
       
            register #(.WIDTH(4)) int_reg (
                clk,
@@ -99,6 +99,7 @@ module sys_cont_top (
            pencoder8_3$ (1'b0, {4'b0, int_vec_r}, {nc0, int_serviced});
 
            assign  fetch_load_address = mem_dp_read_data;
+           assign  reg_cs = 'h0;
    
            int_controller ic (
                 clk,
