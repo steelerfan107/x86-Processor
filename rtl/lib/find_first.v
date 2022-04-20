@@ -27,7 +27,7 @@ module find_first (
 	 // If so tie that bit to 0. If not that bit is its own value. 			
          for( i = 0; i < WIDTH; i = i+1) begin
 	    if(i == 0) begin
-	       assign out[0] = 1'b0;	       
+	       assign or_of_the_before[0] = 1'b0;	       
 	    end else begin
               logic_tree #(.WIDTH(i),.OPERATION(1)) compare_vec (in[i-1:0], or_of_the_before[i]);
 	    end
@@ -35,7 +35,7 @@ module find_first (
       end else begin // if (OPERATION)
          for( i = WIDTH-1; i >= 0; i = i-1) begin
 	    if(i == WIDTH-1) begin
-	       assign out[WIDTH-1] = 1'b0;	       
+	       assign or_of_the_before[WIDTH-1] = 1'b0;	       
 	    end else begin
               logic_tree #(.WIDTH((WIDTH-1)-i),.OPERATION(1)) compare_vec (in[(WIDTH-1):(i+1)], or_of_the_before[i]);
 	    end

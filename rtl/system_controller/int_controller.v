@@ -27,6 +27,8 @@ module int_controller (
      or_int_vec		       
 );
 
+   input      clk;
+   input      reset;
    output     mem_valid;
    input      mem_ready;
    output     [31:0] mem_address;
@@ -51,6 +53,8 @@ module int_controller (
    output     [15:0] reg_cs;
    input      or_int_vec;
    output     int_clear;
+
+   assign mem_dp_ready = 1'b1;
    
    wire [2:0] 	     curr_state, next_state, n_curr_state;
 
@@ -66,14 +70,14 @@ module int_controller (
    int_comb_output_cloud coc (
        curr_state[2],
        curr_state[1],
-       curr_state[0],			      
+       curr_state[0],
        flush_fetch,
-       flush_dec_0,
-       flush_dec_1,
-       flush_reg,
-       flush_addr,
-       flush_ex,
-       flush_wb,
+       flush_decode_0,
+       flush_decode_1,
+       flush_register,
+       flush_address,
+       flush_execute,
+       flush_writeback,			      
        decode_start_int,
        mem_valid,
        fetch_load,
@@ -86,7 +90,7 @@ module int_controller (
        curr_state[1],
        curr_state[0],
        or_int_vec,
-       dec_end_int,
+       decode_end_int,
        mem_ready,
        mem_dp_valid,	     
        next_state[2],
