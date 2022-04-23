@@ -45,7 +45,7 @@ module instruction_queue (
    input          ready_o;
    input [3:0]    bytes_read_o;
    output [6:0]   valid_bytes_o;
-   output [127:0] intruction_o;
+   output [255:0] intruction_o;
 
    wire 	  in_accept;
    wire           out_accept;
@@ -145,8 +145,8 @@ module instruction_queue (
    compare #(.WIDTH(2)) clear_3_comp (2'd0,head[5:4],eq_o3);
 
    // Muxes to select Upper and Lower halves of the shifter
-   mux #(.INPUTS(4),.WIDTH(128)) data_mux_lower ({data3, data2, data1, data0}, full_data[127:0], head[5:4]);
-   mux #(.INPUTS(4),.WIDTH(128)) data_mux_upper ({data3, data2, data1, data0}, full_data[255:128], head_p16[5:4]);
+   mux #(.INPUTS(4),.WIDTH(128)) data_mux_lower ({data3, data2, data1, data0}, full_data[255:128], head[5:4]);
+   mux #(.INPUTS(4),.WIDTH(128)) data_mux_upper ({data3, data2, data1, data0}, full_data[127:0], head_p16[5:4]);
 
    // Mux to select what to load into head pointer
    mux #(.INPUTS(2),.WIDTH(7))   head_mux ({{3'b0,load_address[3:0]},head_p_br},head_in,load);
@@ -203,7 +203,7 @@ module instruction_queue (
 
    byte_shifter_32B shifter (full_data ,shifter_o, {1'b0,head[3:0]});
 
-   assign intruction_o = shifter_o[127:0];
+   assign intruction_o = shifter_o;
    
 endmodule
    
