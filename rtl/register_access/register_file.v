@@ -209,33 +209,83 @@ module register_writeback_select(
     output [2:0] selected_reg;
 
     input [2:0] reg_num;
-    input [1:0] reg_size;
+    input [2:0] reg_size;
 
-    wire [1:0] not_reg_size;
+    wire num2 = reg_num[2];
+    wire num1 = reg_num[1];
+    wire num0 = reg_num[0];
 
-    inv1$ 
-    inv1_0 (not_reg_size[0], reg_size[0]),
-    inv1_1 (not_reg_size[1], reg_size[1]);
+    wire size[2] = reg_size[2];
+    wire size[1] = reg_size[1];
+    wire size[0] = reg_size[0];
 
-    // s2 = (num2&!size1);
-    and2$ and_s2 (selected_reg[2], reg_num[2], not_reg_size[1]);
+    wire num1_not;
+    wire num0_not;
+    wire size1_not;
+    wire and0;
+    wire size2_not;
+    wire and1;
+    wire num2_not;
+    wire and2;
+    wire and3;
+    wire and4;
+    wire and5;
+    wire and6;
+    wire or0;
+    wire and7;
+    wire and8;
+    wire and9;
+    wire and10;
+    wire and11;
+    wire and12;
+    wire and13;
+    wire and14;
+    wire and15;
+    wire or1;
+    wire and16;
+    wire and17;
+    wire and18;
+    wire and19;
+    wire and20;
+    wire and21;
+    wire or2;
 
-    // s1 = (num1&!size0) | (num1&!size1);
-    wire [1:0] s1_and_out;
-    and2$ 
-    and_s1_0 (s1_and_out[0], reg_num[1], not_reg_size[0]),
-    and_s1_1 (s1_and_out[1], reg_num[1], not_reg_size[1]);
+    inv1$ num1_inv (.out(num1_not), .in(num1));
+    inv1$ num0_inv (.out(num0_not), .in(num0));
+    inv1$ size1_inv (.out(size1_not), .in(size1));
+    inv1$ size2_inv (.out(size2_not), .in(size2));
+    inv1$ num2_inv (.out(num2_not), .in(num2));
 
-    or2$ or_s1 (selected_reg[1], s1_and_out[0], s1_and_out[1]);
+    and5$ and_gate0(.out(and0), .in0(num2), .in1(num1_not), .in2(num0_not), .in3(size2), .in4(size1_not));
+    and4$ and_gate1(.out(and1), .in0(num1_not), .in1(num0), .in2(size2_not), .in3(size1_not));
+    and4$ and_gate2(.out(and2), .in0(num2_not), .in1(num1), .in2(size2_not), .in3(size1));
+    and5$ and_gate3(.out(and3), .in0(num2_not), .in1(num1), .in2(num0_not), .in3(size2), .in4(size1_not));
+    and5$ and_gate4(.out(and4), .in0(num2_not), .in1(num1), .in2(num0), .in3(size2), .in4(size1));
+    and4$ and_gate5(.out(and5), .in0(num2_not), .in1(num1), .in2(num0), .in3(size2_not));
+    and5$ and_gate6(.out(and6), .in0(num2_not), .in1(num1_not), .in2(num0_not), .in3(size2_not), .in4(size1_not));
+    and5$ and_gate7(.out(and7), .in0(num2), .in1(num1_not), .in2(num0), .in3(size2), .in4(size1));
+    and4$ and_gate8(.out(and8), .in0(num2), .in1(num0_not), .in2(size2_not), .in3(size1));
+    and4$ and_gate9(.out(and9), .in0(num2_not), .in1(num0), .in2(size2_not), .in3(size1_not));
+    and4$ and_gate10(.out(and10), .in0(num2), .in1(num1), .in2(num0_not), .in3(size1_not));
+    and5$ and_gate11(.out(and11), .in0(num2_not), .in1(num1), .in2(num0_not), .in3(size2), .in4(size1_not));
+    and5$ and_gate12(.out(and12), .in0(num2_not), .in1(num1), .in2(num0), .in3(size2), .in4(size1));
+    and4$ and_gate13(.out(and13), .in0(num2), .in1(num0_not), .in2(size2), .in3(size1_not));
+    and4$ and_gate14(.out(and14), .in0(num1), .in1(num0_not), .in2(size2_not), .in3(size1));
+    and5$ and_gate15(.out(and15), .in0(num2_not), .in1(num1_not), .in2(num0_not), .in3(size2_not), .in4(size1_not));
+    and5$ and_gate16(.out(and16), .in0(num2), .in1(num1_not), .in2(num0), .in3(size2), .in4(size1));
+    and5$ and_gate17(.out(and17), .in0(num2_not), .in1(num1), .in2(num0), .in3(size2), .in4(size1));
+    and4$ and_gate18(.out(and18), .in0(num2_not), .in1(num1), .in2(num0), .in3(size2_not));
+    and4$ and_gate19(.out(and19), .in0(num2), .in1(num0_not), .in2(size2), .in3(size1_not));
+    and4$ and_gate20(.out(and20), .in0(num1), .in1(num0_not), .in2(size2_not), .in3(size1));
+    and5$ and_gate21(.out(and21), .in0(num2_not), .in1(num1_not), .in2(num0_not), .in3(size2_not), .in4(size1_not));
 
+    or7$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5), .in6(and6));
+    or9$ or_gate1(.out(or1), .in0(and7), .in1(and8), .in2(and9), .in3(and10), .in4(and11), .in5(and12), .in6(and13), .in7(and14), .in8(and15));
+    or6$ or_gate2(.out(or2), .in0(and16), .in1(and17), .in2(and18), .in3(and19), .in4(and20), .in5(and21));
 
-    // s0 = (num0&!size0) | (num0&!size1);
-    wire [1:0] s0_and_out;
-    and2$ 
-    and_s0_0 (s0_and_out[0], reg_num[0], not_reg_size[0]),
-    and_s0_1 (s0_and_out[1], reg_num[0], not_reg_size[1]);
-
-    or2$ or_s0 (selected_reg[0], s0_and_out[0], s0_and_out[1]);
+    assign s2 = or0;
+    assign s1 = or1;
+    assign s0 = or2;
 
 endmodule
 
