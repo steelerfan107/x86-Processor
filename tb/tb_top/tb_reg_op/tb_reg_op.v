@@ -186,7 +186,12 @@ module TOP;
         $readmemh("rom/rom_program_0", test_rom_0.mem);
         $readmemh("rom/rom_program_1", test_rom_1.mem);
         $readmemh("rom/rom_program_2", test_rom_2.mem);
-        $readmemh("rom/rom_program_3", test_rom_3.mem); 
+        $readmemh("rom/rom_program_3", test_rom_3.mem);
+
+        $readmemh("rom/dec_rom_program_0", uut_decode.ds1.rom_block.b0.mem);
+        $readmemh("rom/dec_rom_program_1", uut_decode.ds1.rom_block.b1.mem);
+        $readmemh("rom/dec_rom_program_2", uut_decode.ds1.rom_block.b2.mem);
+     
         clk = 0;
         fetch_flush = 0;
         handle_int = 0;
