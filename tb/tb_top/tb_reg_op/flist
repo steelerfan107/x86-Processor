@@ -42,4 +42,10 @@
 ../../../rtl/fetch/address_generation.v
 ../../../rtl/fetch/byte_shifter_32B.v
 ../../../rtl/fetch/instruction_queue.v
+../../../rtl/register_access/mmx_register.v
+../../../rtl/register_access/register_file.v
+../../../rtl/register_access/segment_register.v
+../../../rtl/register_access/register_access_top.v
+../../../rtl/address_generation/address_generation_top.v
+../../../rtl/address_generation/address_generator.v
 tb_reg_op.v
