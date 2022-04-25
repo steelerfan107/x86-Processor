@@ -151,14 +151,76 @@ module address_generation_top (
     output [31:0] a_pc;
     output a_branch_taken;
 
+    // -------   //
+    // Pipestage //
+    // -------   //
 
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1;
+   
+    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
+    wire [2:0] p_size;
+    wire  p_set_d_flag;
+    wire  p_clear_d_flag;
+    wire  [63:0] p_op0;
+    wire  [63:0] p_op1;
+    wire  [2:0] p_op0_reg;
+    wire  [2:0] p_op1_reg;
+    wire  p_op0_is_address;
+    wire  p_op1_is_address;
+    wire  [47:0] p_imm;
+    wire  [3:0] p_alu_op;
+    wire  [2:0] p_flag_0;
+    wire  [2:0] p_flag_1;
+    wire  [1:0] p_stack_op;
+    wire  [31:0] p_pc;
+    wire  p_branch_taken;
+   
+    assign {
+      a_size,
+      a_set_d_flag,
+      a_clear_d_flag,
+      a_op0,
+      a_op1,
+      a_op0_reg,
+      a_op1_reg,
+      a_op0_is_address,
+      a_op1_is_address,
+      a_imm,
+      a_alu_op,
+      a_flag_0,
+      a_flag_1,
+      a_stack_op,
+      a_pc,
+      a_branch_taken	    
+    } = pipe_in_data;
+
+    assign pipe_in_data = {
+      r_size,
+      r_set_d_flag,
+      r_clear_d_flag,
+      p_op0,
+      p_op1,
+      r_op0_reg,
+      r_op1_reg,
+      p_op0_is_address,
+      p_op1_is_address,
+      r_imm,
+      r_alu_op,
+      r_flag_0,
+      r_flag_1,
+      r_stack_op,
+      r_pc,
+      r_branch_taken		    
+    };    
+    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
+   
     // ------- //
     // OP0 Mux //
     // ------- //
     op0_generator op0_generator0 (
-        a_op0,
-        a_op0_is_address,
+        p_op0,
+        p_op0_is_address,
 
         r_size,
 
@@ -202,8 +264,8 @@ module address_generation_top (
     // OP1 Mux //
     // ------- //
     op1_generator op1_generator0 (
-    a_op1,
-    a_op1_is_address,
+    p_op1,
+    p_op1_is_address,
 
     r_size,
 

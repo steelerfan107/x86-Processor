@@ -1,0 +1,16 @@
+// Reg32 Sanity Test
+// Eric T.
+
+0x0: B8 00 00 11 11 // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
+0x5: B9 00 00 00 01 // Move 0x1111_1111 to ECX (Move imm to r32) - Row 61
+0xa: BA 00 00 00 02 // Move 0x1111_1111 to EDX (Move imm to r32) - Row 61
+0xf: BB 00 00 00 03 // Move 0x1111_1111 to EBX (Move imm to r32) - Row 61
+0x14: 89 C4 // Move EAX to ESP (Move R/M32 to r32) - Row 69
+0x16: 89 CD // Move ECX to EBP (Move R/M32 to r32) - Row 69
+0x18: 89 D6 // Move EDX to ESI (Move R/M32 to r32) - Row 69
+0x1a: 89 DF // Move EBX to EDI (Move R/M32 to r32) - Row 69
+0x1c: 05 11 11 00 00 // Add 11 11 00 00 to EAX  - Row 4
+0x21: 81 C1 00 00 00 01 // Add 00 00 00 01 to ECX  - Row 7
+0x27: 81 C2 00 00 00 01 // Add 00 00 00 01 to EDX  - Row 7
+0x2d: 01 DC  // Add EBX to ESP  - Row 12
+0x2e: F4  // Halt  - Row 44

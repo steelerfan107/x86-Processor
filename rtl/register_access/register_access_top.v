@@ -189,6 +189,130 @@ module register_access_top (
     input wb_mmx_en;
     input [63:0] wb_mmx_data;
 
+    // ------                     //
+    // Pipestage (Bypass for now) //
+    // ------                     //
+   
+    localparam PIPEWIDTH = 1+32+1+3+2+3+3+4+32+48+8+8+3+3+3+3+1+1+3+8*32+6*16+8*64;
+
+    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
+
+    wire [31:0] p_eax;
+    wire [31:0] p_ecx;
+    wire [31:0] p_edx;
+    wire [31:0] p_ebx;
+    wire [31:0] p_esp;
+    wire [31:0] p_ebp;
+    wire [31:0] p_esi;
+    wire [31:0] p_edi;
+    wire [15:0] p_cs;
+    wire [15:0] p_ds;
+    wire [15:0] p_es;
+    wire [15:0] p_fs;
+    wire [15:0] p_gs;
+    wire [15:0] p_ss;
+    wire [63:0] p_mm0;
+    wire [63:0] p_mm1;
+    wire [63:0] p_mm2;
+    wire [63:0] p_mm3;
+    wire [63:0] p_mm4;
+    wire [63:0] p_mm5;
+    wire [63:0] p_mm6;
+    wire [63:0] p_mm7;   
+
+    assign {
+       r_size,
+       r_set_d_flag,
+       r_clear_d_flag,
+       r_op0,
+       r_op1,
+       r_op0_reg,
+       r_op1_reg,
+       r_modrm,
+       r_sib,
+       r_imm,
+       r_disp,
+       r_alu_op,
+       r_flag_0,
+       r_flag_1,
+       r_stack_op,
+       r_seg_override,
+       r_seg_override_valid,
+       r_pc,
+       r_branch_taken,
+       r_eax,
+       r_ecx,
+       r_edx,
+       r_ebx,
+       r_esp,
+       r_ebp,
+       r_esi,
+       r_edi,
+       r_cs,
+       r_ds,
+       r_es,
+       r_fs,
+       r_gs,
+       r_ss,
+       r_mm0,
+       r_mm1,
+       r_mm2,
+       r_mm3,
+       r_mm4,
+       r_mm5,
+       r_mm6,
+       r_mm7	    
+    } = pipe_in_data;
+
+    assign pipe_in_data = {
+       d_size,
+       d_set_d_flag,
+       d_clear_d_flag,
+       d_op0,
+       d_op1,
+       d_op0_reg,
+       d_op1_reg,
+       d_modrm,
+       d_sib,
+       d_imm,
+       d_disp,
+       d_alu_op,
+       d_flag_0,
+       d_flag_1,
+       d_stack_op,
+       d_seg_override,
+       d_seg_override_valid,
+       d_pc,
+       d_branch_taken,	
+       p_eax,
+       p_ecx,
+       p_edx,
+       p_ebx,
+       p_esp,
+       p_ebp,
+       p_esi,
+       p_edi,
+       p_cs,
+       p_ds,
+       p_es,
+       p_fs,
+       p_gs,
+       p_ss,
+       p_mm0,
+       p_mm1,
+       p_mm2,
+       p_mm3,
+       p_mm4,
+       p_mm5,
+       p_mm6,
+       p_mm7    
+    };
+
+   assign r_valid = d_valid;
+   assign d_ready = r_ready;
+       
+   //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
+   
     // ------ //
     // Stalls //
     // ------ //
@@ -227,14 +351,14 @@ module register_access_top (
         .writeback_size(wb_reg_size),
         .writeback_data(wb_reg_data),
 
-        .eax_out(r_eax),
-        .ecx_out(r_ecx),
-        .edx_out(r_edx),
-        .ebx_out(r_ebx),
-        .esp_out(r_esp),
-        .ebp_out(r_ebp),
-        .esi_out(r_esi),
-        .edi_out(r_edi)
+        .eax_out(p_eax),
+        .ecx_out(p_ecx),
+        .edx_out(p_edx),
+        .ebx_out(p_ebx),
+        .esp_out(p_esp),
+        .ebp_out(p_ebp),
+        .esi_out(p_esi),
+        .edi_out(p_edi)
     );
 
     // --------------------- //
@@ -249,12 +373,12 @@ module register_access_top (
         .write_data(wb_seg_data),
         .write_enable(wb_seg_en),
 
-        .cs_out(r_cs),
-        .ds_out(r_ds),
-        .es_out(r_es),
-        .fs_out(r_fs),
-        .gs_out(r_gs),
-        .ss_out(r_ss)
+        .cs_out(p_cs),
+        .ds_out(p_ds),
+        .es_out(p_es),
+        .fs_out(p_fs),
+        .gs_out(p_gs),
+        .ss_out(p_ss)
     );
 
     // ----------------- //
@@ -269,14 +393,14 @@ module register_access_top (
         .writeback_select(wb_mmx_number),
         .writeback_enable(wb_mmx_en),
 
-        .mm0_out(r_mm0),
-        .mm1_out(r_mm1),
-        .mm2_out(r_mm2),
-        .mm3_out(r_mm3),
-        .mm4_out(r_mm4),
-        .mm5_out(r_mm5),
-        .mm6_out(r_mm6),
-        .mm7_out(r_mm7)
+        .mm0_out(p_mm0),
+        .mm1_out(p_mm1),
+        .mm2_out(p_mm2),
+        .mm3_out(p_mm3),
+        .mm4_out(p_mm4),
+        .mm5_out(p_mm5),
+        .mm6_out(p_mm6),
+        .mm7_out(p_mm7)
     );
 
 endmodule
