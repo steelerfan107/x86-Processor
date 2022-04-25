@@ -108,7 +108,7 @@ wire agb16;
 wire eq16;
 wire bga16;
 
-ucomp16 c16(.a(a[15:0]), .b(b[15:0]), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .agb_out(agb16), .eq_out(eq16), .bga_out(bga16));
-ucomp32 c32(.a(a[31:16]), .b(b[31:16]), .agb_in(agb16), .eq_in(eq16), .bga_in(bga16), .agb_out(agb), .eq_out(eq), .bga_out(bga));
+ucomp16 c16a(.a(a[15:0]), .b(b[15:0]), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .agb_out(agb16), .eq_out(eq16), .bga_out(bga16));
+ucomp16 c16b(.a(a[31:16]), .b(b[31:16]), .agb_in(agb16), .eq_in(eq16), .bga_in(bga16), .agb_out(agb), .eq_out(eq), .bga_out(bga));
 
 endmodule

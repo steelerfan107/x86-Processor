@@ -1,9 +1,12 @@
 `timescale 1ns / 1ps
-module CMPXCHG32(rm32, r32, eax_in, out, eax_out);
+module CMPXCHG32(rm32, r32, eax_in, eflags, dest, out, eax_out);
 input [31:0] rm32; //register or memory value, dest
 input [31:0] r32; //always a register value, src
-output [31:0] dest; 
+output [31:0] dest;
+output [31:0] out;    
 output [5:0] eflags;
+input [31:0] eax_in;
+input [31:0] eax_out; 
 
 ucomp32 cmp(.a(rm32), .b(src), .eq(eflags[3]));
 /*IF accumulator = DEST

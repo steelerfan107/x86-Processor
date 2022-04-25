@@ -169,7 +169,7 @@ module register_file (
     wire ld_esi;
     wire ld_edi;
 
-    decoder3_8$ wb_decoder (selected_reg, wb_en, );
+    decoder3_8$ wb_decoder (writeback_reg, wb_en, );
 
     // and gate to enable load only when we actually want to load
     and2$ 
@@ -333,14 +333,14 @@ module register_input_size_selector (
 
     // 8 muxes, one for each reg
     reg_mux4_32 
-    reg_mux0 (reg_mux_out0, data, ax, al, , size),
-    reg_mux1 (reg_mux_out1, data, cx, cl, , size),
-    reg_mux2 (reg_mux_out2, data, dx, dl, , size),
-    reg_mux3 (reg_mux_out3, data, bx, bl, , size),
-    reg_mux4 (reg_mux_out4, data, sp, ah, , size),
-    reg_mux5 (reg_mux_out5, data, bp, ch, , size),
-    reg_mux6 (reg_mux_out6, data, si, dh, , size),
-    reg_mux7 (reg_mux_out7, data, di, bh, , size);
+    reg_mux0 (reg_mux_out0, ,al, ax, data, size),
+    reg_mux1 (reg_mux_out1, ,cl, cx, data, size),
+    reg_mux2 (reg_mux_out2, ,dl, dx, data, size),
+    reg_mux3 (reg_mux_out3, ,bl, bx, data, size),
+    reg_mux4 (reg_mux_out4, ,ah, sp, data, size),
+    reg_mux5 (reg_mux_out5, ,ch, bp, data, size),
+    reg_mux6 (reg_mux_out6, ,dh, si, data, size),
+    reg_mux7 (reg_mux_out7, ,bh, di, data, size);
 
     // mux these outputs to the final output
     reg_mux8_32 mux_final (

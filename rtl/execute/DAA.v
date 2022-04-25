@@ -53,6 +53,6 @@ mux2_8$ AL_mux1(.Y(AL_out), .IN0(AL), .IN1(AL_if_true1), .S0(if_out1));
 mux2$ CF_mux1(.outb(CF_out), .in0(1'b0), .in1(1'b1), .s0(if_out1));
 
 assign AF_out = AF;
-assign set_eflags = 6'z11111;
+assign set_eflags = 6'bz11111;
 
 endmodule
