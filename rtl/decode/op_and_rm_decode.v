@@ -42,8 +42,8 @@ module op_and_rm_decode (
    wire [2:0] 		 reg0_cloud;
    wire [2:0] 		 reg1_cloud;
    
-   mux #(.WIDTH(3), .INPUTS(4)) mr0 ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg0_cloud},dec_op0_reg,reg0_sel);
-   mux #(.WIDTH(3), .INPUTS(4)) mr1 ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg1_cloud},dec_op1_reg,reg0_sel);   
+   mux #(.WIDTH(3), .INPUTS(4)) mr0 ({3'b0,mask_op[10:8],mask_modrm[5:3],reg0_cloud},dec_op0_reg,reg0_sel);
+   mux #(.WIDTH(3), .INPUTS(4)) mr1 ({3'b0,mask_op[10:8],mask_modrm[5:3],reg1_cloud},dec_op1_reg,reg1_sel);   
    
    opcode_modrm_control_cloud opcode_modrm_control_cloud (
      .modrm7(mask_modrm[7]), 

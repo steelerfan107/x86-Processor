@@ -62,6 +62,8 @@ module execute_top (
     output wb_valid;
     output wb_branch_taken;
 
+   
+
     wire [63:0] a;
     wire [63:0] b;
     wire [15:0] sext16_b;
@@ -74,6 +76,49 @@ module execute_top (
     wire [31:0] e_cmovc_out;
     wire [31:0] e_cmpxchg_out;
     wire [63:0] e_xchg_out;
+
+    // -------   //
+    // Pipestage //
+    // -------   //
+    // Some Temp Logic
+   
+    localparam PIPEWIDTH = 32+32+64+2+1+1;
+
+    wire [31:0] p_dest_address;
+    wire [31:0] p_dest_reg;
+    wire [63:0] p_result;
+    wire [1:0] p_opsize;
+    wire p_mem_or_reg;
+    wire p_branch_taken;
+   
+    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
+
+    assign p_dest_address = 'h0;   
+    assign p_dest_reg = 'h0;
+    assign p_result = (~|e_op) ? e_op_b : e_op_a + e_op_b;
+    assign p_opsize = 'h0;
+    assign p_mem_or_reg = 'h0;
+    assign p_branch_taken = 'h0;
+
+    assign pipe_in_data = {
+        p_dest_address,
+        p_dest_reg,
+        p_result,
+        p_opsize,
+        p_mem_or_reg,
+        p_branch_taken		    
+    };
+
+    assign {
+        wb_dest_address,
+        wb_dest_reg,
+        wb_result,
+        wb_opsize,
+        wb_mem_or_reg,
+        wb_branch_taken		    
+    } = pipe_out_data; 
+
+    pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
 
     genvar i;
     generate

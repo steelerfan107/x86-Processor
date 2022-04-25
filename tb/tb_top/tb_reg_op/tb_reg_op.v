@@ -29,7 +29,9 @@ module TOP;
 
    reg                   reg_flush;
 
-   reg                   addr_gen_flush;   
+   reg                   addr_gen_flush;  
+
+   reg                   exe_flush; 
  
    // Code Segment
    wire [15:0] 	         cs_register;	
@@ -134,19 +136,19 @@ module TOP;
    wire   [31:0] r_pc;
    wire   r_branch_taken;
 
-   reg   [2:0] wb_reg_number;
-   reg   wb_reg_en;
-   reg   [2:0] wb_reg_size;
-   reg   [31:0] wb_reg_data;
-   reg   [2:0] wb_seg_number;
-   reg   wb_seg_en;
-   reg   [15:0] wb_seg_data;
-   reg   [2:0] wb_mmx_number;
-   reg   wb_mmx_en;
-   reg   [63:0] wb_mmx_data;
+   wire   [2:0] wb_reg_number;
+   wire   wb_reg_en;
+   wire   [2:0] wb_reg_size;
+   wire   [31:0] wb_reg_data;
+   wire   [2:0] wb_seg_number;
+   wire   wb_seg_en;
+   wire   [15:0] wb_seg_data;
+   wire   [2:0] wb_mmx_number;
+   wire   wb_mmx_en;
+   wire  [63:0] wb_mmx_data;
 
    wire a_valid;
-   reg  a_ready;
+   wire a_ready;
    wire [2:0] a_size;
    wire a_set_d_flag;
    wire a_clear_d_flag;
@@ -162,7 +164,17 @@ module TOP;
    wire [2:0] a_flag_1;
    wire [1:0] a_stack_op;
    wire [31:0] a_pc;
-   wire a_branch_taken;   
+   wire a_branch_taken;
+
+   // Writeback Interface
+   reg   wb_ready;
+   wire  [31:0] wb_dest_address;
+   wire  [31:0] wb_dest_reg;
+   wire  [63:0] wb_result;
+   wire  [1:0] wb_opsize;
+   wire  wb_mem_or_reg;
+   wire  wb_valid;
+   wire  wb_branch_taken;   
    
    fetch_top uut_fetch (
       clk,
@@ -378,7 +390,44 @@ address_generation_top uut_address_gen(
       a_pc,
       a_branch_taken
 
-  );   
+  ); 
+
+  temp_execute_top uut_execute(
+      clk,
+      reset,
+      exe_flush,
+      a_valid,
+      a_ready,
+      1'b0,
+      a_op0_reg,		       
+      a_op0,
+      a_op1,
+      32'h0,
+      a_alu_op,
+      a_size,
+      1'b0,
+      a_branch_taken,
+      wb_ready,
+      wb_dest_address,
+      wb_dest_reg,
+      wb_result,
+      wb_opsize,
+      wb_mem_or_reg,
+      wb_valid,					 			       
+      wb_branch_taken
+  );
+
+  
+  assign wb_reg_number = wb_dest_reg[2:0];
+  assign wb_reg_en = wb_valid;
+  assign wb_reg_size = wb_opsize;
+  assign wb_reg_data = wb_result;
+  assign wb_seg_number = 'h0;
+  assign wb_seg_en = 'h0;
+  assign wb_seg_data = 'h0;
+  assign wb_mmx_number = 'h0;
+  assign wb_mmx_en = 'h0;
+  assign wb_mmx_data = 'h0; 
 
   wire [31:0] 		rom_data_0, rom_data_1, rom_data_2, rom_data_3;
 
@@ -410,25 +459,14 @@ address_generation_top uut_address_gen(
   );    
    
   initial begin
-        $readmemh("rom/rom_program_0", test_rom_0.mem);
-        $readmemh("rom/rom_program_1", test_rom_1.mem);
-        $readmemh("rom/rom_program_2", test_rom_2.mem);
-        $readmemh("rom/rom_program_3", test_rom_3.mem);
+        $readmemh("rom/rom_control_0_0", test_rom_0.mem);
+        $readmemh("rom/rom_control_0_1", test_rom_1.mem);
+        $readmemh("rom/rom_control_0_2", test_rom_2.mem);
+        $readmemh("rom/rom_control_0_3", test_rom_3.mem);
 
         $readmemh("rom/dec_rom_program_0", uut_decode.ds1.rom_block.b0.mem);
         $readmemh("rom/dec_rom_program_1", uut_decode.ds1.rom_block.b1.mem);
         $readmemh("rom/dec_rom_program_2", uut_decode.ds1.rom_block.b2.mem);
-
-        wb_reg_number = 0;
-        wb_reg_en = 0;
-        wb_reg_size = 0;
-        wb_reg_data = 0;
-        wb_seg_number = 0;
-        wb_seg_en = 0;
-        wb_seg_data = 0;
-        wb_mmx_number = 0;
-        wb_mmx_en = 0;
-        wb_mmx_data = 0;  
    
         clk = 0;
         fetch_flush = 0;
@@ -436,10 +474,12 @@ address_generation_top uut_address_gen(
         decode_flush = 0;
         reg_flush = 0;
         addr_gen_flush = 0;
+        exe_flush = 0;      
         load_address = 0;
         load = 0;
-        a_ready = 1;
+        wb_ready = 1;
         reset = 1;
+     
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
@@ -474,4 +514,121 @@ address_generation_top uut_address_gen(
         $vcdpluson(0, TOP);
   end
 
+endmodule
+
+module temp_execute_top (
+    // Clock Interface
+    clk,
+    reset,
+
+    // Control Interface
+    flush,
+
+    // Pipestage Interface
+    e_valid,
+    e_ready,
+    e_mmr,
+    e_dest_reg, 		 
+    e_op_a,
+    e_op_b,
+    e_stack_ptr,
+    e_op,
+    e_opsize,
+    e_size_of_txn,
+    e_branch_taken,
+
+    // Writeback Interface
+    wb_ready,
+    wb_dest_address,
+    wb_dest_reg,
+    wb_result,
+    wb_opsize,
+    wb_mem_or_reg,
+    wb_valid,
+    wb_branch_taken
+);
+    // Clock Interface
+    input clk;
+    input reset;
+
+    // Control Interface
+    input flush;
+
+    // Pipestage Interface
+    input e_valid;
+    output e_ready;
+    input e_mmr;
+    input [2:0] e_dest_reg;
+    input [63:0] e_op_a;
+    input [63:0] e_op_b;
+    input [31:0] e_stack_ptr;
+    input [3:0] e_op;
+    input [2:0] e_opsize;
+    input e_size_of_txn;
+    input e_branch_taken;
+
+    // Writeback Interface
+    input wb_ready;
+    output [31:0] wb_dest_address;
+    output [31:0] wb_dest_reg;
+    output [63:0] wb_result;
+    output [2:0] wb_opsize;
+    output wb_mem_or_reg;
+    output wb_valid;
+    output wb_branch_taken;
+
+    wire [63:0] a;
+    wire [63:0] b;
+    wire [15:0] sext16_b;
+    wire [31:0] sext32_b;
+    wire [31:0] e_alu_out;
+    wire [5:0] e_alu_set_eflags; 
+    wire [5:0] e_alu_eflags_out; 
+    wire [63:0] e_simd_out;
+    wire [5:0] e_eflags_out;
+    wire [31:0] e_cmovc_out;
+    wire [31:0] e_cmpxchg_out;
+
+   // -------   //
+   // Pipestage //
+   // -------   //
+   // Some Temp Logic
+   
+    localparam PIPEWIDTH = 32+3+64+3+1+1;
+
+    wire [31:0] p_dest_address;
+    wire [2:0] p_dest_reg;
+    wire [63:0] p_result;
+    wire [2:0] p_opsize;
+    wire p_mem_or_reg;
+    wire p_branch_taken;
+   
+    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
+
+    assign p_dest_address = 'h0;   
+    assign p_dest_reg = e_dest_reg;
+    assign p_result = (~|e_op) ? e_op_b : e_op_a + e_op_b;
+    assign p_opsize = e_opsize;
+    assign p_mem_or_reg = 'h0;
+    assign p_branch_taken = 'h0;
+
+    assign pipe_in_data = {
+        p_dest_address,
+        p_dest_reg,
+        p_result,
+        p_opsize,
+        p_mem_or_reg,
+        p_branch_taken		    
+    };
+
+    assign {
+        wb_dest_address,
+        wb_dest_reg[2:0],
+        wb_result,
+        wb_opsize,
+        wb_mem_or_reg,
+        wb_branch_taken		    
+    } = pipe_out_data; 
+
+    pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
 endmodule

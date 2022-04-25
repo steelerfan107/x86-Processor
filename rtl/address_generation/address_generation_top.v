@@ -193,7 +193,7 @@ module address_generation_top (
       a_stack_op,
       a_pc,
       a_branch_taken	    
-    } = pipe_in_data;
+    } = pipe_out_data;
 
     assign pipe_in_data = {
       r_size,
@@ -212,7 +212,8 @@ module address_generation_top (
       r_stack_op,
       r_pc,
       r_branch_taken		    
-    };    
+    };   
+ 
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
    
     // ------- //

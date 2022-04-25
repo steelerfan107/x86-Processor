@@ -13,4 +13,4 @@
 0x21: 81 C1 00 00 00 01 // Add 00 00 00 01 to ECX  - Row 7
 0x27: 81 C2 00 00 00 01 // Add 00 00 00 01 to EDX  - Row 7
 0x2d: 01 DC  // Add EBX to ESP  - Row 12
-0x2e: F4  // Halt  - Row 44
+0x2f: F4  // Halt  - Row 44
