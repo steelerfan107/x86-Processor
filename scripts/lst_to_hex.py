@@ -22,23 +22,26 @@ def hexTobin(hex, bits) :
    return bin(int(hex, 16))[2:].zfill(bits)
 
 # Create hex View of Program
-hexArray = ["ZZ"] * 4096
+hexArray = ["ZZ"] * total_bytes
 
 f = open(lstFile, "r")
 lines = f.readlines()
 
 count = 0
+last_offset = 0;
+
 for line in lines:
    print("Converting: " + line);
-   if (line != '\n' and line[0] != "/"):
-      string = line.strip().replace(' ', '')
+   if (line != '\n' and line[0] != "/") :
+    if (line[1] == "x"):
+      string = line.strip().replace(' ', '').replace('\t', '')
       colon_split = string.split(":")
 
       address = colon_split[0].split("x")[1]
       bin_address = int(address,16)
 
       command_hex =  colon_split[1].split("//")[0]
-      comment =   colon_split[1].split("//")[1]
+      #comment =   colon_split[1].split("//")[1]
 
       offset = 0;
       hex_list = [];
@@ -50,7 +53,23 @@ for line in lines:
          hexArray[bin_address + offset] = byte
          offset += 1
     
-      print("Out: ", bin_address, command_hex);
+      last_offset = bin_address + offset
+      print("Out 1: ", bin_address, command_hex, hex_list);
+    else:
+      string = line.strip().replace(' ', '')
+      command_hex =  string.split("//")[0]
+
+      hex_list = [];
+
+      for index in range(0, len(command_hex), 2):
+         hex_list.append(command_hex[index : index + 2])
+
+      offset = last_offset
+      for byte in hex_list:
+         hexArray[offset] = byte
+         offset += 1         
+      print("Out 2: ", last_offset, command_hex);
+  
 
 f = open("./test_generation/"+test_name+"_readable", "w")
 
@@ -64,7 +83,6 @@ for line in range(0,total_memory_lines):
          f.write("  ")
      f.write(hexArray[(line*32) + byte] + " ")
   f.write("\n")
-
 f.close()
 
 # Create memory load files
@@ -81,7 +99,7 @@ for memory_x in range(0,number_of_memories_wide):
         y_offset = memory_y * memory_depth
 
         for byte in range(0,memory_width):
-           f.write(hexArray[(y_offset+line) * total_width + (byte + x_offset)] + " ")
+           f.write(hexArray[(y_offset+line) * total_width + (byte + x_offset)])
 
         f.write("\n")
     f.close()

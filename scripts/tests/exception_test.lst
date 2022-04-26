@@ -1,0 +1,72 @@
+// Exception Test Public Test Program
+// EE382N Spring 2018
+//
+// Set IDTR = 0x02000000 for this test program
+//
+0x0:	bc 00 03 00 00	//movl    $0x300, %esp			// esp = 0x300
+0x5:	bf 00 04 00 00	//movl    $0x400, %edi                  // edi = 0x400
+0xa:	66 8e d7	//movw    %di, %ss                      // ss = 0x400 (SS base VA=0x04000000)
+0xd:	b8 00 0b 00 00	//movl    $0xb00, %eax                  // eax = 0xb00
+0x12:	66 8e c0	//movw    %ax, %es                      // es = 0xb00 (ES base VA=0x0b000000)
+0x15:	bb b7 03 00 00	//movl    $0x03b7, %ebx                 // ebx = 0x03b7
+0x1a:	bd 10 00 00 00	//movl    $0x10, %ebp                   // ebp = 0x10
+0x1f:	66 c1 e0 08	//salw	  $0x8, %ax                     // ax=0 (eax=0),CF=1,SF=0,ZF=1,PF=1,others undef
+0x23:	66 26 c7 44 ab 
+0x28:	08 09 0a	//movw    $0x0a09, %es:0x8(%ebx, %ebp, 4)  // tries M[VA=0x0b000000+0x03b7+4*0x10+0x8=0x0b0003ff]
+								// takes exception on this
+								// push eflags, cs, eip at 
+								// stack addresses 0x040002fc, 0x040002f8, 0x040002f4
+								// get IDT entry at 0x02000068
+								// new cs=0x0, eip=0x52 (fetch addr is VA=0x52)
+								// service routine:	
+								// bx = 0x03b6, modify eflags
+								// iretd:  pop eip, cs, eflags 
+								// second time trying movw:	
+								// M[VA=0x0b000000+0x03b6+4*0x10+0x8=0x0b0003fe (PA=0x43fe)] = 0x0a90 (little-endian)
+								//
+0x2b:	bf 00 0b 00 00	//movl    $0xb00, %edi                  // edi = 0xb00
+0x30:	66 8e ef	//movw    %di, %gs                      // gs = 0xb00 (GS base VA=0x0b000000)
+0x33:	be 00 04 00 00	//movl    $0x400, %esi			// esi = 0x400
+0x38:	65 01 5e fd	//addl    %ebx, %gs:-3(%esi)		// M[VA=0x0b000000+0x400+0xfffffffd (PA=0x43fd)] = 0x03b6 + 0x050a0902
+
+0x3c:	f4 90 90 90	//hlt                                   
+0x40:	90 90 90 90
+0x44:	90 90 90 90
+0x48:	90 90 90 90
+0x4c:	90 90 90 90	
+0x50:	f4 f4 66 83	//addw	  $-1, %bx			//ebx = 0x03b6
+0x54:	c3 ff cf f4	//iretd
+		
+0x2000:	 00 00 00 00
+0x2004:	 00 00 00 00
+0x2008:	 00 00 00 00
+0x200c:	 00 00 00 00
+0x2010:	 00 00 00 00
+0x2014:	 00 00 00 00
+0x2018:	 00 00 00 00
+0x201c:	 00 00 00 00
+0x2020:	 00 00 00 00
+0x2024:	 00 00 00 00
+0x2028:	 00 00 00 00
+0x202c:	 00 00 00 00
+0x2030:	 00 00 00 00
+0x2034:	 00 00 00 00
+0x2038:	 00 00 00 00
+0x203c:	 00 00 00 00
+0x2040:	 00 00 00 00
+0x2044:	 00 00 00 00
+0x2048:	 00 00 00 00
+0x204c:	 00 00 00 00
+0x2050:	 00 00 00 00
+0x2054:	 00 00 00 00
+0x2058:	 00 00 00 00
+0x205c:	 00 00 00 00
+0x2060:	 00 00 00 00
+0x2064:	 00 00 00 00
+0x2068:	 52 00 00 00    //cs=0x0, eip=0x52 (protection fault routine address)
+0x206c:	 00 00 00 00
+0x2070:	 00 00 00 00	//cs=0x5, eip=0x200 (not used)
+0x2074:	 00 00 00 00
+
+0x43fc:	 01 02 03 04	//data
+0x4400:	 05 06 07 08
