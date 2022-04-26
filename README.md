@@ -30,7 +30,7 @@ The lst file is in the format:
 0x0:     B8 00 00 11 11 // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
          89 99          // This is an illegal op but just to show format.
                         // Another Comment
-0x5:     B9 00 00 00 01 // Move 0x1111_1111 to ECX (Move imm to r32) - Row 61
+0x7:     B9 00 00 00 01 // Move 0x1111_1111 to ECX (Move imm to r32) - Row 61
 0x2000:  B9 00 00 00 01 // Can do jumps also
 ```
 
