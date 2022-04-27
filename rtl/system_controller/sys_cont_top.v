@@ -23,7 +23,8 @@ module sys_cont_top (
      decode_start_int,
      decode_end_int,
      reg_load_cs,
-     reg_cs		  
+     reg_cs,
+     ric		  
 );
 
            input      clk;
@@ -51,7 +52,8 @@ module sys_cont_top (
 	   input      decode_end_int;  
 	   output     reg_load_cs;  
 	   output     [15:0] reg_cs;
-    
+           input      ric;
+   
            wire [1:0] int_serviced;
            wire [3:0] int_serviced_oh;
            wire       or_int_vec;

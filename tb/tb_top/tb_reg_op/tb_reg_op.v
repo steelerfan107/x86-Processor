@@ -12,26 +12,31 @@ module TOP;
    reg [127:0]           memory_data;
    reg                   memory_valid;
    reg [31:0]            memory_address;
-   
+ 
+   reg [31:0]            ememory_data;
+   reg                   ememory_valid;
+   reg [31:0]            ememory_address;
+  
    // Clock Interface
    reg                   clk;
    reg                   reset;
 
    // Control Interface
-   reg 	                 fetch_flush;
-   reg                   handle_int;
+   wire	                 fetch_flush;
+   wire                  handle_int;
    wire                  halt;
 
    // Control Interface
-   reg   	         decode_flush;
-   reg   [IADDRW-1:0]    load_address;
-   reg  	         load;
+   wire   	         decode_1_flush;
+   wire   	         decode_0_flush;   
+   wire   [IADDRW-1:0]   load_address;
+   wire  	         load;
+   wire                  reg_flush;
+   wire                  addr_gen_flush;  
+   wire                  exe_flush;
+   wire                  wb_flush;  
 
-   reg                   reg_flush;
-
-   reg                   addr_gen_flush;  
-
-   reg                   exe_flush; 
+   reg [3:0] 		 int_vec;
  
    // Code Segment
    wire [15:0] 	         cs_register;	
@@ -46,6 +51,17 @@ module TOP;
    reg                   imem_dp_valid;
    wire                  imem_dp_ready;
    reg    [IDATAW-1:0] 	 imem_dp_read_data;
+
+   // Inturrupt Memory Interface
+   wire                  emem_valid;
+   reg   	         emem_ready;
+   wire    [IADDRW-1:0]  emem_address;
+   wire    	         emem_wr_en;
+   wire    [32-1:0]	 emem_wr_data;
+   wire    [ISIZEW-1:0]  emem_wr_size;
+   reg                   emem_dp_valid;
+   wire                  emem_dp_ready;
+   reg    [32-1:0] 	 emem_dp_read_data;   
 
    // Branch Predictor Interface
    wire  [IADDRW-1:0] 	bp_pc;
@@ -179,7 +195,10 @@ module TOP;
    wire  [1:0] wb_opsize;
    wire  wb_mem_or_reg;
    wire  wb_valid;
-   wire  wb_branch_taken;   
+   wire  wb_branch_taken;
+
+   wire     reg_load_cs;  
+   wire     [15:0] reg_cs;   
    
    fetch_top uut_fetch (
       clk,
@@ -214,7 +233,8 @@ module TOP;
    decode_top uut_decode (
       clk,
       reset,
-      decode_flush,
+      decode_0_flush,
+      decode_1_flush,			  
       handle_int,
       handle_int_done,
       halt,
@@ -425,6 +445,34 @@ address_generation_top uut_address_gen(
       wb_valid,					 			       
       wb_branch_taken
   );
+   
+  sys_cont_top uut_sys_cont (
+     clk,
+     reset,
+     int_vec,		     
+     emem_valid,
+     emem_ready,
+     emem_address,
+     emem_wr_en,
+     emem_wr_data,
+     emem_wr_size,
+     emem_dp_valid,
+     emem_dp_ready,
+     emem_dp_read_data,
+     fetch_flush,
+     decode_0_flush,
+     decode_1_flush,
+     reg_flush,
+     addr_gen_flush,
+     exe_flush,
+     wb_flush,
+     load,
+     load_address,
+     handle_int,
+     handle_int_done,
+     reg_load_cs,
+     reg_cs		  
+  );   
 
   
   assign wb_reg_number = wb_dest_reg[2:0];
@@ -480,21 +528,17 @@ address_generation_top uut_address_gen(
         eip = 'h0;
         eflags_reg = 'h0;   
         clk = 0;
-        fetch_flush = 0;
-        handle_int = 0;
-        decode_flush = 0;
-        reg_flush = 0;
-        addr_gen_flush = 0;
-        exe_flush = 0;      
-        load_address = 0;
-        load = 0;
         wb_ready = 1;
         reset = 1;
+        int_vec = 'h0;     
      
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
-        #20	 
+        #500
+        int_vec = 1;     
+	#50
+        int_vec = 0;     	  
         $display("==========\n End Test \n==========");
   end
 
@@ -510,12 +554,28 @@ address_generation_top uut_address_gen(
           memory_valid <= (memory_valid) ? ~(imem_dp_ready) : imem_valid;
 	  memory_address <= imem_address;
        end
-  end
+  end // always @ (posedge clk or posedge reset)
+
+  always @ (posedge clk or posedge reset) begin
+       if (reset) begin
+          ememory_data  <= 0;
+          ememory_valid <= 0;
+          ememory_address <= 0;	  
+       end else begin
+          ememory_data  <= 32'h400;
+          ememory_valid <= (ememory_valid) ? ~(emem_dp_ready) : emem_valid;
+	  ememory_address <= emem_address;
+       end
+  end   
 
   always @ (*) begin
        imem_dp_valid     =  memory_valid;
-       imem_dp_read_data =  memory_data;
+       imem_dp_read_data =  {rom_data_0, rom_data_1, rom_data_2, rom_data_3};
        imem_ready        = ~memory_valid;
+
+       emem_dp_valid     =  ememory_valid;
+       emem_dp_read_data =  32'h400;
+       emem_ready        = ~ememory_valid;     
   end
    
   always #10  clk          = ~clk;
