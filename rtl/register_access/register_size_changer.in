@@ -1,0 +1,7 @@
+.i 3
+.o 2
+.ilb in2 in1 in0
+.ob out1 out0
+001 10
+010 01 #specified above.
+011 00

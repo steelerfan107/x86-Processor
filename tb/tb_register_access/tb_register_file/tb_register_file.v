@@ -22,7 +22,7 @@ module TOP;
 
     reg [2:0] writeback_reg;
     reg writeback_en;
-    reg [1:0] writeback_size;
+    reg [2:0] writeback_size;
     reg [31:0] writeback_data;
 
     wire [31:0] eax_out;
@@ -87,7 +87,7 @@ module TOP;
 
         // Write to EAX then read
         writeback_reg = 0;
-        writeback_size = 0;
+        writeback_size = 3;
         writeback_data = 32'hABCD;
         writeback_en = 1;
 
@@ -297,7 +297,7 @@ module TOP;
 
         $display("Testing 16 bit write");
         // 16 bit write
-        writeback_size = 1;
+        writeback_size = 2;
 
         writeback_reg = 0;
         // writeback_data = 32'h3227cf28;
@@ -306,6 +306,7 @@ module TOP;
         #10
 
         if (eax_out != 32'h3227abcd) $display("FAIL: AX Write Test");
+        $display("EAX 16 bit write: 0x%X", eax_out);
 
         writeback_reg = 1;
         // writeback_data = 32'hebc344b6;
@@ -442,7 +443,7 @@ module TOP;
         // ʕ•ᴥ•ʔ
 
         $display("Testing 8 bit writes");
-        writeback_size = 2;
+        writeback_size = 1;
 
         writeback_data = 32'h0000_00aa;
         writeback_reg = 0;

@@ -56,7 +56,7 @@ module register_file (
 
     input [2:0] writeback_reg;     // number of writeback register
     input writeback_en;
-    input [1:0] writeback_size;
+    input [2:0] writeback_size;
     input [31:0] writeback_data;
 
     output [31:0] eax_out;
@@ -215,9 +215,9 @@ module register_writeback_select(
     wire num1 = reg_num[1];
     wire num0 = reg_num[0];
 
-    wire size[2] = reg_size[2];
-    wire size[1] = reg_size[1];
-    wire size[0] = reg_size[0];
+    wire size2 = reg_size[2];
+    wire size1 = reg_size[1];
+    wire size0 = reg_size[0];
 
     wire num1_not;
     wire num0_not;
@@ -301,7 +301,7 @@ module register_input_size_selector (
     out,
 
     reg_select,
-    size,
+    size_input,
     data,
 
     eax,
@@ -317,7 +317,7 @@ module register_input_size_selector (
     output [31:0] out;
 
     input [2:0] reg_select;
-    input [1:0] size;
+    input [2:0] size_input;
     input [31:0] data;
 
     input [31:0] eax;
@@ -337,6 +337,10 @@ module register_input_size_selector (
     wire [31:0] reg_mux_out5;
     wire [31:0] reg_mux_out6;
     wire [31:0] reg_mux_out7;
+
+    // convert new size encoding to old size encoding
+    wire [1:0] size;
+    register_size_changer size_changer (size, size_input);
 
     // 16 bit registers
     wire [31:0] ax;
@@ -409,6 +413,44 @@ module register_input_size_selector (
 
     );
 
+
+endmodule
+
+// ------------ //
+// Size changer //
+// ------------ //
+// Changes old size encoding to new one
+module register_size_changer (
+    out,
+    in
+);
+
+    output [1:0] out;
+    input [2:0] in;
+
+    wire in2 = in[2];
+    wire in1 = in[1];
+    wire in0 = in[0];
+
+    wire out1 = out[1];
+    wire out0 = out[0];
+
+    wire in2_not;
+    wire in1_not;
+    wire and0;
+    wire in0_not;
+    wire and1;
+
+    inv1$ in2_inv (.out(in2_not), .in(in2));
+    inv1$ in1_inv (.out(in1_not), .in(in1));
+    inv1$ in0_inv (.out(in0_not), .in(in0));
+
+    and3$ and_gate0(.out(and0), .in0(in2_not), .in1(in1_not), .in2(in0));
+    and3$ and_gate1(.out(and1), .in0(in2_not), .in1(in1), .in2(in0_not));
+
+
+    assign out1 = and0;
+    assign out0 = and1;
 
 endmodule
 
