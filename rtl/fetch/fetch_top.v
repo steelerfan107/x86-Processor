@@ -133,8 +133,11 @@ module fetch_top (
        .imem_address(imem_address)				  
    );
    
-   // Wrapper Tieoffs 
-   assign imem_valid = 1'b1;
+   // Wrapper Tieoffs
+   inv1$ finv (flush_not, flush);
+   or2$ imem_vo (imem_v, flush_not, load);   
+   
+   assign imem_valid = imem_v;
    assign imem_wr_en = 'h0;
    assign imem_wr_data = 'h0;
    assign imem_wr_size = 'h0;
