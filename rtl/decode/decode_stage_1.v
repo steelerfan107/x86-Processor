@@ -11,7 +11,15 @@ module decode_stage_1 (
    // Control Interface
    flush,
    handle_int,
+   handle_int_done,		       
    halt,
+
+   // EIP Modification Interface		       
+   write_eip,
+   eip,
+
+   // EFLAGS Interface  
+   eflags_reg,
 
    // Stage 0 Pipe
    s0_valid,
@@ -65,8 +73,16 @@ module decode_stage_1 (
    // Control Interface
    input                flush;
    input                handle_int;
+   output               handle_int_done;   
    output               halt;
-  
+
+   // EIP Modification Interface		       
+   input                write_eip;
+   input [31:0]         eip;
+
+   // EFLAGS Interface  
+   input [31:0] 	eflags_reg;
+   
    // Stage 0 Pipe
    input               s0_valid;
    output              s0_ready;
@@ -132,7 +148,15 @@ module decode_stage_1 (
    
    wire 		rom_in_control;
    wire [2:0] 		rom_control;
+   wire [2:0] 		rom_control_nc;
+   wire [31:0] 		eip_reg_not;
 
+   // Int Handle and EIP
+   mux #(.INPUTS(2),.WIDTH(3))  int_rc_mux ({3'd6,s0_rom_control}   , rom_control   , handle_int);   
+   mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,s0_rom_in_control}, rom_in_control, handle_int);
+
+   register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, write_eip);   
+   
    // Seperate Imm and Disp
    imm_disp_seperate imm_disp_seperate(
 	s0_displace_n_imm,
@@ -178,7 +202,7 @@ module decode_stage_1 (
       	mask_op,
         dec_modrm,
         s0_size_override,
-        rom_control,
+        rom_control_nc,
         dec_size,  
         dec_set_d_flag,
         dec_clear_d_flag,   
@@ -219,9 +243,7 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, s0_rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, s0_rom_in_control);
 
-   
-   assign rom_in_control = 0;
-   wire 		nc_ric;
+   wire nc_ric;  
    
    // ROM Block
    rom_block #(.IADDRW(IADDRW)) rom_block (
@@ -253,7 +275,11 @@ module decode_stage_1 (
       rom_pc,
       rom_branch_taken,  
       nc_ric,
-      s0_rom_control		
+      rom_control,
+      eflags_reg,
+      eip_reg,	
+      dec_imm,
+      handle_int_done	
    );
  
 
