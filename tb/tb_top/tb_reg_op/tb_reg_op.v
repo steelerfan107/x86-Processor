@@ -92,6 +92,11 @@ module TOP;
    wire [IADDRW-1:0]    d_pc;
    wire                 d_branch_taken;
 
+   wire                 handle_int_done;
+   reg                  write_eip;
+   reg [31:0]           eip;
+   reg [31:0]	        eflags_reg;
+   
    wire   r_valid;
    wire   r_ready;
    wire   [2:0] r_size;
@@ -211,7 +216,11 @@ module TOP;
       reset,
       decode_flush,
       handle_int,
+      handle_int_done,
       halt,
+      write_eip,
+      eip,
+      eflags_reg,				  
       ras_address,
       ras_push,		  
       f_valid,
@@ -464,10 +473,12 @@ address_generation_top uut_address_gen(
         $readmemh("rom/rom_control_0_2", test_rom_2.mem);
         $readmemh("rom/rom_control_0_3", test_rom_3.mem);
 
-        $readmemh("rom/dec_rom_program_0", uut_decode.ds1.rom_block.b0.mem);
-        $readmemh("rom/dec_rom_program_1", uut_decode.ds1.rom_block.b1.mem);
-        $readmemh("rom/dec_rom_program_2", uut_decode.ds1.rom_block.b2.mem);
-   
+        $readmemb("rom/dec_rom_program_0_0", uut_decode.ds1.rom_block.b0.mem);
+        $readmemb("rom/dec_rom_program_0_1", uut_decode.ds1.rom_block.b1.mem);
+
+        write_eip = 'h0;
+        eip = 'h0;
+        eflags_reg = 'h0;   
         clk = 0;
         fetch_flush = 0;
         handle_int = 0;

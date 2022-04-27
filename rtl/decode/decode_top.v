@@ -12,7 +12,15 @@ module decode_top (
    // Control Interface
    flush,
    handle_int,
+   handle_int_done,		   
    halt,
+
+   // EIP Modification Interface		       
+   write_eip,
+   eip,
+
+   // EFLAGS Interface  
+   eflags_reg,		   
 
    // Return Address Stack Interface
    ras_address,
@@ -61,7 +69,15 @@ module decode_top (
    // Control Interface
    input 	        flush;
    input                handle_int;
+   output               handle_int_done;   
    output               halt;
+
+   // EIP Modification Interface		       
+   input                write_eip;
+   input [31:0]         eip;
+
+   // EFLAGS Interface  
+   input [31:0] 	eflags_reg;   
 
    // Return Address Stack Interface
    output [IADDRW-1:0] 	ras_address;
@@ -156,6 +172,8 @@ module decode_top (
    wire 	        s1_seg_override_valid;
    wire [IADDRW-1:0]    s1_pc;
    wire                 s1_branch_taken;
+
+   wire 		nc0;
    
    localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3;   
 
@@ -165,7 +183,7 @@ module decode_top (
        clk,
        reset,
        flush,
-       handle_int,
+       nc0,	    
        halt,
        f_valid,
        f_ready,
@@ -238,7 +256,11 @@ module decode_top (
        reset,
        flush,
        handle_int,
-       halt,
+       handle_int_done,					  
+       halt,		       
+       write_eip,
+       eip,
+       eflags_reg,					  
        s0_valid_r,
        s0_ready_r,
        s0_displace_n_imm_r,
