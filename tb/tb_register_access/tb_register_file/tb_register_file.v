@@ -120,49 +120,49 @@ module TOP;
 
         writeback_reg = 0;
         writeback_data = eax_data;
-        #5
+        #10
 
         if (eax_out != eax_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 1;
         writeback_data = ecx_data;
-        #5
+        #10
 
         if (ecx_out != ecx_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 2;
         writeback_data = edx_data;
-        #5
+        #10
 
         if (edx_out != edx_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 3;
         writeback_data = ebx_data;
-        #5
+        #10
 
         if (ebx_out != ebx_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 4;
         writeback_data = esp_data;
-        #5
+        #10
 
         if (esp_out != esp_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 5;
         writeback_data = ebp_data;
-        #5
+        #10
 
         if (ebp_out != ebp_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 6;
         writeback_data = esi_data;
-        #5
+        #10
 
         if (esi_out != esi_data) $display("FAIL: Register %d write test", writeback_reg);
 
         writeback_reg = 7;
         writeback_data = edi_data;
-        #5
+        #10
 
         if (edi_out != edi_data) $display("FAIL: Register %d write test", writeback_reg);
 
@@ -173,14 +173,15 @@ module TOP;
 
         writeback_reg = 0;
         writeback_data = {16'h0, ax_data};
-        #5
+        #10
 
         $display("Testing 8 bit register writes");
         writeback_size = 1;
         writeback_data = 32'd0;
 
-        #5
+        #10
 
+        writeback_reg = 4;
         writeback_data = 32'h0000_00ff;
 
 
