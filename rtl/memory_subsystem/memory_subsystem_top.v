@@ -13,7 +13,6 @@ module memory_subsystem_top (
     imem_dp_ready,
     imem_dp_read_data,
 
-
     // Data Memory Read Interface
     dmem_r_valid,
     dmem_r_ready,
@@ -90,21 +89,35 @@ module memory_subsystem_top (
     // Interconnect - Busses
     wire [BUSDATAW-1:0] bus_data;
     wire [BUSADDRW-1:0] bus_addr;
+
+    wire bus_req_icache;
     wire bus_req;
+
+    wire bus_done_icache;
     wire bus_done;
+
     wire bus_data_valid;
 
     wire bus_rd_wr;
     wire bus_en;
 
+    wire bus_busy_icache;
+    wire bus_busy;
+
+    or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
+    or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
+    or3$(bus_busy, bus_busy_icache, 1'b0, 1'b0);
+
 
     wire arb_grant;
+    wire bus_busy;
     arbiter arb(
         .clk(clk),
         .reset(reset),
         .req(bus_req),
         .done(bus_done),
         .grant(arb_grant)
+        .busy(bus_busy)
     );
 
    
@@ -140,14 +153,16 @@ module memory_subsystem_top (
         .phys_addr(),   // from TLB
         .tlb_hit(),     // from TLB
         .mem_addr(bus_addr),
-        .mem_req(bus_req),
+        .mem_req(bus_req_icache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
         .mem_en(bus_en),
-        .mem_done(bus_done),
+        .mem_done(bus_done_icache),
         .grant_in(arb_grant),
-        .grant_out(icache_grant)
+        .grant_out(icache_grant),
+        .bus_busy_out(bus_busy_icache_out)
+        .bus_busy_in(bus_busy)
     );
 
     //dma_top dma();
@@ -159,7 +174,8 @@ module memory_subsystem_top (
         .rd_wr(dec_rd_wr),
         .addr(bus_addr),
         .data(bus_data),
-        .valid(bus_data_valid)
+        .valid(bus_data_valid),
+        .bus_busy(bus_busy)
     );
 
     //io_device_top io_device();

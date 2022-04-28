@@ -24,7 +24,10 @@ module icache(
 
     // Arbiter Interface
     grant_in,
-    grant_out
+    grant_out,
+
+    bus_busy_out,
+    bus_busy_in
     
 );
 
@@ -63,7 +66,9 @@ module icache(
     // Arbitration Signals
     input  grant_in;
     output grant_out;
- 
+
+    output bus_busy_out;
+    input bus_busy_in;
 
     // TODO implement
     // must use tristate_bus_driver for all tristates 
