@@ -51,7 +51,7 @@ module icache(
     output [IDATAW-1:0] dp_read_data;
 
     // from the TLB
-    input phys_addr;
+    input [31:0] phys_addr;
     input tlb_hit;
     
     // Interface to Interconnect
@@ -70,9 +70,26 @@ module icache(
     output bus_busy_out;
     input bus_busy_in;
 
-    // TODO implement
-    // must use tristate_bus_driver for all tristates 
-    // assign mem_rd_wr =  state==reading ? 1'b0 : 1'bZ;
 
+    wire [4:0] index = address[31:27];
+    wire [22:0] tag = phys_addr[26:4];
+
+    // this should always be 0 for 16B-aligned requests
+    wire [3:0] byte_offset = address[3:0]
+
+    itagRAM tagram();
+    ivalidRAM validram();
+
+    // 23-bit compare
+    // TODO
+    wire tag_hit;
+    compare #(.WIDTH(23)) comp( , ,tag_hit);
+
+    icache_control control();
+
+    decoder2_4$ accum_decoder();
+    // 16B accumulation register here
+
+    idataRAM dataram();
 
 endmodule
