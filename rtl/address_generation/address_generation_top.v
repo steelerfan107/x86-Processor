@@ -75,7 +75,8 @@ module address_generation_top (
     a_flag_1,
     a_stack_op,
     a_pc,
-    a_branch_taken
+    a_branch_taken,
+    a_to_sys_controller			       
 
 );
 
@@ -150,7 +151,8 @@ module address_generation_top (
     output [1:0] a_stack_op;
     output [31:0] a_pc;
     output a_branch_taken;
-
+    output a_to_sys_controller;
+   
     // -------   //
     // Pipestage //
     // -------   //
@@ -215,7 +217,13 @@ module address_generation_top (
     };   
  
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
-   
+
+    // -------                    //
+    // Indicate to Sys Controller //
+    // -------                    //
+
+   compare #(.WIDTH(3)) (r_op0, 3'h7, a_to_sys_controller);
+         
     // ------- //
     // OP0 Mux //
     // ------- //

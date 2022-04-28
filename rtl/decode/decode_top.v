@@ -25,7 +25,11 @@ module decode_top (
 
    // Return Address Stack Interface
    ras_address,
-   ras_push,		  
+   ras_push,
+
+   // IRETd Interface
+   iretd,
+   iretd_halt,		  
    
    // Fetch Interface  
    f_valid,
@@ -84,7 +88,11 @@ module decode_top (
    // Return Address Stack Interface
    output [IADDRW-1:0] 	ras_address;
    output               ras_push;
-	   
+
+   // IRETd Interface
+   output               iretd;
+   input                iretd_halt;
+	   	   
    // Fetch Interface  
    input                f_valid;
    output               f_ready;
@@ -259,7 +267,9 @@ module decode_top (
        flush_1,
        handle_int,
        handle_int_done,					  
-       halt,		       
+       halt,
+       iretd,
+       iretd_halt,			       
        write_eip,
        eip,
        eflags_reg,					  
