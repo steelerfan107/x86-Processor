@@ -13,7 +13,9 @@ module decode_stage_1 (
    handle_int,
    handle_int_done,		       
    halt,
-
+   iretd,
+   iretd_halt,
+		       
    // EIP Modification Interface		       
    write_eip,
    eip,
@@ -75,6 +77,8 @@ module decode_stage_1 (
    input                handle_int;
    output               handle_int_done;   
    output               halt;
+   output               iretd_halt;
+   input                iretd;
 
    // EIP Modification Interface		       
    input                write_eip;
@@ -151,6 +155,11 @@ module decode_stage_1 (
    wire [2:0] 		rom_control_nc;
    wire [31:0] 		eip_reg_not;
 
+   // IRETd Logic
+   wire 		iretd_halt_mask;
+   
+   compare #(.WIDTH(8)) halt_comp (8'hCF, s0_opcode[15:8], iretd);
+   
    // Int Handle and EIP
    mux #(.INPUTS(2),.WIDTH(3))  int_rc_mux ({3'd6,s0_rom_control}   , rom_control   , handle_int);   
    mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,s0_rom_in_control}, rom_in_control, handle_int);

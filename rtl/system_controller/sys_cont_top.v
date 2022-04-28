@@ -24,7 +24,14 @@ module sys_cont_top (
      decode_end_int,
      reg_load_cs,
      reg_cs,
-     ric		  
+     iretd,
+     iretd_halt,
+     iretd_pop_valid,
+     iretd_pop_data,
+     reg_load_eflags,
+     reg_eflags,
+     reg_load_eip,
+     reg_eip			     
 );
 
            input      clk;
@@ -52,7 +59,49 @@ module sys_cont_top (
 	   input      decode_end_int;  
 	   output     reg_load_cs;  
 	   output     [15:0] reg_cs;
-           input      ric;
+           input      iretd;
+           output     iretd_halt;
+           input      iretd_pop_valid;
+           input      [31:0] iretd_pop_data; 
+  	   output     reg_load_eflags;  
+	   output     [31:0] reg_eflags;
+  	   output     reg_load_eip;  
+	   output     [31:0] reg_eip;
+
+  	   wire       reg_load_eflags_int;  
+	   wire       [31:0] reg_eflags_int;
+  	   wire       reg_load_eip_int;  
+	   wire       [31:0] reg_eip_int;   
+	   wire       reg_load_cs_int;  
+	   wire       [15:0] reg_cs_int;
+	   wire       fetch_load_int;  
+	   wire       [31:0] fetch_load_address_int;  
+	   wire       [31:0] fetch_load_address_nc;  
+
+  	   wire       reg_load_eflags_iretd;  
+	   wire       [31:0] reg_eflags_iretd;
+  	   wire       reg_load_eip_iretd;  
+	   wire       [31:0] reg_eip_iretd;   
+	   wire       reg_load_cs_iretd;  
+	   wire       [15:0] reg_cs_iretd;
+	   wire       fetch_load_iretd;  
+	   wire       [31:0] fetch_load_address_iretd; 
+   
+           wire       flush_fetch_int;
+           wire       flush_decode_0_int;
+           wire       flush_decode_1_int;
+           wire       flush_register_int;
+           wire       flush_address_int;
+           wire       flush_execute_int;
+           wire       flush_writeback_int;
+
+           wire       flush_fetch_iretd;
+           wire       flush_decode_0_iretd;
+           wire       flush_decode_1_iretd;
+           wire       flush_register_iretd;
+           wire       flush_address_iretd;
+           wire       flush_execute_iretd;
+           wire       flush_writeback_iretd;  
    
            wire [1:0] int_serviced;
            wire [3:0] int_serviced_oh;
@@ -60,6 +109,12 @@ module sys_cont_top (
            wire       int_clear;
 
            wire [3:0] int_vec_r, n_int_vec_r, int_clear_vec, int_clear_mask, int_clear_mask_inv, int_vec_in, int_vec_or;
+
+           wire [2:0] 	     curr_state_iretd, next_state_iretd, n_curr_state_iretd, curr_state_iretd_p1;
+           wire              not_zero_state, zero_state, last_state;
+           wire              iretd_nc0;
+           wire              not_iretd_pop_valid;
+           wire              curr_state_iretd_one, curr_state_iretd_two, curr_state_iretd_three;
            
            parameter IDT_ADDRESS0 = 32'h4000;
            parameter IDT_ADDRESS1 = 32'h8000;
@@ -68,9 +123,40 @@ module sys_cont_top (
 
            ////////////////////////////////
            // 
+           // Control Accumulation
+           //
+
+           or2$ off (flush_fetch,flush_fetch_int,flush_fetch_iretd);
+           or2$ fd0 (flush_decode_0,flush_decode_0_int,flush_decode_0_iretd); 
+           or2$ fd1 (flush_decode_1,flush_decode_1_int,flush_decode_1_iretd); 
+           or2$ fr  (flush_register,flush_register_int,flush_register_iretd); 
+           or2$ fa  (flush_address,flush_address_int,flush_address_iretd);
+           or2$ fe  (flush_execute,flush_execute_int,flush_execute_iretd);
+           or2$ fw  (flush_writeback,flush_writeback_int,flush_writeback_iretd);
+
+           or2$ rleflags  (reg_load_eflags,reg_load_eflags_int,reg_load_eflags_iretd);
+           or2$ rlcs      (reg_load_cs,reg_load_cs_int,reg_load_cs_iretd);
+           or2$ rleip     (reg_load_eip,reg_load_eip_int,reg_load_eip_iretd);
+           or2$ fla       (fetch_load,fetch_load_int,fetch_load_iretd);
+         
+           logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lbeflags ({reg_eflags_int,reg_eflags_iretd},reg_eflags);
+           logic_tree_bus #(.WIDTH(16), .INPUTS(2), .OPERATION(1)) lbcs ({reg_cs_int,reg_cs_iretd},reg_cs);
+           logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lbeip ({reg_eip_int,reg_eip_iretd},reg_eip);
+           //logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lba ({fetch_load_address_int,fetch_load_address_iretd},fetch_load_address);
+           ao_mux #(.WIDTH(32),.NINPUTS(2)) ({fetch_load_address_int,fetch_load_address_iretd}
+                                            , fetch_load_address
+                                            ,{or_int_vec, not_zero_state});   
+   
+           ////////////////////////////////
+           // 
            // Interrupt Handling
            //
 
+  	   assign       reg_load_eflags_int = 'h0;  
+	   assign       reg_eflags_int = 'h0;
+  	   assign       reg_load_eip_int = 'h0;  
+	   assign       reg_eip_int = 'h0;  
+   
            assign int_clear_vec = {int_clear, int_clear, int_clear, int_clear};
    
            logic_tree_bus #(.WIDTH(4),.OPERATION(0),.NINPUTS(2)) ltb_mask ({int_clear_vec, int_serviced_oh}, int_clear_mask);
@@ -100,7 +186,7 @@ module sys_cont_top (
 
            pencoder8_3$ (1'b0, {4'b0, int_vec_r}, {nc0, int_serviced});
 
-           assign  fetch_load_address = mem_dp_read_data;
+           assign  fetch_load_address_int = mem_dp_read_data;
            assign  reg_cs = 'h0;
    
            int_controller ic (
@@ -115,22 +201,82 @@ module sys_cont_top (
                 mem_dp_valid,
                 mem_dp_ready,
                 mem_dp_read_data,
-                flush_fetch,
-                flush_decode_0,
-                flush_decode_1,
-                flush_register,
-                flush_address,
-                flush_execute,
-                flush_writeback,
-     		fetch_load,
-                fetch_load_address,
+                flush_fetch_int,
+                flush_decode_0_int,
+                flush_decode_1_int,
+                flush_register_int,
+                flush_address_int,
+                flush_execute_int,
+                flush_writeback_int,
+     		fetch_load_int,
+                fetch_load_address_nc,
                 decode_start_int,
                 decode_end_int,
-                reg_load_cs,
-                reg_cs,
+                reg_load_cs_int,
+                reg_cs_int,
                 int_clear,
                 or_int_vec		       
            );
+
+           ////////////////////////////////
+           // 
+           // Interrupt Return Handling
+           //  
+   
+           assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
+           assign       reg_eip_iretd = iretd_pop_data;
+	     
+           assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
+           assign       reg_cs_iretd = iretd_pop_data[15:0];
+
+           assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
+           assign       fetch_load_address_iretd = iretd_pop_data;  
+
+           assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
+           assign       reg_eip_iretd = iretd_pop_data;   
+   
+           assign       last_state = fetch_load_iretd;
+       
+           assign       flush_fetch_iretd = iretd_halt;
+           assign       flush_decode_0_iretd = 'h0;
+           assign       flush_decode_1_iretd = 'h0;
+           assign       flush_register_iretd = 'h0;
+           assign       flush_address_iretd = 'h0;
+           assign       flush_execute_iretd = 'h0;
+           assign       flush_writeback_iretd = 'h0;    
+
+           assign       iretd_halt = not_zero_state;
+   
+           compare #(.WIDTH(3)) zero_state_comp  (curr_state_iretd, 0, zero_state);
+           compare #(.WIDTH(3)) one_state_comp   (curr_state_iretd, 1, curr_state_iretd_one);
+           compare #(.WIDTH(3)) two_state_comp   (curr_state_iretd, 2, curr_state_iretd_two);
+           compare #(.WIDTH(3)) three_state_comp (curr_state_iretd, 3, curr_state_iretd_three);
+
+           // TODO
+           //ao_mux #(.WIDTH(3),.NINPUTS(4)) ({0,1,curr_state_iretd_p1,curr_state_iretd}
+           //                                 , next_state_iretd
+           //                                 ,{last_state,iretd,iretd_pop_valid, not_iretd_pop_valid});
+   
+//
+           assign next_state_iretd = (zero_state)       ? iretd :
+				     (last_state)       ? 0     :
+				     (iretd_pop_valid)  ? curr_state_iretd_p1 : curr_state_iretd;
+  
+           inv1$ nzs (not_zero_state,zero_state);
+           inv1$ npv (not_iretd_pop_valid,iretd_pop_valid);
+
+           assign iretd_halt = not_zero_state;
+	     
+           slow_addr #(.WIDTH(3)) (curr_state_iretd,1,curr_state_iretd_p1,iretd_nc0);
+         
+           register #(.WIDTH(3)) state_reg (
+              clk,
+              reset,
+              next_state_iretd,
+              curr_state_iretd,
+              n_curr_state_iretd,
+              1'b1				    
+            ); 
    
 endmodule
    

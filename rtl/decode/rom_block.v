@@ -36,7 +36,7 @@ module rom_block (
 
    localparam [4:0]  PROGRAM0_OFFSET = 0;
    localparam [4:0]  PROGRAM1_OFFSET = 6;
-   localparam [4:0]  PROGRAM2_OFFSET = 4;
+   localparam [4:0]  PROGRAM2_OFFSET = 7;
    localparam [4:0]  PROGRAM3_OFFSET = 4;
    localparam [4:0]  PROGRAM4_OFFSET = 4;
    localparam [4:0]  PROGRAM5_OFFSET = 4;
@@ -45,7 +45,7 @@ module rom_block (
 
    localparam [4:0]  PROGRAM0_LENGTH = 4-1;
    localparam [4:0]  PROGRAM1_LENGTH = 6-1;
-   localparam [4:0]  PROGRAM2_LENGTH = 8-1;
+   localparam [4:0]  PROGRAM2_LENGTH = 3-1;
    localparam [4:0]  PROGRAM3_LENGTH = 5-1;
    localparam [4:0]  PROGRAM4_LENGTH = 5-1;
    localparam [4:0]  PROGRAM5_LENGTH = 3-1;
@@ -139,8 +139,12 @@ module rom_block (
    register  #(.WIDTH(1)) state_reg (clk, reset, next_state, state, state_not, 1'b1);
 
    // Micro Count
-   slow_addr #(.WIDTH(5)) sac (5'd1, micro_count, micro_count_next, nc0);
-   register  #(.WIDTH(5)) micro_reg (clk, (reset | in_accept), micro_count_next, micro_count, micro_count_not,out_accept);
+   wire [4:0] micro_count_next_p1;
+   
+   slow_addr #(.WIDTH(5)) sac (5'd1, micro_count, micro_count_next_p1, nc0);
+   mux #(.WIDTH(5),.INPUTS(2)) mc_mux ({5'd0,micro_count_next_p1}, micro_count_next, (out_accept & rom_ready));  
+ 
+   register  #(.WIDTH(5)) micro_reg (clk, reset, micro_count_next, micro_count, micro_count_not, out_accept);
 
    // Control Select
    mux #(.WIDTH(5),.INPUTS(8)) cs_mux ( {
