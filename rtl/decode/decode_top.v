@@ -10,7 +10,8 @@ module decode_top (
    reset,
 		   
    // Control Interface
-   flush,
+   flush_0,
+   flush_1,		   
    handle_int,
    handle_int_done,		   
    halt,
@@ -24,7 +25,11 @@ module decode_top (
 
    // Return Address Stack Interface
    ras_address,
-   ras_push,		  
+   ras_push,
+
+   // IRETd Interface
+   iretd,
+   iretd_halt,		  
    
    // Fetch Interface  
    f_valid,
@@ -67,7 +72,8 @@ module decode_top (
    input                reset;
 
    // Control Interface
-   input 	        flush;
+   input 	        flush_0;
+   input 	        flush_1;   
    input                handle_int;
    output               handle_int_done;   
    output               halt;
@@ -82,7 +88,11 @@ module decode_top (
    // Return Address Stack Interface
    output [IADDRW-1:0] 	ras_address;
    output               ras_push;
-	   
+
+   // IRETd Interface
+   output               iretd;
+   input                iretd_halt;
+	   	   
    // Fetch Interface  
    input                f_valid;
    output               f_ready;
@@ -182,7 +192,7 @@ module decode_top (
    decode_stage_0 #(.IADDRW(IADDRW)) ds0 (
        clk,
        reset,
-       flush,
+       flush_0,
        nc0,	    
        halt,
        f_valid,
@@ -247,17 +257,19 @@ module decode_top (
       s0_size_override_r
    } = s0_data_r;     
    
-   pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, reset, s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
+   pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, (reset | flush_0), s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
    
    // Stage 0 and Pipe
    
    decode_stage_1 #(.IADDRW(IADDRW)) ds1 (
        clk,
        reset,
-       flush,
+       flush_1,
        handle_int,
        handle_int_done,					  
-       halt,		       
+       halt,
+       iretd,
+       iretd_halt,			       
        write_eip,
        eip,
        eflags_reg,					  
@@ -347,6 +359,6 @@ module decode_top (
        d_branch_taken
    } = s1_data_r;     
    
-   pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, reset, s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);
+   pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, (reset| flush_1), s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);
 
 endmodule  

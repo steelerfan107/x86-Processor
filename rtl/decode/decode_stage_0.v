@@ -96,12 +96,13 @@ module decode_stage_0 (
    wire [63:0] 		nc3;
 
    // Halt Logic
-   or2$ halt_or (halt, halt_detect, halt_capture);
+   or2$ halt_or (halt, halt_capture, halt_detect);
    
    register halt_reg (clk, (reset | flush), halt_detect, halt_capture, halt_capture_n, 1'b1);
 
-   compare #(.WIDTH(8)) halt_comp (8'hF4, opcode_aligned[63:56], halt_detect);
-   
+   compare #(.WIDTH(8)) halt_comp  (8'hF4, opcode_aligned[63:56], halt_detect);
+   compare #(.WIDTH(8)) iretd_comp (8'hCF, opcode_aligned[63:56], iretd_detect);
+
    // Allign Displacement and Immediete
    byte_shifter_16B  disp_n_imm_shift (f_instruction[127:0], {s0_displace_n_imm,nc3} , poa_bytes);
 
