@@ -110,7 +110,7 @@ module sys_cont_top (
 
            wire [3:0] int_vec_r, n_int_vec_r, int_clear_vec, int_clear_mask, int_clear_mask_inv, int_vec_in, int_vec_or;
 
-           wire [2:0] 	     curr_state_iretd, next_state_iretd, n_curr_state_iretd, curr_state_iretd_p1;
+           wire [2:0] 	     curr_state_iretd, next_state_iretd,next_state_iretd_test, n_curr_state_iretd, curr_state_iretd_p1;
            wire              not_zero_state, zero_state, last_state;
            wire              iretd_nc0;
            wire              not_iretd_pop_valid;
@@ -252,15 +252,31 @@ module sys_cont_top (
            compare #(.WIDTH(3)) two_state_comp   (curr_state_iretd, 2, curr_state_iretd_two);
            compare #(.WIDTH(3)) three_state_comp (curr_state_iretd, 3, curr_state_iretd_three);
 
-           // TODO
-           //ao_mux #(.WIDTH(3),.NINPUTS(4)) ({0,1,curr_state_iretd_p1,curr_state_iretd}
-           //                                 , next_state_iretd
-           //                                 ,{last_state,iretd,iretd_pop_valid, not_iretd_pop_valid});
+           
+           //assign next_state_iretd_test = (zero_state)  ? iretd :
+	   //			     (last_state)       ? 0     :
+	   //			     (iretd_pop_valid)  ? curr_state_iretd_p1 : curr_state_iretd;
+
+           wire              select0,select0n;
+           wire              select1,select1n;
+           wire              select2,select2n;
+           wire              select3,select3n;
+
+           inv1$ s0i (select0n, select0);
+           inv1$ s1i (select1n, select1);
+           inv1$ s2i (select2n, select2);  
+
+           assign select0 = zero_state;
+
+           and2$ s1a (select1, select0n, last_state);
+           and3$ s2a (select2, select0n, select1n, iretd_pop_valid);
+           and3$ s3a (select3, select0n, select1n, select2n);
+
    
-//
-           assign next_state_iretd = (zero_state)       ? iretd :
-				     (last_state)       ? 0     :
-				     (iretd_pop_valid)  ? curr_state_iretd_p1 : curr_state_iretd;
+           ao_mux #(.WIDTH(3),.NINPUTS(4)) (  { curr_state_iretd, curr_state_iretd_p1, 3'd0, {2'b0,iretd} }
+                                            , next_state_iretd
+                                            , { select3, select2, select1, select0 });
+				 
   
            inv1$ nzs (not_zero_state,zero_state);
            inv1$ npv (not_iretd_pop_valid,iretd_pop_valid);
