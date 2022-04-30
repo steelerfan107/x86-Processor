@@ -197,6 +197,8 @@ module register_access_top (
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
+    wire [2:0]  p_op0_reg;
+    wire [2:0]  p_op1_reg;
     wire [31:0] p_eax;
     wire [31:0] p_ecx;
     wire [31:0] p_edx;
@@ -270,8 +272,8 @@ module register_access_top (
        d_clear_d_flag,
        d_op0,
        d_op1,
-       d_op0_reg,
-       d_op1_reg,
+       p_op0_reg,
+       p_op1_reg,
        d_modrm,
        d_sib,
        d_imm,
@@ -320,6 +322,48 @@ module register_access_top (
     // Read after write for all registers
 
 
+
+    // --------------- //
+    // Set Reg Numbers //
+    // --------------- //
+    wire [2:0] mod_rm_reg = d_modrm[5:3];
+    wire [2:0] mod_rm_reg_not;
+
+    inv1$
+    mod_rm_reg_not0 (mod_rm_reg_not[0], mod_rm_reg[0]),
+    mod_rm_reg_not1 (mod_rm_reg_not[1], mod_rm_reg[1]),
+    mod_rm_reg_not2 (mod_rm_reg_not[2], mod_rm_reg[2]);
+
+
+
+    // op0 reg
+    // 
+    // if op0 is 4, then set it op0_reg to mod_rm_reg
+    // else set it to decode reg
+
+    wire use_mod_rm_reg_op0;
+
+    // 4 = 100
+    and3$ use_mod_rm_reg_op0_and (use_mod_rm_reg_op0, mod_rm_reg_not[2], mod_rm_reg[1], mod_rm_reg[0]);
+
+    mux #(.WIDTH(3), .INPUTS(2)) op0_reg_mux (
+        {mod_rm_reg, d_op0_reg},
+        p_op0_reg,
+        use_mod_rm_reg
+    );
+
+    // op1 reg
+
+    wire use_mod_rm_reg_op1;
+
+    // 4 = 100
+    and3$ use_mod_rm_reg_op1_and (use_mod_rm_reg_op1, mod_rm_reg_not[2], mod_rm_reg[1], mod_rm_reg[0]);
+
+    mux #(.WIDTH(3), .INPUTS(2)) op1_reg_mux (
+        {mod_rm_reg, d_op1_reg},
+        p_op1_reg,
+        use_mod_rm_reg
+    );
 
     // ------------- //
     // Register File //
