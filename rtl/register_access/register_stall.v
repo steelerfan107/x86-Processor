@@ -32,10 +32,34 @@ module register_access_stall (
 
     // only add if op0 is register
 
-    // only stall if any of op1's operands access a register
-        // can be a direct register access, or modrm, or a sib byte
 
     // table component should have multiple register ports to see if any of the possible register accesses will be in it
+
+
+    // When to stall
+    //
+    // op0_map = {
+    // "none" : "0", // No stall
+    // "register" : "1", // Stall for register being accessed
+    // "segment" : "2", // No stall
+    // "mm register" : "3", // No stall
+    // "mod r/m" : "4", // stall for up to 2 registers. R/M register if there is 1, and the 2 sib registers if they are there
+    // "immediete" : "5", // no stall
+    // "memory" : "6" // stall for the register with the address
+    // }
+    //
+    // op1_map = {
+    // "none" : "0", // No stall
+    // "register" : "1", // Stall for register being accessed
+    // "segment" : "2", // No stall
+    // "mm register" : "3", // No stall
+    // "mod r/m" : "4", // stall for up to 2 registers. R/M register if there is 1, and the 2 sib registers if they are there
+    // "immediete" : "5", // no stall
+    // "memory" : "6" // stall for the register with the address
+
+    
+}
+        
 
 endmodule
 
@@ -103,6 +127,17 @@ module register_stall_access_calculator (
     register_stall_r1_is_valid register_stall_r1_is_valid0 (r1_is_valid, op1, mod_rm);
 
     // determine what registers are being accessed
+
+    // mod rm register accesses
+    wire [2:0] mod_rm_r0;  
+    register_stall_mod_rm_registers logic0 (
+        mod_rm_r0, 
+        r1, // if r1 is being used it has to be bc of mod rm and SIB
+
+        mod_rm,
+        sib
+    )
+
     
 
 
@@ -222,15 +257,54 @@ module register_stall_mod_rm_registers (
     input [7:0] mod_rm;
     input [7:0] sib;
 
-    // r0 will either be the rm value, or the sib index
+    // r0 will either be the rm value, or the sib index (or none at all but the valid bit checks for that)
+    wire [2:0] rm = mod_rm[2:0];
+    wire [2:0] sib_index = sib[5:3];
+
+    wire is_rm;
+
+    register_stall_is_r0_rm logic0 (
+        is_rm,
+        mod_rm[7:6],
+        rm
+    );
+
+    mux #(.WIDTH(3), .INPUTS(2)) r0_mux (
+        {rm, sib_index},
+        r0,
+        is_rm
+    )
     
 
     // r1 is sib base
+    assign r1 = sib[2:0];
 
 endmodule
 
 module register_stall_is_r0_rm (
+    is_rm,
+    mod,
+    rm
 
 );
+    output is_rm;
+
+    input [1:0] mod;
+    input [2:0] rm;
+
+    // is_rm = (mod1&mod0) | (!rm2) | (rm1) | (rm0)
+
+    // mod1 & mod0
+    wire mod1_and_mod0;
+    and2$ and0 (mod1_and_mod0, mod[1], mod[0]);
+
+    // not rm2
+    wire not_rm2;
+    inv1$ inv0 (not_rm2, rm[2]);
+
+    // or
+    or4$ or0 (is_rm, mod1_and_mod0, not_rm2, rm[1], rm[0]);
+
+
 
 endmodule

@@ -7,7 +7,7 @@
 00010 1
 00011 1
 00100 0
-00101 0
+00101 1 # this case is where the value is disp32 but it ends up not being used bc valid bit isn't set
 00110 1
 00111 1
 01000 1
