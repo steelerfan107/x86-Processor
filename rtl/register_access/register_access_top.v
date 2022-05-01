@@ -326,7 +326,6 @@ module register_access_top (
     // --------------- //
     // Set Reg Numbers //
     // --------------- //
-    wire [2:0] 	mod_rm_reg; //= d_modrm[5:3];
     wire [2:0]  d_op0_not;
     wire [2:0]  d_op1_not;
 
@@ -337,7 +336,7 @@ module register_access_top (
 
     inv1$
     d_op1_not0 (d_op1_not[0], d_op1[0]),
-    d_op1_not1 (d_op1_not[1], d_o11[1]),
+    d_op1_not1 (d_op1_not[1], d_op1[1]),
     d_op1_not2 (d_op1_not[2], d_op0[2]);
    
     // op0 reg

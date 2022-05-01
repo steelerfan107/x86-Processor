@@ -259,9 +259,11 @@ module TOP;
         d_op0 = 4;
         d_op1 = 4;
 
-        d_modrm = 38;
+        d_modrm = 8'hFF;
 
         #10
+        $display("OP0 Reg %d", r_op0_reg);
+        $display("OP1 Reg %d", r_op1_reg);
         
         if (r_op0_reg != 7) $display("OP0 Mode 4 Reg FAIL");
         if (r_op1_reg != 7) $display("OP1 Mode 4 Reg FAIL");
