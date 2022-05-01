@@ -221,19 +221,38 @@ module sys_cont_top (
            ////////////////////////////////
            // 
            // Interrupt Return Handling
-           //  
+           //
+
+           wire [15:0] 		     temp_cs, n_temp_cs;
+
    
-           assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
+   
+           register #(.WIDTH(16)) temp_cs_reg (
+               clk,
+               reset,
+               iretd_pop_data[15:0],
+               temp_cs,
+               n_temp_cs,
+               reg_load_cs_iretd				    
+           );
+   
+   
+           //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
+           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_one);
            assign       reg_eip_iretd = iretd_pop_data;
 	     
-           assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
+           //assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
+           and2$ load_cs_and (reg_load_cs_iretd, iretd_pop_valid, curr_state_iretd_two);
            assign       reg_cs_iretd = iretd_pop_data[15:0];
 
-           assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
-           assign       fetch_load_address_iretd = iretd_pop_data;  
+           //assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
+           and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
+           slow_addr #(.WIDTH(32)) ({16'b0,temp_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
+           //assign       fetch_load_address_iretd = iretd_pop_data;  
 
-           assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
-           assign       reg_eip_iretd = iretd_pop_data;   
+           //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
+           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_three);
+           assign       reg_eflags_iretd = iretd_pop_data;   
    
            assign       last_state = fetch_load_iretd;
        

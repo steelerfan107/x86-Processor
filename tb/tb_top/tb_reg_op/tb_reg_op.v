@@ -176,6 +176,7 @@ module TOP;
    wire   [2:0] wb_mmx_number;
    wire   wb_mmx_en;
    wire  [63:0] wb_mmx_data;
+   wire [31:0] 	wb_pc;
 
    wire a_valid;
    wire a_ready;
@@ -241,6 +242,8 @@ module TOP;
       f_pc,
       f_branch_taken	  		  		  
    );
+
+   wire 	   wb_accept;
  
    decode_top uut_decode (
       clk,
@@ -250,8 +253,8 @@ module TOP;
       handle_int,
       handle_int_done,
       halt,
-      reg_load_eip,
-      reg_eip,
+      wb_accept,
+      wb_pc,
       eflags_reg,				  
       ras_address,
       ras_push,
@@ -286,6 +289,8 @@ module TOP;
       d_pc,
       d_branch_taken  		  		  
    );
+
+   and2$ wb_and ( wb_accept, wb_valid, wb_ready );
 
    register_access_top uut_register_access (
       clk,
@@ -451,7 +456,8 @@ address_generation_top uut_address_gen(
       a_size,
       1'b0,
       a_branch_taken,
-      a_to_sys_controller,			       
+      a_to_sys_controller,
+      a_pc,			       
       wb_ready,
       wb_dest_address,
       wb_dest_reg,
@@ -460,7 +466,8 @@ address_generation_top uut_address_gen(
       wb_mem_or_reg,
       wb_valid,					 			       
       wb_branch_taken,
-      wb_sys_controller_valid			       
+      wb_sys_controller_valid,
+      wb_pc		       
   );
    
   sys_cont_top uut_sys_cont (
@@ -559,7 +566,7 @@ address_generation_top uut_address_gen(
         #55
         reset = 0;
         #150
-        int_vec = 1;     
+        int_vec = 0; //1;     
 	#50
         int_vec = 0;     	  
         $display("==========\n End Test \n==========");
@@ -630,7 +637,8 @@ module temp_execute_top (
     e_opsize,
     e_size_of_txn,
     e_branch_taken,
-    e_to_sys_controller,			 
+    e_to_sys_controller,
+    e_pc,			 
 
     // Writeback Interface
     wb_ready,
@@ -641,7 +649,8 @@ module temp_execute_top (
     wb_mem_or_reg,
     wb_valid,
     wb_branch_taken,
-    wb_sys_controller_valid
+    wb_sys_controller_valid,
+    wb_pc
 );
     // Clock Interface
     input clk;
@@ -663,6 +672,7 @@ module temp_execute_top (
     input e_size_of_txn;
     input e_branch_taken;
     input e_to_sys_controller;
+    input [31:0] e_pc;
 
     // Writeback Interface
     input wb_ready;
@@ -673,7 +683,8 @@ module temp_execute_top (
     output wb_mem_or_reg;
     output wb_valid;
     output wb_branch_taken;
-    output wb_sys_controller_valid;   
+    output wb_sys_controller_valid;
+    output [31:0] wb_pc;
 
     wire [63:0] a;
     wire [63:0] b;
@@ -692,7 +703,7 @@ module temp_execute_top (
    // -------   //
    // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+3+64+3+1+1+1;
+    localparam PIPEWIDTH = 32+3+64+3+1+1+1+32;
 
     wire [31:0] p_dest_address;
     wire [2:0] p_dest_reg;
@@ -701,7 +712,9 @@ module temp_execute_top (
     wire p_mem_or_reg;
     wire p_branch_taken;
     wire p_sys_controller_valid;
-     
+    wire [31:0] p_pc;
+
+   
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
 
     assign p_sys_controller_valid = e_to_sys_controller;
@@ -711,6 +724,7 @@ module temp_execute_top (
     assign p_opsize = e_opsize;
     assign p_mem_or_reg = 'h0;
     assign p_branch_taken = 'h0;
+    assign p_pc = e_pc;
 
     assign pipe_in_data = {
 	p_sys_controller_valid,		   
@@ -719,7 +733,8 @@ module temp_execute_top (
         p_result,
         p_opsize,
         p_mem_or_reg,
-        p_branch_taken		    
+        p_branch_taken,
+        p_pc	    
     };
 
     assign {
@@ -729,7 +744,8 @@ module temp_execute_top (
         wb_result,
         wb_opsize,
         wb_mem_or_reg,
-        wb_branch_taken		    
+        wb_branch_taken,
+        wb_pc	    
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
