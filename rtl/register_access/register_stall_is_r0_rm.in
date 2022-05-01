@@ -3,7 +3,7 @@
 .ilb mod1 mod0 rm2 rm1 rm0
 .ob is_rm
 00000 1
-00001 1
+00001 1 #specified above.
 00010 1
 00011 1
 00100 0

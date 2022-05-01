@@ -113,11 +113,17 @@ endmodule
 // OUT = (OP1 == 1) || (OP1 == 4 && MODRM != 00101)
 module register_stall_r0_is_valid (
     out,
-    op1
+    op1,
+    modrm_byte
 );
 
     output out;
     input [2:0] op1;
+    input [7:0] modrm_byte;
+
+    wire [4:0] modrm;   // just the mod and rm field
+    assign modrm[4:3] = modrm_byte[7:6];
+    assign modrm[2:0] = modrm_byte[2:0];
 
     wire [2:0] op1_not;
     inv1$ 
@@ -125,12 +131,32 @@ module register_stall_r0_is_valid (
     op1_not_1 (op1_not[1], op1[1]), 
     op1_not_2 (op1_not[2], op1[2]);
 
-    wire [1:0] and_result;
-    and3$ 
-    and0 (and_result[0], op1_not[2], op1_not[1], op1[0]),
-    and1 (and_result[1], op1[2], op1_not[1], op1_not[0]);
+    wire [4:0] modrm_not;
+    inv1$ 
+    modrm_not_0 (modrm_not[0], modrm[0]), 
+    modrm_not_1 (modrm_not[1], modrm[1]), 
+    modrm_not_2 (modrm_not[2], modrm[2]), 
+    modrm_not_3 (modrm_not[3], modrm[3]), 
+    modrm_not_4 (modrm_not[4], modrm[4]);
 
-    or2$ or0 (out, and_result[0], and_result[1]);
+    // modrm != 00101
+    wire modrm_not_00101;
+    nand5$ nand0 (modrm_not_00101, modrm_not[4], modrm_not[3], modrm[2], modrm_not[1], modrm[0]);
+
+    // op1 is 4 (100)
+    wire op1_is_4;
+    and3$ op1_is_4_and (op1_is_4, op1[2], op1_not[1], op1_not[0]);
+
+    // (OP1 == 4 && MODRM != 00101)
+    wire op1_4_and_modrm_not;
+    and2$ op1_4_and_modrm_not_and (op1_4_and_modrm_not, modrm_not_00101, op1_is_4);
+
+    // op1 is 1 (001)
+    wire op1_is_1;
+    and3$ op1_is_1_and (op1_is_1, op1_not[2], op1_not[1], op1[0]);
+
+    // SOP
+    or2$ or0 (out, op1_4_and_modrm_not, op1_is_1);
 
 endmodule
 
