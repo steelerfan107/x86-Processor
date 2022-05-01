@@ -349,7 +349,7 @@ module register_access_top (
     mux #(.WIDTH(3), .INPUTS(2)) op0_reg_mux (
         {mod_rm_reg, d_op0_reg},
         p_op0_reg,
-        use_mod_rm_reg
+        use_mod_rm_reg_op0
     );
 
     // op1 reg
@@ -362,7 +362,7 @@ module register_access_top (
     mux #(.WIDTH(3), .INPUTS(2)) op1_reg_mux (
         {mod_rm_reg, d_op1_reg},
         p_op1_reg,
-        use_mod_rm_reg
+        use_mod_rm_reg_op1
     );
 
     // ------------- //
