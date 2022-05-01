@@ -153,7 +153,7 @@ module decode_stage_1 (
    wire 		rom_in_control;
    wire [2:0] 		rom_control;
    wire [2:0] 		rom_control_nc;
-   wire [31:0] 		eip_reg_not;
+   wire [31:0] 		eip_reg_not,eip_reg;
 
    // IRETd Logic
    wire 		iretd_halt_mask;
@@ -249,9 +249,12 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({rom_seg_override,dec_seg_override},s1_seg_override, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({rom_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
+   //mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
+   //mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 
+   assign s1_pc = s0_pc;
+   assign s1_branch_taken = s0_branch_taken;
+   
    wire nc_ric;  
    
    // ROM Block

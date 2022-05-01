@@ -27,11 +27,11 @@ byte_shifter_8B bs8 (
 );
 
 // TODO - Make Case
-assign imm_mask  = (48'hFFFFFFFFFFFF >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
-assign disp_mask = (32'hFFFFFFFF     >> 8*(8-s0_displacement_bytes));
+assign imm_mask  = (48'hFFFFFFFFFFFF >> 8*(6-(s0_immediete_bytes+s0_displacement_bytes)));
+assign disp_mask = (32'hFFFFFFFF     >> 8*(4-s0_displacement_bytes));
 
-assign imm  = (s0_displace_n_imm[47:0] >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
-assign disp = (s0_displace_n_imm[31:0]     >> 8*(8-s0_displacement_bytes));
+assign imm  = (s0_displace_n_imm >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
+assign disp = (s0_displace_n_imm >> 8*(8-s0_displacement_bytes));
    
 logic_tree_bus #(.WIDTH(32),.NINPUTS(2)) disp_maskb ({disp_mask,disp},dec_disp);
 logic_tree_bus #(.WIDTH(48),.NINPUTS(2)) imm_maskb  ({imm_mask,imm},dec_imm);

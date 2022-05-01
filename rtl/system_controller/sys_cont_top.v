@@ -110,7 +110,7 @@ module sys_cont_top (
 
            wire [3:0] int_vec_r, n_int_vec_r, int_clear_vec, int_clear_mask, int_clear_mask_inv, int_vec_in, int_vec_or;
 
-           wire [2:0] 	     curr_state_iretd, next_state_iretd, n_curr_state_iretd, curr_state_iretd_p1;
+           wire [2:0] 	     curr_state_iretd, next_state_iretd,next_state_iretd_test, n_curr_state_iretd, curr_state_iretd_p1;
            wire              not_zero_state, zero_state, last_state;
            wire              iretd_nc0;
            wire              not_iretd_pop_valid;
@@ -221,19 +221,38 @@ module sys_cont_top (
            ////////////////////////////////
            // 
            // Interrupt Return Handling
-           //  
+           //
+
+           wire [15:0] 		     temp_cs, n_temp_cs;
+
    
-           assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
+   
+           register #(.WIDTH(16)) temp_cs_reg (
+               clk,
+               reset,
+               iretd_pop_data[15:0],
+               temp_cs,
+               n_temp_cs,
+               reg_load_cs_iretd				    
+           );
+   
+   
+           //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
+           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_one);
            assign       reg_eip_iretd = iretd_pop_data;
 	     
-           assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
+           //assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
+           and2$ load_cs_and (reg_load_cs_iretd, iretd_pop_valid, curr_state_iretd_two);
            assign       reg_cs_iretd = iretd_pop_data[15:0];
 
-           assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
-           assign       fetch_load_address_iretd = iretd_pop_data;  
+           //assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
+           and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
+           slow_addr #(.WIDTH(32)) ({16'b0,temp_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
+           //assign       fetch_load_address_iretd = iretd_pop_data;  
 
-           assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
-           assign       reg_eip_iretd = iretd_pop_data;   
+           //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
+           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_three);
+           assign       reg_eflags_iretd = iretd_pop_data;   
    
            assign       last_state = fetch_load_iretd;
        
@@ -252,15 +271,31 @@ module sys_cont_top (
            compare #(.WIDTH(3)) two_state_comp   (curr_state_iretd, 2, curr_state_iretd_two);
            compare #(.WIDTH(3)) three_state_comp (curr_state_iretd, 3, curr_state_iretd_three);
 
-           // TODO
-           //ao_mux #(.WIDTH(3),.NINPUTS(4)) ({0,1,curr_state_iretd_p1,curr_state_iretd}
-           //                                 , next_state_iretd
-           //                                 ,{last_state,iretd,iretd_pop_valid, not_iretd_pop_valid});
+           
+           //assign next_state_iretd_test = (zero_state)  ? iretd :
+	   //			     (last_state)       ? 0     :
+	   //			     (iretd_pop_valid)  ? curr_state_iretd_p1 : curr_state_iretd;
+
+           wire              select0,select0n;
+           wire              select1,select1n;
+           wire              select2,select2n;
+           wire              select3,select3n;
+
+           inv1$ s0i (select0n, select0);
+           inv1$ s1i (select1n, select1);
+           inv1$ s2i (select2n, select2);  
+
+           assign select0 = zero_state;
+
+           and2$ s1a (select1, select0n, last_state);
+           and3$ s2a (select2, select0n, select1n, iretd_pop_valid);
+           and3$ s3a (select3, select0n, select1n, select2n);
+
    
-//
-           assign next_state_iretd = (zero_state)       ? iretd :
-				     (last_state)       ? 0     :
-				     (iretd_pop_valid)  ? curr_state_iretd_p1 : curr_state_iretd;
+           ao_mux #(.WIDTH(3),.NINPUTS(4)) (  { curr_state_iretd, curr_state_iretd_p1, 3'd0, {2'b0,iretd} }
+                                            , next_state_iretd
+                                            , { select3, select2, select1, select0 });
+				 
   
            inv1$ nzs (not_zero_state,zero_state);
            inv1$ npv (not_iretd_pop_valid,iretd_pop_valid);
