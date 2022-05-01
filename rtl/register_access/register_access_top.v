@@ -326,16 +326,20 @@ module register_access_top (
     // --------------- //
     // Set Reg Numbers //
     // --------------- //
-    wire [2:0] mod_rm_reg = d_modrm[5:3];
-    wire [2:0] mod_rm_reg_not;
+    wire [2:0] 	mod_rm_reg; //= d_modrm[5:3];
+    wire [2:0]  d_op0_not;
+    wire [2:0]  d_op1_not;
 
     inv1$
-    mod_rm_reg_not0 (mod_rm_reg_not[0], mod_rm_reg[0]),
-    mod_rm_reg_not1 (mod_rm_reg_not[1], mod_rm_reg[1]),
-    mod_rm_reg_not2 (mod_rm_reg_not[2], mod_rm_reg[2]);
+    d_op0_not0 (d_op0_not[0], d_op0[0]),
+    d_op0_not1 (d_op0_not[1], d_op0[1]),
+    d_op0_not2 (d_op0_not[2], d_op0[2]);
 
-
-
+    inv1$
+    d_op1_not0 (d_op1_not[0], d_op1[0]),
+    d_op1_not1 (d_op1_not[1], d_o11[1]),
+    d_op1_not2 (d_op1_not[2], d_op0[2]);
+   
     // op0 reg
     // 
     // if op0 is 4, then set it op0_reg to mod_rm_reg
@@ -344,12 +348,12 @@ module register_access_top (
     wire use_mod_rm_reg_op0;
 
     // 4 = 100
-    and3$ use_mod_rm_reg_op0_and (use_mod_rm_reg_op0, mod_rm_reg_not[2], mod_rm_reg[1], mod_rm_reg[0]);
+    and3$ use_mod_rm_reg_op0_and (use_mod_rm_reg_op0, d_op0[2], d_op0_not[1], d_op0_not[0]);
 
     mux #(.WIDTH(3), .INPUTS(2)) op0_reg_mux (
-        {mod_rm_reg, d_op0_reg},
+        {d_modrm[2:0], d_op0_reg},
         p_op0_reg,
-        use_mod_rm_reg
+        use_mod_rm_reg_op0
     );
 
     // op1 reg
@@ -357,12 +361,13 @@ module register_access_top (
     wire use_mod_rm_reg_op1;
 
     // 4 = 100
-    and3$ use_mod_rm_reg_op1_and (use_mod_rm_reg_op1, mod_rm_reg_not[2], mod_rm_reg[1], mod_rm_reg[0]);
+    and3$ use_mod_rm_reg_op1_and (use_mod_rm_reg_op1, d_op1[2], d_op1_not[1], d_op1_not[0]);
+   
 
     mux #(.WIDTH(3), .INPUTS(2)) op1_reg_mux (
-        {mod_rm_reg, d_op1_reg},
+        {d_modrm[2:0], d_op1_reg},
         p_op1_reg,
-        use_mod_rm_reg
+        use_mod_rm_reg_op1
     );
 
     // ------------- //
