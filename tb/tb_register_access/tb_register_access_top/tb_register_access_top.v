@@ -256,8 +256,8 @@ module TOP;
         if (r_op0_reg != 2) $display("OP0 Mode 1 Reg FAIL"); 
         if (r_op1_reg != 3) $display("OP1 Mode 1 Reg FAIL"); 
 
-        d_op0 = 3;
-        d_op1 = 3;
+        d_op0 = 4;
+        d_op1 = 4;
 
         d_modrm = 38;
 
