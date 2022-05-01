@@ -243,10 +243,30 @@ module TOP;
 
         #10
 
-        // see if this is passed to the next pipstage
-        d_size = 1;
+        $display("Testing OP1 and OP2 Register Numbers with ModR/M");
 
+        d_op0 = 1;
+        d_op1 = 1;
 
+        d_op0_reg = 2;
+        d_op1_reg = 3;
+
+        #10
+
+        if (r_op0_reg != 2) $display("OP0 Mode 1 Reg FAIL"); 
+        if (r_op1_reg != 3) $display("OP1 Mode 1 Reg FAIL"); 
+
+        d_op0 = 4;
+        d_op1 = 4;
+
+        d_modrm = 8'hFF;
+
+        #10
+        $display("OP0 Reg %d", r_op0_reg);
+        $display("OP1 Reg %d", r_op1_reg);
+        
+        if (r_op0_reg != 7) $display("OP0 Mode 4 Reg FAIL");
+        if (r_op1_reg != 7) $display("OP1 Mode 4 Reg FAIL");
 
         $display("==========\n End Test \n==========");
     end

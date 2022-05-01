@@ -6,6 +6,7 @@
 ../../../rtl/lib/lib5.v
 ../../../rtl/lib/lib6.v
 ../../../rtl/lib/register.v
+../../../rtl/lib/mux.v
 ../../../rtl/register_access/register_file.v
 ../../../rtl/register_access/mmx_register.v
 ../../../rtl/register_access/segment_register.v
