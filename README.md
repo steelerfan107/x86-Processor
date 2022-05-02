@@ -112,6 +112,6 @@ The lst file is in the format:
 
 ### fifo.v
 - A first in first out buffer.
-- Inputs :
-- Outputs :
+- Inputs : clk, reset, flush, wr_en, wr_data [31:0], rd_en
+- Outputs : rd_data [31:0], empty, nearly_full, full
 - Parameters : 
