@@ -193,14 +193,16 @@ module ivalidRAM(
     output out_data;
 
     wire [31:0] sel;
+    wire [31:0] mux_sel;
 
     decoder5_32$ dec1(index, sel);
-
 
     wire [31:0] n_sel;
     genvar i;
     generate
         for (i=0; i<32;i=i+1) begin
+            wire tmp;
+            and2$ and2(mux_sel[i], sel[i], wr_en);
             inv1$ inv1(n_sel[i], sel[i]);
         end
     endgenerate
@@ -213,7 +215,7 @@ module ivalidRAM(
             // 1-bit register
             wire mux_out;
             wire q_out;
-            mux2$ mux(mux_out, q_out, wr_data, sel[i]);
+            mux2$ mux(mux_out, q_out, wr_data, mux_sel[i]);
             dff$ dff(clk, mux_out, q_out, , n_reset , 1'b1); 
             tristateH$ ts(n_sel[i], q_out, out_data);
         end

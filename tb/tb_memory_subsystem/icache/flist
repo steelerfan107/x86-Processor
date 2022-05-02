@@ -19,4 +19,6 @@
 ../../../rtl/lib/decoder5_32.v
 ../../../rtl/memory_subsystem/icache.v
 ../../../rtl/memory_subsystem/iRAM.v
-tb_tagRAM.v
+../../../rtl/memory_subsystem/icache_controller.v
+../../../rtl/memory_subsystem/icache_combinational_logic.v
+tb_icache.v

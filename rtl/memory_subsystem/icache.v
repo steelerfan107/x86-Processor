@@ -2,9 +2,9 @@ module icache(
     clk,
     reset,
     
-    valid,
-    ready,
-    address,
+    req_valid,
+    req_ready,
+    req_address,
     dp_valid,
     dp_ready,
     dp_read_data,
@@ -43,9 +43,9 @@ module icache(
     input reset;
   
     // Fetch Stage Interface  
-    input               valid;
-    output              ready;
-    input  [IADDRW-1:0] address;
+    input               req_valid;
+    output              req_ready;
+    input  [IADDRW-1:0] req_address;
     output              dp_valid;
     input               dp_ready;
     output [IDATAW-1:0] dp_read_data;
@@ -71,25 +71,88 @@ module icache(
     input bus_busy_in;
 
 
-    wire [4:0] index = address[31:27];
-    wire [22:0] tag = phys_addr[26:4];
+    wire [4:0] index = req_address[31:27];
+    wire [22:0] phys_tag = phys_addr[26:4];
 
     // this should always be 0 for 16B-aligned requests
-    wire [3:0] byte_offset = address[3:0]
+    wire [3:0] byte_offset = req_address[3:0];
 
-    itagRAM tagram();
-    ivalidRAM validram();
+    wire ctrl_write;
+
+    wire [22:0] tag_out;
+    wire valid_out;
+
+    itagRAM tagram(clk, reset, index, ctrl_write, phys_tag, tag_out);
+    ivalidRAM validram(clk,reset, index, ctrl_write, 1'b1, valid_out);
 
     // 23-bit compare
     // TODO
     wire tag_hit;
-    compare #(.WIDTH(23)) comp( , ,tag_hit);
+    compare #(.WIDTH(23)) comp(tag_out, phys_tag, tag_hit);
 
-    icache_control control();
+    wire cache_hit;
+    and2$ hit_and(cache_hit, tag_hit, valid_out);
 
-    decoder2_4$ accum_decoder();
-    // 16B accumulation register here
+    wire ctrl_pa_src;
+    wire ctrl_pa_wr_en;
+    wire ctrl_grant_pass;
+    wire ctrl_write_num_sel;
 
-    idataRAM dataram();
+    wire [1:0] write_num;
+
+    icache_controller control(
+        .clk             (clk),
+        .reset           (reset),
+        .read_valid      (req_valid),
+        .read_ready      (req_ready),
+        .dp_ready        (dp_ready),
+        .dp_valid        (dp_valid),
+        .write_num       (write_num),
+        .cache_hit       (cache_hit),
+        .write           (ctrl_write),
+        .write_num_src   (ctrl_write_num_sel),
+        .pa_src          (ctrl_pa_src),
+        .pa_wr_en        (ctrl_pa_wr_en),
+        .TLB_hit         (tlb_hit),
+        .mem_ready       (mem_data_valid),
+        .mem_req         (mem_req),
+        .bus_grant       (grant_in),
+        .grant_pass      (ctrl_grant_pass),
+        .bus_busy        (bus_busy_in),
+        .busy_out        (bus_busy_out)
+    );
+
+    // pass along grant signal?
+    mux2$ grant_mux(grant_out, 1'b0, grant_in, ctrl_grant_pass);
+
+    wire [1:0] write_num_p1;
+    wire [1:0] write_num_mux_out; 
+    mux2$ 
+        mux20(write_num_mux_out[0], write_num[0], write_num_p1[0], ctrl_write_num_sel),
+        mux21(write_num_mux_out[1], write_num[1], write_num_p1[1], ctrl_write_num_sel);
+    register #(.WIDTH(2)) write_num_reg(clk, reset, write_num_mux_out, write_num, , 1'b1);
+    slow_addr #(.WIDTH(2)) write_num_adder(write_num, 2'b01, write_num_p1, );
+
+    wire [3:0] accum_we;
+    decoder2_4$ accum_decoder(write_num, accum_we, );
+    // 16B accumulation register
+    wire [127:0] accum_out;
+    register #(.WIDTH(32)) accum_reg1(clk, reset, mem_data, accum_out[127:96], , accum_we[3]);
+    register #(.WIDTH(32)) accum_reg2(clk, reset, mem_data, accum_out[95:64] , , accum_we[2]);
+    register #(.WIDTH(32)) accum_reg3(clk, reset, mem_data, accum_out[63:32] , , accum_we[1]);
+    register #(.WIDTH(32)) accum_reg4(clk, reset, mem_data, accum_out[31:0]  , , accum_we[0]);
+
+    // PA adder and mux (can make this faster with smaller adder (only add last
+    // few bits since addresses are 16B-aligned)
+    wire [BUSADDRW-1:0] pa_out;
+    wire [BUSADDRW-1:0] pa_p4;
+    wire [BUSADDRW-1:0] phys_addr_mux_out;
+    mux2_16$ 
+        pa_mux0(phys_addr_mux_out[15:0], phys_addr[15:0], pa_p4[15:0], ctrl_pa_src),
+        pa_mux1(phys_addr_mux_out[31:16], phys_addr[31:16], pa_p4[31:16], ctrl_pa_src);
+    register #(.WIDTH(32)) phys_addr_reg(clk, reset, , pa_out, , ctrl_pa_wr_en);
+    slow_addr  #(.WIDTH(32)) phys_addr_adder(pa_out, 32'd4, pa_p4, );
+
+    idataRAM dataram(clk, reset, index, ctrl_write, accum_out, dp_read_data);
 
 endmodule
