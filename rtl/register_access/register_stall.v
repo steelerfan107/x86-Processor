@@ -15,11 +15,16 @@ module register_access_stall (
 );
     output is_stall;    // 1 if the stage should stall
 
+    input clk;
+    input reset;
+
+    input register_size;
+
     input [2:0] op0;
-    input [2:0] op0_type;   // if its none, a reg, segment, etc...
+    input [2:0] op0_reg;  
 
     input [2:0] op1;
-    input [2:0] op1_type;
+    input [2:0] op1_reg;
 
     input [7:0] mod_rm;
 
@@ -28,35 +33,73 @@ module register_access_stall (
 
     input [32:0] wb_data;
     input [2:0] wb_reg;
+    input [1:0] wb_size;
     input wb_enable;
 
-    // only add if op0 is register
+    // wires
+    wire [2:0] op0_r0;
+    wire op0_r0_is_valid;
+    
+    wire [2:0] op0_r1;
+    wire op0_r1_is_valid;
 
+    wire [2:0] op1_r0;
+    wire op1_r0_is_valid;
+    
+    wire [2:0] op1_r1;
+    wire op1_r1_is_valid;
 
-    // table component should have multiple register ports to see if any of the possible register accesses will be in it
+    // correct register index based on operand size
+    wire [2:0] op0_reg_corrected;
+    wire [2:0] op1_reg_corrected;
+    wire [2:0] wb_reg_corrected;
 
+    register_writeback_select 
+    op0_reg_corrector (op0_reg_corrected, op0_reg, register_size),
+    op1_reg_corrector (op1_reg_corrected, op1_reg, register_size),
+    wb_reg_corrector (wb_reg_corrected, wb_reg, wb_size);
 
-    // When to stall
-    //
-    // op0_map = {
-    // "none" : "0", // No stall
-    // "register" : "1", // Stall for register being accessed
-    // "segment" : "2", // No stall
-    // "mm register" : "3", // No stall
-    // "mod r/m" : "4", // stall for up to 2 registers. R/M register if there is 1, and the 2 sib registers if they are there
-    // "immediete" : "5", // no stall
-    // "memory" : "6" // stall for the register with the address
-    // }
-    //
-    // op1_map = {
-    // "none" : "0", // No stall
-    // "register" : "1", // Stall for register being accessed
-    // "segment" : "2", // No stall
-    // "mm register" : "3", // No stall
-    // "mod r/m" : "4", // stall for up to 2 registers. R/M register if there is 1, and the 2 sib registers if they are there
-    // "immediete" : "5", // no stall
-    // "memory" : "6" // stall for the register with the address
+    register_stall_access_calculator logic0 (
+        op0_r0,
+        op0_r0_is_valid,
 
+        op0_r1,
+        op0_r1_is_valid,
+
+        op1_r0,
+        op1_r0_is_valid,
+
+        op1_r1,
+        op1_r1_is_valid,
+
+        op0,
+        op0_reg_corrected,
+
+        op1,
+        op1_reg_corrected,
+
+        mod_rm,
+        sib
+    );
+
+    register_stall_table logic1 (
+        clk,
+        reset,
+
+        op0_r0,
+        op0_r0_is_valid,
+
+        op0_r1,
+        op0_r1_is_valid,
+
+        op1_r0,
+        op1_r0_is_valid,
+
+        op1_r1,
+        op1_r1_is_valid,
+
+        next_stage_ready
+    );
     
 }
         
@@ -70,21 +113,313 @@ endmodule
 module register_stall_modify_table (
     
 );
-    output [1:0] mux_control;   // 0 = +1 to reg; 2 = -1 to reg
+    // output [1:0] mux_control;   // 1 = +1 to reg; 2 = -1 to reg (one hot)
     output write_enable;
+    output [3:0] reg_in;
+
 
     input [2:0] assigned_reg;   // reg number that this block is monitoring
     input [2:0] op0_reg;
     input [2:0] wb_reg;
-    input next_stage_ready;
+    input next_stage_ready;     // only add to table if the data is passed through the pipeline
+    input [3:0] reg_out;
+
+
+    // add 1
+    wire [3:0] reg_plus_one;
+    slow_addr plus_one (reg_out, 4'd1, reg_plus_one, );
+
+    // sub 1
+    wire [3:0] reg_minus_one;
+    slow_addr minus_one (reg_out, 4'd-1, reg_minus_one, );
+
+    // decide on what to use
+    //
+    // 1 = add 1
+    // 2 = subtract 1
+    
+    wire [1:0] mux_control;
+
+    // mux_control[0] = 1 if assigned_reg == op0_reg
+    wire [2:0] add_and_result;
+    and2$ 
+    and0 (add_and_result[0], assigned_reg[0], op0_reg[0]), 
+    and1 (add_and_result[1], assigned_reg[1], op0_reg[1]), 
+    and2 (add_and_result[2], assigned_reg[2], op0_reg[2]);
+
+    // see if match
+    and3$ and3 (mux_control[0], add_and_result[0], add_and_result[1], add_and_result[2]);
+
+    // mux_control[1] = 1 if assigned_reg == wb_reg
+    wire [2:0] sub_and_result;
+    and2$ 
+    and3 (sub_and_result[0], assigned_reg[0], wb_reg[0]), 
+    and4 (sub_and_result[1], assigned_reg[1], wb_reg[1]), 
+    and5 (sub_and_result[2], assigned_reg[2], wb_reg[2]);
+
+    // see if match
+    and3$ and6 (mux_control[1], sub_and_result[0], sub_and_result[1], sub_and_result[2]);
+
+    // select input to reg with a mux
+    ao_mux (.WIDTH(4), .NINPUTS(2)) reg_in_mux (
+        {reg_minus_one, reg_plus_one},
+        reg_in,
+        mux_control
+    );
+
+    // determine if we writing
+    // write if mux control is 01 or 10, but not 11
+
+    xor2$ xor0 (write_enable, mux_control[0]. mux_control[1]);
+
+    // i think thats it
 
 endmodule
 
 
 // table of regs
 module register_stall_table (
+    clk,
+    reset,
+
+    is_stall;
+
+    op0_r0,
+    op0_r0_is_valid,
+
+    op0_r1,
+    op0_r1_is_valid,
+
+    op1_r0,
+    op1_r0_is_valid,
+
+    op1_r1,
+    op1_r1_is_valid,
+
+
+    next_stage_ready
+);
+
+    input clk;
+    input reset;
+
+    output is_stall;
+
+    input [2:0] op0_r0;
+    input op0_r0_is_valid;
+    
+    input [2:0] op0_r1;
+    input op0_r1_is_valid;
+
+    input [2:0] op1_r0;
+    input op1_r0_is_valid;
+    
+    input [2:0] op1_r1;
+    input op1_r1_is_valid;
+
+
+    input next_stage_ready;
+
+
+    // 8 registers to hold counter values
+    // Each with 4 bits (chosen arbitrarily lol)
+
+    // from register_file.v since this can be set to 0 at reset
+    wire [3:0] 
+    r0_out,
+    r1_out,
+    r2_out,
+    r3_out,
+    r4_out,
+    r5_out,
+    r6_out,
+    r7_out;
+
+    wire [3:0] 
+    r0_in,
+    r1_in,
+    r2_in,
+    r3_in,
+    r4_in,
+    r5_in,
+    r6_in,
+    r7_in;
+
+    wire [3:0]
+    r0_en,
+    r1_en,
+    r2_en,
+    r3_en,
+    r4_en,
+    r5_en,
+    r6_en,
+    r7_en;
+
+    register_32_reset 
+    r0 ({24'd0, r0_out}, (24'd0, r0_in}, 0, r0_en, clk, reset), 
+    r1 ({24'd0, r1_out}, (24'd0, r1_in}, 0, r1_en, clk, reset), 
+    r2 ({24'd0, r2_out}, (24'd0, r2_in}, 0, r2_en, clk, reset), 
+    r3 ({24'd0, r3_out}, (24'd0, r3_in}, 0, r3_en, clk, reset), 
+    r4 ({24'd0, r4_out}, (24'd0, r4_in}, 0, r4_en, clk, reset), 
+    r5 ({24'd0, r5_out}, (24'd0, r5_in}, 0, r5_en, clk, reset), 
+    r6 ({24'd0, r6_out}, (24'd0, r6_in}, 0, r6_en, clk, reset), 
+    r7 ({24'd0, r7_out}, (24'd0, r7_in}, 0, r7_en, clk, reset);
+
+    // decide if they should be written
+    register_stall_modify_table 
+    r0_modifier (r0_en, r0_in, 3'd0, op0_reg, wb_reg, next_stage_ready, r0_out), 
+    r1_modifier (r1_en, r1_in, 3'd1, op0_reg, wb_reg, next_stage_ready, r1_out), 
+    r2_modifier (r2_en, r2_in, 3'd2, op0_reg, wb_reg, next_stage_ready, r2_out), 
+    r3_modifier (r3_en, r3_in, 3'd3, op0_reg, wb_reg, next_stage_ready, r3_out), 
+    r4_modifier (r4_en, r4_in, 3'd4, op0_reg, wb_reg, next_stage_ready, r4_out), 
+    r5_modifier (r5_en, r5_in, 3'd5, op0_reg, wb_reg, next_stage_ready, r5_out), 
+    r6_modifier (r6_en, r6_in, 3'd6, op0_reg, wb_reg, next_stage_ready, r6_out), 
+    r7_modifier (r7_en, r7_in, 3'd7, op0_reg, wb_reg, next_stage_ready, r7_out);
+
+    // check if there is a stall condition
+    wire is_stall;
+    register_stall_is_reg_in_table table_checker (
+        is_stall,
+
+        r0_out,
+        r1_out,
+        r2_out,
+        r3_out,
+        r4_out,
+        r5_out,
+        r6_out,
+        r7_out,
+
+        op0_r0,
+        op0_r0_is_valid,
+
+        op0_r1,
+        op0_r1_is_valid,
+
+        op1_r0,
+        op1_r0_is_valid,
+
+        op1_r1,
+        op1_r1_is_valid,
+    );
+
+    
+
+
+endmodule
+
+// Sees if a reg that is needed is currently in the table
+module register_stall_is_reg_in_table (
 
 );
+    output reg_in_table;
+
+    input [3:0] 
+    r0,
+    r1,
+    r2,
+    r3,
+    r4,
+    r5,
+    r6,
+    r7;
+
+    input [2:0] op0_r0;
+    input op0_r0_is_valid;
+    
+    input [2:0] op0_r1;
+    input op0_r1_is_valid;
+
+    input [2:0] op1_r0;
+    input op1_r0_is_valid;
+    
+    input [2:0] op1_r1;
+    input op1_r1_is_valid;
+
+    // see if there is a match between each reg and each op number... god
+    wire [7:0] in_table_all;
+    register_stall_check_4_regs 
+    r0_check (in_table_all[0], r[0], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[1], r[1], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[2], r[2], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[3], r[3], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[4], r[4], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[5], r[5], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[6], r[6], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
+    r0_check (in_table_all[7], r[7], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid);
+
+    // see if there's a dependency in any register
+    or8$ or_final (
+        reg_in_table,
+        in_table_al[0],
+        in_table_al[1],
+        in_table_al[2],
+        in_table_al[3],
+        in_table_al[4],
+        in_table_al[5],
+        in_table_al[6],
+        in_table_al[7]
+    );
+
+endmodule
+
+// sees if any of the 4 ops equal the reg
+//
+// is_equal = ((r & op0_r0) & op0_r0_is_valid) | ..... 
+module register_stall_check_4_regs (
+    
+);
+    output is_equal;
+
+    input [3:0] r;
+
+    input [2:0] op0_r0;
+    input op0_r0_is_valid;
+    
+    input [2:0] op0_r1;
+    input op0_r1_is_valid;
+
+    input [2:0] op1_r0;
+    input op1_r0_is_valid;
+    
+    input [2:0] op1_r1;
+    input op1_r1_is_valid;
+
+    // four of the check_1_reg block
+    wire [3:0] is_equal_all;
+    register_stall_check_1_reg 
+    logic0 (is_equal_all[0], r, op0_r0, op0_r0_is_valid),
+    logic1 (is_equal_all[1], r, op0_r1, op0_r1_is_valid),
+    logic2 (is_equal_all[2], r, op1_r0, op1_r0_is_valid),
+    logic3 (is_equal_all[3], r, op1_r1, op1_r1_is_valid);
+
+    // or to see if any are equal
+    or4$ or0 (is_equal, is_equal_all[0], is_equal_all[1], is_equal_all[2], is_equal_all[3]);
+
+endmodule
+
+// TODO: This logic is wrong... it should check contents of table rather than if op == r...
+module register_stall_check_1_reg (
+
+);
+    output is_equal;
+
+    input [3:0] r;
+    input [3:0] op;
+    input op_is_valid;
+
+    // is_equal = ((r & op) & op_is_valid)
+
+    wire [3:0] r_equals_op;
+    and2$ 
+    and0 (r_equals_op[0], r[0], op[0]),
+    and1 (r_equals_op[1], r[1], op[1]),
+    and2 (r_equals_op[2], r[2], op[2]),
+    and3 (r_equals_op[3], r[3], op[3]);
+
+    // see if all of those bits are 1 and its valid
+    wire is_equal;
+    and5$ and4 (r_equals_op[0], r_equals_op[1], r_equals_op[2], r_equals_op[3], op_is_valid);
 
 endmodule
 
@@ -94,14 +429,42 @@ endmodule
     // 1 register is op1 is a register only, or modrm with no SIB
     // 2 registers if op1 is modrm with SIB (MOD ==  00 | 01 | 10 and R/M == 100)
 module register_stall_access_calculator (
+    op0_r0,
+    op0_r0_is_valid,
 
+    op0_r1,
+    op0_r1_is_valid,
 
+    op1_r0,
+    op1_r0_is_valid,
+
+    op1_r1,
+    op1_r1_is_valid,
+
+    op0,
+    op0_reg,
+
+    op1,
+    op1_reg,
+
+    mod_rm,
+    sib
 );
-    output [2:0] r0;
-    output r0_is_valid;
+
+    output [2:0] op0_r0;
+    output op0_r0_is_valid;
+
+    output [2:0] op0_r1;
+    output op0_r1_is_valid;
+
+    output [2:0] op1_r0;
+    output op1_r0_is_valid;
     
-    output [2:0] r1;
-    output r1_is_valid;
+    output [2:0] op1_r1;
+    output op1_r1_is_valid;
+
+    input [2:0] op0;
+    input [2:0] op0_reg;
 
     input [2:0] op1;
     input [2:0] op1_reg;
@@ -109,7 +472,7 @@ module register_stall_access_calculator (
     input [7:0] mod_rm;
     input [7:0] sib;
 
-    // OP1 Types:
+    // OP Types:
     //
     // "none"        : "0",
     // "register"    : "1",
@@ -120,32 +483,72 @@ module register_stall_access_calculator (
     // "memory"      : "6"
 
 
-    // r0_is_valid if 1 or 4
-    register_stall_r0_is_valid register_stall_r0_is_valid0 (r0_is_valid, op1);
-
-    // r1_is_valid if 4 and there's mod_rm
-    register_stall_r1_is_valid register_stall_r1_is_valid0 (r1_is_valid, op1, mod_rm);
-
-    // determine what registers are being accessed
-
     // mod rm register accesses
     wire [2:0] mod_rm_r0;  
+    wire [2:0] mod_rm_r1;
     register_stall_mod_rm_registers logic0 (
         mod_rm_r0, 
-        r1, // if r1 is being used it has to be bc of mod rm and SIB
+        mod_rm_r1, // if r1 is being used it has to be bc of mod rm and SIB
 
         mod_rm,
         sib
     );
 
-    
+    // ---------- //
+    // op0 Access //
+    // ---------- //
 
+    register_stall_r0_is_valid logic1 (op0_r0_is_valid, op0, mod_rm);
+
+    register_stall_r1_is_valid logic2 (op0_r1_is_valid, op0, mod_rmm, sib);
+
+    // mux selecting output of r0
+    mux #(.WIDTH(3), .INPUTS(8)) op0_r0_mux (
+        {
+            ,   // 7
+            op0_reg,    //6
+            ,   //5
+            mod_rm_r0,  //4
+            ,   //3
+            ,   //2
+            op0_reg,   //1
+            ,   //0
+        }
+    );
+
+    // r1 always the mod rm r1
+    assign op0_r1 = mod_rm_r1;
+
+
+    // ---------- //
+    // op1 Access //
+    // ---------- //
+
+    register_stall_r0_is_valid logic1 (op1_r0_is_valid, op1, mod_rm);
+
+    register_stall_r1_is_valid logic2 (op1_r1_is_valid, op1, mod_rmm, sib);
+
+    // mux selecting output of r0
+    mux #(.WIDTH(3), .INPUTS(8)) op1_r0_mux (
+        {
+            ,   // 7
+            op1_reg,    //6
+            ,   //5
+            mod_rm_r0,  //4
+            ,   //3
+            ,   //2
+            op1_reg,   //1
+            ,   //0
+        }
+    );
+
+    // r1 always the mod rm r1
+    assign op1_r1 = mod_rm_r1;
 
 
 endmodule
 
 // r0_is_valid if op1 is 1, and op1 is 4 and mod rm isn't 00 101
-// OUT = (OP1 == 1) || (OP1 == 4 && MODRM != 00101)
 // OUT = (OP! == 1) || (OP1 == 4 && MODRM != 00101) || (OP1 == 6)
 module register_stall_r0_is_valid (
     out,
