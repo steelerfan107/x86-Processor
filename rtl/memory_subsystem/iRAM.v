@@ -20,7 +20,8 @@ module idataRAM(
     input wr_en_inn;
 
     wire wr_en_in;
-    and2$ andd(wr_en_in, wr_en_inn, clk);
+    //and2$ andd(wr_en_in, wr_en_inn, clk);
+    assign wr_en_in = wr_en_inn;
 
     input [127:0] wr_data;
 
@@ -129,7 +130,8 @@ module itagRAM(
     input [4:0] index;
     input wr_en_inn;
     wire wr_en_in;
-    and2$ andd(wr_en_in, wr_en_inn, clk);
+    //and2$ andd(wr_en_in, wr_en_inn, clk);
+    assign wr_en_in = wr_en_inn;
 
     input [22:0] wr_data;
 

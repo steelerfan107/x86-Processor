@@ -152,9 +152,11 @@ module icache(
     mux2_16$ 
         pa_mux0(phys_addr_mux_out[15:0], phys_addr[15:0], pa_p4[15:0], ctrl_pa_src),
         pa_mux1(phys_addr_mux_out[31:16], phys_addr[31:16], pa_p4[31:16], ctrl_pa_src);
-    register #(.WIDTH(32)) phys_addr_reg(clk, reset, , pa_out, , ctrl_pa_wr_en);
+    register #(.WIDTH(32)) phys_addr_reg(clk, reset, phys_addr_mux_out, pa_out, , ctrl_pa_wr_en);
     slow_addr  #(.WIDTH(32)) phys_addr_adder(pa_out, 32'd4, pa_p4, );
 
     idataRAM dataram(clk, reset, index, ctrl_write, accum_out, dp_read_data);
+
+    assign mem_addr = pa_out;
 
 endmodule

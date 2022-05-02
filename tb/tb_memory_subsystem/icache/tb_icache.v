@@ -96,6 +96,29 @@ module TOP;
         #20 
         mem_data = 32'hdeadbeef;
         mem_data_valid = 1;
+        #20
+        mem_data_valid = 0;
+        #20
+        mem_data = 32'habdcabcd;
+        mem_data_valid = 1;
+        #20
+        mem_data_valid = 0;
+        #20
+        grant_in = 0;
+        #20
+        mem_data_valid = 1;
+        
+        #20
+        mem_data_valid = 0;
+        #20
+
+        #20
+        grant_in = 1;
+
+        #20
+        mem_data_valid = 1;
+        
+        
 
         $display("==========\n End Test \n==========");
     end
