@@ -136,7 +136,7 @@ module register_stall_access_calculator (
 
         mod_rm,
         sib
-    )
+    );
 
     
 
@@ -146,6 +146,7 @@ endmodule
 
 // r0_is_valid if op1 is 1, and op1 is 4 and mod rm isn't 00 101
 // OUT = (OP1 == 1) || (OP1 == 4 && MODRM != 00101)
+// OUT = (OP! == 1) || (OP1 == 4 && MODRM != 00101) || (OP1 == 6)
 module register_stall_r0_is_valid (
     out,
     op1,
@@ -155,6 +156,14 @@ module register_stall_r0_is_valid (
     output out;
     input [2:0] op1;
     input [7:0] modrm_byte;
+
+    // "none" : "0", // No stall
+    // "register" : "1", // Stall for register being accessed
+    // "segment" : "2", // No stall
+    // "mm register" : "3", // No stall
+    // "mod r/m" : "4", // stall for up to 2 registers. R/M register if there is 1, and the 2 sib registers if they are there
+    // "immediete" : "5", // no stall
+    // "memory" : "6" // stall for the register with the address
 
     wire [4:0] modrm;   // just the mod and rm field
     assign modrm[4:3] = modrm_byte[7:6];
@@ -190,11 +199,18 @@ module register_stall_r0_is_valid (
     wire op1_is_1;
     and3$ op1_is_1_and (op1_is_1, op1_not[2], op1_not[1], op1[0]);
 
+    // op1 is 4 (110)
+    wire op1_is_4;
+    and3$ op1_is_4_and (op1_is_4, op1[2], op1[1], op1_not[0]);
+
     // SOP
-    or2$ or0 (out, op1_4_and_modrm_not, op1_is_1);
+    or3$ or0 (out, op1_4_and_modrm_not, op1_is_1, op1_is_4);
 
 endmodule
 
+// Valid when there is a mod rm and that mod rm needs sib and the sib has an index
+// OUT = (OP1 == 4 && MOD != 11 && RM == 100 && INDEX != 100)
+// TODO: Implement product of sums of this 
 module register_stall_r1_is_valid (
 
 );
@@ -203,16 +219,17 @@ module register_stall_r1_is_valid (
     input [2:0] op1;
 
     input [7:0] mod_rm;
-
-    // (OP1 == 4) && ((MOD == 00 || MOD == 01 || MOD == 10) && R/M == 100)
+    input [7:0] sib;
 
     wire [1:0] mod = mod_rm[7:6];
     wire [2:0] rm = mod_rm[2:0];
 
-    wire [1:0] mod_not;
-    inv1$ 
-    inv0 (mod_not[1], mod[1]), 
-    inv1 (mod_not[0], mod[0]);
+    wire [2:0] sib_index = sib[5:3];
+
+    // wire [1:0] mod_not;
+    // inv1$ 
+    // inv0 (mod_not[1], mod[1]), 
+    // inv1 (mod_not[0], mod[0]);
 
     wire [2:0] rm_not;
     inv1$
@@ -220,29 +237,28 @@ module register_stall_r1_is_valid (
     inv3 (rm_not[1], rm[1]),
     inv4 (rm_not[2], rm[2]);
 
-    wire mod_00, mod_01, mod_10;
-    and2$ 
-    and0 (mod_00, mod_not[1], mod_not[0]),
-    and1 (mod_01, mod_not[1], mod[0]),
-    and2 (mod_10, mod[1], mod_not[0]);
-
-    wire mod_or;
-    or3$ (mod_or, mod_00, mod_01, mod_10);
+    wire mod_not_11;
+    nand2$ nand0 (mod_not_11, mod[1], mod[0]);
 
     wire rm_100;
     and3$ 
     and3 (rm_100, rm[2], rm_not[1], rm_not[0]);
 
-    wire mod_rm_or_and;
-    and2$ 
-    and4 (mod_rm_or_and, mod_or, rm_100);
-
     wire op1_100;
     and3$ 
     and5 (op1_100, op1[2], op1_not[1], op1_not[0])
 
-    and2$ 
-    and5 (out, op1_100, mod_rm_or_and);
+    wire [2:0] sib_index_not;
+    inv1$ 
+    inv5 (sib_index_not[0], sib_index[0]), 
+    inv6 (sib_index_not[1], sib_index[1]), 
+    inv7 (sib_index_not[2], sib_index[2]);
+
+    wire sib_index_not_100;
+    nand3$ nand1 (sib_index_not_100, sib_index[2], sib_index_not[1], sib_index_not[0]);
+
+    and4$ 
+    and5 (out, op1_100, mod_not_11, rm_100, sib_index_not_100);
 
 endmodule
 
@@ -260,6 +276,7 @@ module register_stall_mod_rm_registers (
     // r0 will either be the rm value, or the sib index (or none at all but the valid bit checks for that)
     wire [2:0] rm = mod_rm[2:0];
     wire [2:0] sib_index = sib[5:3];
+    wire [2:0] sib_base = sib[2:0];
 
     wire is_rm;
 
@@ -270,14 +287,14 @@ module register_stall_mod_rm_registers (
     );
 
     mux #(.WIDTH(3), .INPUTS(2)) r0_mux (
-        {rm, sib_index},
+        {rm, sib_base},
         r0,
         is_rm
-    )
+    );
     
 
-    // r1 is sib base
-    assign r1 = sib[2:0];
+    // r1 is sib index
+    assign r1 = sib_index;
 
 endmodule
 
