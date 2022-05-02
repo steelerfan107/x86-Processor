@@ -137,10 +137,12 @@ module icache(
     decoder2_4$ accum_decoder(write_num, accum_we, );
     // 16B accumulation register
     wire [127:0] accum_out;
-    register #(.WIDTH(32)) accum_reg1(clk, reset, mem_data, accum_out[127:96], , accum_we[3]);
+    //register #(.WIDTH(32)) accum_reg1(clk, reset, mem_data, accum_out[127:96], , accum_we[3]);
     register #(.WIDTH(32)) accum_reg2(clk, reset, mem_data, accum_out[95:64] , , accum_we[2]);
     register #(.WIDTH(32)) accum_reg3(clk, reset, mem_data, accum_out[63:32] , , accum_we[1]);
     register #(.WIDTH(32)) accum_reg4(clk, reset, mem_data, accum_out[31:0]  , , accum_we[0]);
+
+    assign accum_out[127:96] = mem_data;
 
     // PA adder and mux (can make this faster with smaller adder (only add last
     // few bits since addresses are 16B-aligned)
