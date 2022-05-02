@@ -13,13 +13,21 @@ module decode_top (
    flush_0,
    flush_1,		   
    handle_int,
-   handle_int_done,		   
+   handle_int_done,
+   busy_ahead_of_decode,		   
    halt,
 
    // EIP Modification Interface		       
    write_eip,
    eip,
 
+   // Repeat Interface
+   ecx_register,
+   wb_valid,
+   wb_reg,
+   wb_data, 
+   wb_size,
+		   
    // EFLAGS Interface  
    eflags_reg,		   
 
@@ -60,6 +68,7 @@ module decode_top (
    d_stack_op,
    d_seg_override,
    d_seg_override_valid,
+   d_movs,
    d_pc,
    d_branch_taken	  		  
 		  
@@ -75,9 +84,17 @@ module decode_top (
    input 	        flush_0;
    input 	        flush_1;   
    input                handle_int;
-   output               handle_int_done;   
+   output               handle_int_done;  
+   input                busy_ahead_of_decode; 
    output               halt;
 
+   // Repeat Interface
+   input [31:0]         ecx_register;
+   output               wb_valid;
+   output [2:0]         wb_reg;
+   output [31:0]        wb_data;  
+   output [2:0]         wb_size;  
+   
    // EIP Modification Interface		       
    input                write_eip;
    input [31:0]         eip;
@@ -122,6 +139,7 @@ module decode_top (
    output [1:0]         d_stack_op;   
    output [2:0]		d_seg_override;   
    output 		d_seg_override_valid;
+   output               d_movs;
    output [IADDRW-1:0]  d_pc;
    output               d_branch_taken;
 
@@ -180,12 +198,13 @@ module decode_top (
    wire [1:0]           s1_stack_op;   
    wire [2:0]		s1_seg_override;   
    wire 	        s1_seg_override_valid;
+   wire                 s1_movs;
    wire [IADDRW-1:0]    s1_pc;
    wire                 s1_branch_taken;
 
    wire 		nc0;
    
-   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3;   
+   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3 + 1;   
 
    // Stage 0 and Pipe
    
@@ -259,19 +278,24 @@ module decode_top (
    
    pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, (reset | flush_0), s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
    
-   // Stage 0 and Pipe
-   
+   // Stage 0 and Pipe   
    decode_stage_1 #(.IADDRW(IADDRW)) ds1 (
        clk,
        reset,
        flush_1,
        handle_int,
-       handle_int_done,					  
+       handle_int_done,
+       busy_ahead_of_decode,					  
        halt,
        iretd,
        iretd_halt,			       
        write_eip,
        eip,
+       ecx_register,
+       wb_valid,
+       wb_reg,
+       wb_data, 
+       wb_size,					  
        eflags_reg,					  
        s0_valid_r,
        s0_ready_r,
@@ -308,6 +332,7 @@ module decode_top (
        s1_stack_op,
        s1_seg_override,
        s1_seg_override_valid,
+       s1_movs,					  
        s1_pc,
        s1_branch_taken					  
    );
@@ -333,6 +358,7 @@ module decode_top (
        s1_stack_op,
        s1_seg_override,
        s1_seg_override_valid,
+       s1_movs,
        s1_pc,
        s1_branch_taken      
    };
@@ -355,6 +381,7 @@ module decode_top (
        d_stack_op,
        d_seg_override,
        d_seg_override_valid,
+       d_movs,	     
        d_pc,
        d_branch_taken
    } = s1_data_r;     

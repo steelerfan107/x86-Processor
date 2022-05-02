@@ -32,6 +32,7 @@ module register_access_top (
     d_stack_op,
     d_seg_override,
     d_seg_override_valid,
+    d_movs,
     d_pc,
     d_branch_taken,
 
@@ -121,6 +122,7 @@ module register_access_top (
     input [1:0] d_stack_op;
     input [2:0] d_seg_override;
     input d_seg_override_valid;
+    input d_movs;
     input [31:0] d_pc;
     input d_branch_taken;
 

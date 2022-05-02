@@ -11,7 +11,8 @@ module decode_stage_1 (
    // Control Interface
    flush,
    handle_int,
-   handle_int_done,		       
+   handle_int_done,
+   busy_ahead_of_decode,		        
    halt,
    iretd,
    iretd_halt,
@@ -19,6 +20,13 @@ module decode_stage_1 (
    // EIP Modification Interface		       
    write_eip,
    eip,
+
+   // Repeat Interface
+   ecx_register,
+   wb_valid,
+   wb_reg,
+   wb_data, 
+   wb_size,		       
 
    // EFLAGS Interface  
    eflags_reg,
@@ -61,6 +69,7 @@ module decode_stage_1 (
    s1_stack_op,
    s1_seg_override,
    s1_seg_override_valid,
+   s1_movs,
    s1_pc,
    s1_branch_taken	       
 );
@@ -75,10 +84,18 @@ module decode_stage_1 (
    // Control Interface
    input                flush;
    input                handle_int;
-   output               handle_int_done;   
+   output               handle_int_done;  
+   input                busy_ahead_of_decode; 
    output               halt;
    output               iretd_halt;
    input                iretd;
+
+   // Repeat Interface
+   input [31:0]         ecx_register;
+   output               wb_valid;
+   output [2:0]         wb_reg;
+   output [31:0]        wb_data;  
+   output [2:0]         wb_size;  
 
    // EIP Modification Interface		       
    input                write_eip;
@@ -125,8 +142,12 @@ module decode_stage_1 (
    output [1:0]         s1_stack_op;   
    output [2:0]		s1_seg_override;   
    output 		s1_seg_override_valid;
+   output               s1_movs;
    output [IADDRW-1:0]  s1_pc;
    output               s1_branch_taken;
+
+   wire 		pre_s1_valid;
+   wire 		pre_s1_ready;   
 
    wire 		dec_valid,rom_valid;   
    wire 		dec_ready,rom_ready;	       
@@ -155,14 +176,89 @@ module decode_stage_1 (
    wire [2:0] 		rom_control_nc;
    wire [31:0] 		eip_reg_not,eip_reg;
 
+   wire [23:0] 		mask_prefix;
+   wire [2:0] 		pre_seg_override;
+   wire                 pre_seg_override_valid;
+   wire                 pre_repeat;
+   wire                 pre_size_override;
+   
+   wire                 repeat_halt_mask;
+   wire                 cs_is_non_one;
+   wire                 cs_is_one;
+   wire                 not_movs;
+   
+   wire                 out_accept, out_accept_writecs;
+   wire                 not_busy;
+
+   wire                 halt_forward_progress;
+   wire                 not_halt_forward_progress;
+   wire                 halt_forward_progress_mask;
+ 
+   // Dependency Logic
+   wire                 in_repeat_in, in_repeat, not_in_repeat;
+   wire                 in_accept;
+   wire 		repeat_and_busy;
+   wire 		repeat_and_out_accept;
+
+   and2$ (in_accept, s0_valid, s0_ready);
+
+   //and3$ (repeat_and_out_accept, dec_valid, dec_ready , pre_repeat);
+   //mux2$ (in_repeat_in         , repeat_and_out_accept, ~in_accept,  in_repeat);
+   
+   //register #(.WIDTH(1)) in_repeat_reg (
+   //            clk,
+   //            reset,
+   //            in_repeat_in,
+   //            in_repeat,
+   //            not_in_repeat,
+   //            1'b1			    
+   //);
+  
+   and3$ ( repeat_and_busy, busy_ahead_of_decode, pre_repeat, not_halt_forward_progress);
+   inv1$ ( not_busy, busy_ahead_of_decode);
+	   
+   mux2$ ( halt_forward_progress_in, not_busy, ~in_accept, halt_forward_progress);
+   
+   register #(.WIDTH(1)) half_forward_reg (
+               clk,
+               reset,
+               halt_forward_progress_in,
+               halt_forward_progress,
+               not_halt_forward_progress,
+               s0_valid				    
+   );
+
+   and2$ ( halt_forward_progress_mask, repeat_and_busy, not_halt_forward_progress);
+   
+   and2$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask);
+   and2$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask);   
+
+   // Repeat Logic   
+   and4$ (out_accept_writecs, s1_valid, s1_ready, ~halt_forward_progress_mask, pre_repeat);
+   
+   compare #(.WIDTH(8)) movs_comp (8'hA5, s0_opcode[15:8], s1_movs);
+   inv1$ ( not_movs, s1_movs);
+   
+   compare #(.WIDTH(32)) (ecx_register, 32'd1,  cs_is_one);
+   inv1$ (cs_is_non_one, cs_is_one);
+
+   mux2$ (repeat_halt_mask, 1'b1, cs_is_one, pre_repeat);
+   
+   assign wb_valid = out_accept_writecs;
+   assign wb_reg   = 3'b001;
+   assign wb_data  = ecx_register - 1;  
+   assign wb_size  = 3;
+   
    // IRETd Logic
    wire 		iretd_halt_mask;
-   
    compare #(.WIDTH(8)) halt_comp (8'hCF, s0_opcode[15:8], iretd);
+
+   wire 		rom_in_control_mask;
+   and2$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control);
    
    // Int Handle and EIP
-   mux #(.INPUTS(2),.WIDTH(3))  int_rc_mux ({3'd6,s0_rom_control}   , rom_control   , handle_int);   
-   mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,s0_rom_in_control}, rom_in_control, handle_int);
+   mux #(.INPUTS(2),.WIDTH(3))  int_rc_mux ({3'd6,s0_rom_control}        , rom_control   , handle_int);   
+   mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,rom_in_control_mask}   , rom_in_control, handle_int);
 
    register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, write_eip);   
    
@@ -183,12 +279,6 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(16)) op_mask_mux( {s0_opcode, {s0_opcode[15:8], 8'b0} }, mask_op, s0_opcode_bytes[1]);
 
    // Prefix Decode
-   wire [23:0] 		mask_prefix;
-   wire [2:0] 		pre_seg_override;
-   wire                 pre_seg_override_valid;
-   wire                 pre_repeat;
-   wire                 pre_size_override;
-
    mux #(.INPUTS(4),.WIDTH(24)) prefix_mask_mux( 
            {s0_prefix, {s0_prefix[23:8],8'b0}, {s0_prefix[23:16], 16'b0}, 24'b0}, 
             mask_prefix, 
@@ -227,11 +317,12 @@ module decode_stage_1 (
         dec_stack_op        			     
    );
  
-   assign dec_valid = s0_valid;   
+   assign dec_valid = s0_valid;
+   and2$ dra (dec_ready, repeat_halt_mask, pre_s1_ready);
 
    // Output Muxes
-   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,s1_ready},s0_ready, rom_in_control);     
-   mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},s1_valid, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,dec_ready},s0_ready, rom_in_control);     
+   mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},pre_s1_valid, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  size_mux({rom_size,dec_size},s1_size, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(1))  clear_d_flag_mux({rom_clear_d_flag,dec_clear_d_flag},s1_clear_d_flag, rom_in_control);  

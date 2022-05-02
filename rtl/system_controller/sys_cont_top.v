@@ -223,9 +223,7 @@ module sys_cont_top (
            // Interrupt Return Handling
            //
 
-           wire [15:0] 		     temp_cs, n_temp_cs;
-
-   
+           wire [15:0] 		     temp_cs, n_temp_cs;   
    
            register #(.WIDTH(16)) temp_cs_reg (
                clk,
