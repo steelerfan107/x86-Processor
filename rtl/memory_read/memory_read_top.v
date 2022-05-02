@@ -12,6 +12,11 @@ module memory_read_top (
     // Control Interface
     flush,
 
+    // Write Back Interface (To Pop Addr Dependency)
+    wb_valid,
+    wb_ready,
+    wb_to_memory, 			
+
     // Memory Read Interface
     m_valid,
     m_ready,
@@ -47,6 +52,11 @@ module memory_read_top (
     // Control Interface
     input flush;
 
+    // Write Back Interface (To Pop Addr Dependency)
+    input wb_valid;
+    input wb_ready;
+    input wb_to_memory;
+
     // Memory Read Interface
     input m_valid;
     output m_ready;
@@ -72,5 +82,53 @@ module memory_read_top (
     output e_opsize;
     output e_size_of_txn;
     output e_branch_taken;
+
+    wire    [31:0] a_op0;
+    wire    a_op0_is_address;
+
+    wire    [31:0] a_op1;
+    wire    a_op1_is_address;   
+   
+    wire    pop_address_dependency;
+    wire    push_address_dependency;   
+    wire    addr0_match;
+    wire    addr1_match;
+    wire    halt, halt0, halt1;
+
+    and3$ ( pop_address_dependency , wb_valid, wb_ready, wb_to_memory);
+    and2$ ( push_address_dependency, e_valid, e_ready, a_op0_is_address);
+
+    address_dependency_table (
+     // Clock Interface
+     .clk(clk),
+     .reset(reset),  
+
+     // Control Interface
+     .flush(flush),
+
+     // Address Interface In	
+     .push(push_address_dependency),		  
+     .push_address(a_op0),
+     .push_size(a_opsize),
+
+     // Address Compare Interface
+     .compare_address_0(a_op0),
+     .compare_address_0_size(a_opsize),			  
+     .compare_address_0_hit(addr0_match),			  
+
+     .compare_address_1(a_op1),
+     .compare_address_1_size(a_opsize),			  
+     .compare_address_1_hit(addr1_match),
+		  
+     // Address Interface Out
+     .pop(pop_address_dependency),
+   );
+
+   and2$ (halt0, addr0_match, a_op0_is_address);
+   and2$ (halt1, addr1_match, a_op1_is_address);
+   or2$  (halt, halt0, halt1);
+
+   // Use halt signal to hold tranaction until dependency is cleared
+   
 
 endmodule
