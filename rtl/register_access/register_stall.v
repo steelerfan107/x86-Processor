@@ -309,6 +309,8 @@ module register_stall_table (
 endmodule
 
 // Sees if a reg that is needed is currently in the table
+//
+// For each valid operand, select its corresponding register and set reg_in_table to 1 if the value is at least 1
 module register_stall_is_reg_in_table (
 
 );
@@ -336,92 +338,80 @@ module register_stall_is_reg_in_table (
     input [2:0] op1_r1;
     input op1_r1_is_valid;
 
-    // see if there is a match between each reg and each op number... god
-    wire [7:0] in_table_all;
-    register_stall_check_4_regs 
-    r0_check (in_table_all[0], r[0], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[1], r[1], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[2], r[2], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[3], r[3], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[4], r[4], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[5], r[5], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[6], r[6], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid), 
-    r0_check (in_table_all[7], r[7], op0_r0, op0_r0_is_valid, op0_r1, op0_r1_is_valid, op1_r0, op1_r0_is_valid, op1_r1, op1_r1_is_valid);
+    wire [3:0] in_table;
 
-    // see if there's a dependency in any register
-    or8$ or_final (
-        reg_in_table,
-        in_table_al[0],
-        in_table_al[1],
-        in_table_al[2],
-        in_table_al[3],
-        in_table_al[4],
-        in_table_al[5],
-        in_table_al[6],
-        in_table_al[7]
+    // mux for each op0_r0
+    wire [3:0] op0_r0_mux_out;
+    mux #(.WIDTH(4), .INPUTS(8)) op0_r0_mux (
+        {r7, r6, r5, r4, r3, r2, r1, r0},
+        op0_r0_mux_out,
+        op0_r0
     );
 
+    wire is_op0_r0_not_empty;
+    register_stall_reg_not_empty not_empty0 (is_op0_r0_not_empty, op0_r0_mux_out);
+
+    and2$ and0 (in_table[0], is_op0_r0_empty, op0_r0_is_valid);
+
+    // mux for each op0_r1
+    wire [3:0] op0_r1_mux_out;
+    mux #(.WIDTH(4), .INPUTS(8)) op0_r1_mux (
+        {r7, r6, r5, r4, r3, r2, r1, r0},
+        op0_r1_mux_out,
+        op0_r1
+    );
+
+    wire is_op0_r1_not_empty;
+    register_stall_reg_not_empty not_empty1 (is_op0_r1_not_empty, op0_r1_mux_out);
+
+    and2$ and1 (in_table[1], is_op0_r1_empty, op0_r1_is_valid);
+
+    // mux for each op1_r0
+    wire [3:0] op1_r0_mux_out;
+    mux #(.WIDTH(4), .INPUTS(8)) op1_r0_mux (
+        {r7, r6, r5, r4, r3, r2, r1, r0},
+        op1_r0_mux_out,
+        op1_r0
+    );
+
+    wire is_op1_r0_not_empty;
+    register_stall_reg_not_empty not_empty2 (is_op1_r0_not_empty, op1_r0_mux_out);
+
+    and2$ and2 (in_table[2], is_op1_r0_empty, op1_r0_is_valid);
+
+    // mux for each op0_r0
+    wire [3:0] op1_r1_mux_out;
+    mux #(.WIDTH(4), .INPUTS(8)) op1_r1_mux (
+        {r7, r6, r5, r4, r3, r2, r1, r0},
+        op1_r1_mux_out,
+        op1_r1
+    );
+
+    wire is_op1_r1_not_empty;
+    register_stall_reg_not_empty not_empty3 (is_op1_r1_not_empty, op1_r1_mux_out);
+
+    and2$ and3 (in_table[3], is_op1_r1_empty, op1_r1_is_valid);
+
+
+    // see if any are valid
+    or4$ or0 (reg_in_table, in_table[0], in_table[1], in_table[2], in_table[3]);
+
+
 endmodule
 
-// sees if any of the 4 ops equal the reg
-//
-// is_equal = ((r & op0_r0) & op0_r0_is_valid) | ..... 
-module register_stall_check_4_regs (
-    
+// sees if the register is not zero
+module register_stall_reg_not_empty (
+    out,
+    in,
 );
-    output is_equal;
 
-    input [3:0] r;
+    output out;
+    input [3:0] in;
 
-    input [2:0] op0_r0;
-    input op0_r0_is_valid;
-    
-    input [2:0] op0_r1;
-    input op0_r1_is_valid;
-
-    input [2:0] op1_r0;
-    input op1_r0_is_valid;
-    
-    input [2:0] op1_r1;
-    input op1_r1_is_valid;
-
-    // four of the check_1_reg block
-    wire [3:0] is_equal_all;
-    register_stall_check_1_reg 
-    logic0 (is_equal_all[0], r, op0_r0, op0_r0_is_valid),
-    logic1 (is_equal_all[1], r, op0_r1, op0_r1_is_valid),
-    logic2 (is_equal_all[2], r, op1_r0, op1_r0_is_valid),
-    logic3 (is_equal_all[3], r, op1_r1, op1_r1_is_valid);
-
-    // or to see if any are equal
-    or4$ or0 (is_equal, is_equal_all[0], is_equal_all[1], is_equal_all[2], is_equal_all[3]);
+    or4$ or0 (out, in[0], in[1], in[2], in[3]);
 
 endmodule
 
-// TODO: This logic is wrong... it should check contents of table rather than if op == r...
-module register_stall_check_1_reg (
-
-);
-    output is_equal;
-
-    input [3:0] r;
-    input [3:0] op;
-    input op_is_valid;
-
-    // is_equal = ((r & op) & op_is_valid)
-
-    wire [3:0] r_equals_op;
-    and2$ 
-    and0 (r_equals_op[0], r[0], op[0]),
-    and1 (r_equals_op[1], r[1], op[1]),
-    and2 (r_equals_op[2], r[2], op[2]),
-    and3 (r_equals_op[3], r[3], op[3]);
-
-    // see if all of those bits are 1 and its valid
-    wire is_equal;
-    and5$ and4 (r_equals_op[0], r_equals_op[1], r_equals_op[2], r_equals_op[3], op_is_valid);
-
-endmodule
 
 // determines what registers are being accessed by the current instruction
 // up to two registers will be accessed
