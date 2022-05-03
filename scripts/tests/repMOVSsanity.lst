@@ -11,3 +11,5 @@
 0x1a: 89 CD // Move ECX to EBP (Move R/M32 to r32) - Row 69
 0x1c: F3 A5 // REP MOVS  - Row 122
 0x1e: F4  // Halt  - Row 44
+0x40: 81 C1 00 00 00 01 // Add 00 00 00 01 to ECX  - Row 7
+0x46: CF // IRETd
