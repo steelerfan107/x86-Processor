@@ -11,7 +11,28 @@
 // Each table entry is a counter that is incremented/decrimented
 
 module register_access_stall (
+    is_stall,
 
+    clk,
+    reset,
+
+    register_size,
+
+    op0,
+    op0_reg,
+
+    op1,
+    op1_reg,
+
+    mod_rm,
+
+    sib,
+    sib_valid,
+
+    wb_data,
+    wb_reg,
+    wb_size,
+    wb_enable
 );
     output is_stall;    // 1 if the stage should stall
 
@@ -86,6 +107,8 @@ module register_access_stall (
         clk,
         reset,
 
+        is_stall,
+
         op0_r0,
         op0_r0_is_valid,
 
@@ -100,9 +123,6 @@ module register_access_stall (
 
         next_stage_ready
     );
-    
-}
-        
 
 endmodule
 
@@ -111,8 +131,16 @@ endmodule
 // +1 if op0 matches the register that the block modifies and the next segment is ready for new data
 // -1 if writeback matches the register that the block modifies
 module register_stall_modify_table (
-    
+    write_enable,
+    reg_in,
+
+    assigned_reg,
+    op0_reg,
+    wb_reg,
+    next_stage_ready,
+    reg_out
 );
+
     // output [1:0] mux_control;   // 1 = +1 to reg; 2 = -1 to reg (one hot)
     output write_enable;
     output [3:0] reg_in;
@@ -131,7 +159,7 @@ module register_stall_modify_table (
 
     // sub 1
     wire [3:0] reg_minus_one;
-    slow_addr minus_one (reg_out, 4'd-1, reg_minus_one, );
+    slow_addr minus_one (reg_out, 4'hf, reg_minus_one, );
 
     // decide on what to use
     //
@@ -153,15 +181,15 @@ module register_stall_modify_table (
     // mux_control[1] = 1 if assigned_reg == wb_reg
     wire [2:0] sub_and_result;
     and2$ 
-    and3 (sub_and_result[0], assigned_reg[0], wb_reg[0]), 
-    and4 (sub_and_result[1], assigned_reg[1], wb_reg[1]), 
-    and5 (sub_and_result[2], assigned_reg[2], wb_reg[2]);
+    and4 (sub_and_result[0], assigned_reg[0], wb_reg[0]), 
+    and5 (sub_and_result[1], assigned_reg[1], wb_reg[1]), 
+    and6 (sub_and_result[2], assigned_reg[2], wb_reg[2]);
 
     // see if match
-    and3$ and6 (mux_control[1], sub_and_result[0], sub_and_result[1], sub_and_result[2]);
+    and3$ and7 (mux_control[1], sub_and_result[0], sub_and_result[1], sub_and_result[2]);
 
     // select input to reg with a mux
-    ao_mux (.WIDTH(4), .NINPUTS(2)) reg_in_mux (
+    ao_mux #(.WIDTH(4), .NINPUTS(2)) reg_in_mux (
         {reg_minus_one, reg_plus_one},
         reg_in,
         mux_control
@@ -170,7 +198,7 @@ module register_stall_modify_table (
     // determine if we writing
     // write if mux control is 01 or 10, but not 11
 
-    xor2$ xor0 (write_enable, mux_control[0]. mux_control[1]);
+    xor2$ xor0 (write_enable, mux_control[0], mux_control[1]);
 
     // i think thats it
 
@@ -182,7 +210,7 @@ module register_stall_table (
     clk,
     reset,
 
-    is_stall;
+    is_stall,
 
     op0_r0,
     op0_r0_is_valid,
@@ -256,14 +284,14 @@ module register_stall_table (
     r7_en;
 
     register_32_reset 
-    r0 ({24'd0, r0_out}, (24'd0, r0_in}, 0, r0_en, clk, reset), 
-    r1 ({24'd0, r1_out}, (24'd0, r1_in}, 0, r1_en, clk, reset), 
-    r2 ({24'd0, r2_out}, (24'd0, r2_in}, 0, r2_en, clk, reset), 
-    r3 ({24'd0, r3_out}, (24'd0, r3_in}, 0, r3_en, clk, reset), 
-    r4 ({24'd0, r4_out}, (24'd0, r4_in}, 0, r4_en, clk, reset), 
-    r5 ({24'd0, r5_out}, (24'd0, r5_in}, 0, r5_en, clk, reset), 
-    r6 ({24'd0, r6_out}, (24'd0, r6_in}, 0, r6_en, clk, reset), 
-    r7 ({24'd0, r7_out}, (24'd0, r7_in}, 0, r7_en, clk, reset);
+    r0 ({24'd0, r0_out}, {24'd0, r0_in}, 0, r0_en, clk, reset), 
+    r1 ({24'd0, r1_out}, {24'd0, r1_in}, 0, r1_en, clk, reset), 
+    r2 ({24'd0, r2_out}, {24'd0, r2_in}, 0, r2_en, clk, reset), 
+    r3 ({24'd0, r3_out}, {24'd0, r3_in}, 0, r3_en, clk, reset), 
+    r4 ({24'd0, r4_out}, {24'd0, r4_in}, 0, r4_en, clk, reset), 
+    r5 ({24'd0, r5_out}, {24'd0, r5_in}, 0, r5_en, clk, reset), 
+    r6 ({24'd0, r6_out}, {24'd0, r6_in}, 0, r6_en, clk, reset), 
+    r7 ({24'd0, r7_out}, {24'd0, r7_in}, 0, r7_en, clk, reset);
 
     // decide if they should be written
     register_stall_modify_table 
@@ -312,7 +340,28 @@ endmodule
 //
 // For each valid operand, select its corresponding register and set reg_in_table to 1 if the value is at least 1
 module register_stall_is_reg_in_table (
+    reg_in_table,
 
+    r0,
+    r1,
+    r2,
+    r3,
+    r4,
+    r5,
+    r6,
+    r7,
+
+    op0_r0,
+    op0_r0_is_valid,
+    
+    op0_r1,
+    op0_r1_is_valid,
+
+    op1_r0,
+    op1_r0_is_valid,
+    
+    op1_r1,
+    op1_r1_is_valid
 );
     output reg_in_table;
 
@@ -402,7 +451,7 @@ endmodule
 // sees if the register is not zero
 module register_stall_reg_not_empty (
     out,
-    in,
+    in
 );
 
     output out;
@@ -495,15 +544,17 @@ module register_stall_access_calculator (
     // mux selecting output of r0
     mux #(.WIDTH(3), .INPUTS(8)) op0_r0_mux (
         {
-            ,   // 7
+            8'h0,   // 7
             op0_reg,    //6
-            ,   //5
+            8'h0,   //5
             mod_rm_r0,  //4
-            ,   //3
-            ,   //2
+            8'h0,   //3
+            8'h0,   //2
             op0_reg,   //1
-            ,   //0
-        }
+            8'h0   //0
+        },
+        op0_r0,
+        op0_reg
     );
 
     // r1 always the mod rm r1
@@ -514,22 +565,25 @@ module register_stall_access_calculator (
     // op1 Access //
     // ---------- //
 
-    register_stall_r0_is_valid logic1 (op1_r0_is_valid, op1, mod_rm);
+    register_stall_r0_is_valid logic3 (op1_r0_is_valid, op1, mod_rm);
 
-    register_stall_r1_is_valid logic2 (op1_r1_is_valid, op1, mod_rmm, sib);
+    register_stall_r1_is_valid logic4 (op1_r1_is_valid, op1, mod_rmm, sib);
 
     // mux selecting output of r0
     mux #(.WIDTH(3), .INPUTS(8)) op1_r0_mux (
         {
-            ,   // 7
+            8'h0,   // 7
             op1_reg,    //6
-            ,   //5
+            8'h0,   //5
             mod_rm_r0,  //4
-            ,   //3
-            ,   //2
+            8'h0,   //3
+            8'h0,   //2
             op1_reg,   //1
-            ,   //0
-        }
+            8'h0   //0
+        },
+        op1_r0,
+        op1_reg
+
     );
 
     // r1 always the mod rm r1
@@ -593,19 +647,23 @@ module register_stall_r0_is_valid (
     and3$ op1_is_1_and (op1_is_1, op1_not[2], op1_not[1], op1[0]);
 
     // op1 is 4 (110)
-    wire op1_is_4;
-    and3$ op1_is_4_and (op1_is_4, op1[2], op1[1], op1_not[0]);
+    wire op1_is_6;
+    and3$ op1_is_6_and (op1_is_6, op1[2], op1[1], op1_not[0]);
 
     // SOP
-    or3$ or0 (out, op1_4_and_modrm_not, op1_is_1, op1_is_4);
+    or4$ or0 (out, op1_4_and_modrm_not, op1_is_1, op1_is_4, op1_is_6);
 
 endmodule
 
 // Valid when there is a mod rm and that mod rm needs sib and the sib has an index
 // OUT = (OP1 == 4 && MOD != 11 && RM == 100 && INDEX != 100)
-// TODO: Implement product of sums of this 
 module register_stall_r1_is_valid (
+    out,
 
+    op1,
+
+    mod_rm,
+    sib
 );
     output out;
 
@@ -639,7 +697,7 @@ module register_stall_r1_is_valid (
 
     wire op1_100;
     and3$ 
-    and5 (op1_100, op1[2], op1_not[1], op1_not[0])
+    and5 (op1_100, op1[2], op1_not[1], op1_not[0]);
 
     wire [2:0] sib_index_not;
     inv1$ 
@@ -651,13 +709,17 @@ module register_stall_r1_is_valid (
     nand3$ nand1 (sib_index_not_100, sib_index[2], sib_index_not[1], sib_index_not[0]);
 
     and4$ 
-    and5 (out, op1_100, mod_not_11, rm_100, sib_index_not_100);
+    and6 (out, op1_100, mod_not_11, rm_100, sib_index_not_100);
 
 endmodule
 
 // determines what registers are being accessed by mod rm
 module register_stall_mod_rm_registers (
+    r0,
+    r1,
 
+    mod_rm,
+    sib
 );
 
     output [2:0] r0;
@@ -714,7 +776,5 @@ module register_stall_is_r0_rm (
 
     // or
     or4$ or0 (is_rm, mod1_and_mod0, not_rm2, rm[1], rm[0]);
-
-
 
 endmodule
