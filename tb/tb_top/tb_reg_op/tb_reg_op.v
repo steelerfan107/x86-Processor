@@ -591,7 +591,7 @@ address_generation_top uut_address_gen(
         #55
         reset = 0;
         #350
-        int_vec = 1;     
+        int_vec = 0;     
 	#50
         int_vec = 0;     	  
         $display("==========\n End Test \n==========");
