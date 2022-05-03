@@ -158,7 +158,7 @@ module decode_top (
    wire [3:0] 	        s0_immediete_bytes;   
    wire [23:0] 	        s0_prefix;   
    wire [1:0] 	        s0_prefix_bytes;
-   wire [2:0] 		s0_rom_control;
+   wire [3:0] 		s0_rom_control;
    wire                 s0_rom_in_control;
    wire [IADDRW-1:0] 	s0_pc;   
    wire 		s0_branch_taken;   
@@ -174,13 +174,13 @@ module decode_top (
    wire [3:0] 	        s0_immediete_bytes_r;   
    wire [23:0] 	        s0_prefix_r;   
    wire [1:0] 	        s0_prefix_bytes_r; 
-   wire [2:0] 		s0_rom_control_r;
+   wire [3:0] 		s0_rom_control_r;
    wire                 s0_rom_in_control_r;  
    wire [IADDRW-1:0] 	s0_pc_r;   
    wire 		s0_branch_taken_r;
    wire                 s0_size_override_r;
    
-   localparam S0_PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 + 1 + 1 + 1 + 3;
+   localparam S0_PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 + 1 + 1 + 1 + 3 + 1;
 
    // Stage 1 Pipe  
    wire 		s1_valid;   

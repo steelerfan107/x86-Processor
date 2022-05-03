@@ -56,10 +56,7 @@ module opcode_modrm_control_cloud (
  output flag1_1, 
  output flag1_0, 
  output stack_op_1, 
- output stack_op_0, 
- output rom_control_2, 
- output rom_control_1, 
- output rom_control_0				   
+ output stack_op_0				   
 );
 
 
