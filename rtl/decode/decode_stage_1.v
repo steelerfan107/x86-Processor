@@ -176,8 +176,8 @@ module decode_stage_1 (
    wire                 dec_branch_taken,rom_branch_taken;
    
    wire 		rom_in_control;
-   wire [2:0] 		rom_control;
-   wire [2:0] 		rom_control_nc;
+   wire [3:0] 		rom_control;
+   wire [3:0] 		rom_control_nc;
    wire [31:0] 		eip_reg_not,eip_reg;
 
    wire [23:0] 		mask_prefix;
