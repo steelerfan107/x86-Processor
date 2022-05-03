@@ -11,7 +11,9 @@ module decode_top (
 		   
    // Control Interface
    flush_0,
-   flush_1,		   
+   flush_1,
+   pending_int,
+   hold_int,		   
    handle_int,
    handle_int_done,
    busy_ahead_of_decode,		   
@@ -82,7 +84,9 @@ module decode_top (
 
    // Control Interface
    input 	        flush_0;
-   input 	        flush_1;   
+   input 	        flush_1;
+   input                pending_int;
+   output               hold_int;   
    input                handle_int;
    output               handle_int_done;  
    input                busy_ahead_of_decode; 
@@ -283,6 +287,8 @@ module decode_top (
        clk,
        reset,
        flush_1,
+       pending_int,
+       hold_int,
        handle_int,
        handle_int_done,
        busy_ahead_of_decode,					  

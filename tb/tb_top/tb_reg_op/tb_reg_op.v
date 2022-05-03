@@ -22,6 +22,8 @@ module TOP;
    reg                   reset;
 
    // Control Interface
+   wire                  pending_int;
+   wire                  hold_int;
    wire	                 fetch_flush;
    wire                  handle_int;
    wire                  halt;
@@ -257,7 +259,9 @@ module TOP;
       clk,
       reset,
       decode_0_flush,
-      decode_1_flush,			  
+      decode_1_flush,
+      pending_int,
+      hold_int,			  
       handle_int,
       handle_int_done,
       busy_ahead_of_decode,			  
@@ -519,7 +523,9 @@ address_generation_top uut_address_gen(
      reg_load_eflags,
      reg_eflags,
      reg_load_eip,
-     reg_eip		  
+     reg_eip,
+     pending_int,
+     hold_int	  
   );   
 
   assign busy_ahead_of_decode = wb_valid | a_valid | r_valid;
@@ -584,8 +590,8 @@ address_generation_top uut_address_gen(
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
-        #150
-        int_vec = 0; //1;     
+        #350
+        int_vec = 1;     
 	#50
         int_vec = 0;     	  
         $display("==========\n End Test \n==========");

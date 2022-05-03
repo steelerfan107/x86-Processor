@@ -10,6 +10,8 @@ module decode_stage_1 (
 
    // Control Interface
    flush,
+   pending_int,
+   hold_int,
    handle_int,
    handle_int_done,
    busy_ahead_of_decode,		        
@@ -83,6 +85,8 @@ module decode_stage_1 (
 
    // Control Interface
    input                flush;
+   input                pending_int;
+   output               hold_int;
    input                handle_int;
    output               handle_int_done;  
    input                busy_ahead_of_decode; 
@@ -187,12 +191,14 @@ module decode_stage_1 (
    wire                 cs_is_one;
    wire                 not_movs;
    
-   wire                 out_accept, out_accept_writecs;
+   wire                 out_accept, out_accept_writeecx;
    wire                 not_busy;
 
    wire                 halt_forward_progress;
    wire                 not_halt_forward_progress;
    wire                 halt_forward_progress_mask;
+
+   wire [31:0] 		ecx_register_selected;
  
    // Dependency Logic
    wire                 in_repeat_in, in_repeat, not_in_repeat;
@@ -201,18 +207,6 @@ module decode_stage_1 (
    wire 		repeat_and_out_accept;
 
    and2$ (in_accept, s0_valid, s0_ready);
-
-   //and3$ (repeat_and_out_accept, dec_valid, dec_ready , pre_repeat);
-   //mux2$ (in_repeat_in         , repeat_and_out_accept, ~in_accept,  in_repeat);
-   
-   //register #(.WIDTH(1)) in_repeat_reg (
-   //            clk,
-   //            reset,
-   //            in_repeat_in,
-   //            in_repeat,
-   //            not_in_repeat,
-   //            1'b1			    
-   //);
   
    and3$ ( repeat_and_busy, busy_ahead_of_decode, pre_repeat, not_halt_forward_progress);
    inv1$ ( not_busy, busy_ahead_of_decode);
@@ -229,12 +223,41 @@ module decode_stage_1 (
    );
 
    and2$ ( halt_forward_progress_mask, repeat_and_busy, not_halt_forward_progress);
-   
-   and2$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask);
-   and2$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask);   
 
-   // Repeat Logic   
-   and4$ (out_accept_writecs, s1_valid, s1_ready, ~halt_forward_progress_mask, pre_repeat);
+   and2$ ( hold_int_repeat, pending_int, pre_repeat);
+   
+   and3$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask, ~hold_int_repeat);
+   and3$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask, ~hold_int_repeat);   
+
+   // Repeat Logic
+   wire 		store_temp_ecx, valid_temp_ecx_in, valid_temp_ecx, not_valid_temp_ecx;
+   wire [31:0] 		temp_ecx_register, not_temp_ecx_register;
+   
+   and3$ (store_temp_ecx, pending_int, pre_repeat, cs_is_non_one);
+   
+   register #(.WIDTH(16)) temp_ecx (
+               clk,
+               reset,
+               ecx_register,
+               temp_ecx_register,
+               not_temp_ecx_register,
+               store_temp_ecx		    
+   );
+
+   mux #(.INPUTS(2),.WIDTH(1)) ({~out_accept_writeecx,store_temp_ecx}, valid_temp_ecx_in, valid_temp_ecx);
+
+   register #(.WIDTH(1)) v_temp_ecx (
+               clk,
+               reset,
+               valid_temp_ecx_in,
+               valid_temp_ecx,
+               not_valid_temp_ecx,
+               1'b1		    
+   );  
+   
+   and3$ (hold_int, pending_int, busy_ahead_of_decode, pre_repeat); 
+   
+   and4$ (out_accept_writeecx, s1_valid, s1_ready, ~halt_forward_progress_mask, pre_repeat);
    
    compare #(.WIDTH(8)) movs_comp (8'hA5, s0_opcode[15:8], s1_movs);
    inv1$ ( not_movs, s1_movs);
@@ -243,10 +266,12 @@ module decode_stage_1 (
    inv1$ (cs_is_non_one, cs_is_one);
 
    mux2$ (repeat_halt_mask, 1'b1, cs_is_one, pre_repeat);
+
+   mux #(.INPUTS(2),.WIDTH(32)) ({temp_ecx_register,ecx_register}, ecx_register_selected, valid_temp_ecx);
    
-   assign wb_valid = out_accept_writecs;
+   assign wb_valid = out_accept_writeecx;
    assign wb_reg   = 3'b001;
-   assign wb_data  = ecx_register - 1;  
+   assign wb_data  = ecx_register_selected - 1;  
    assign wb_size  = 3;
    
    // IRETd Logic

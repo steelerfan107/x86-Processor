@@ -31,7 +31,9 @@ module sys_cont_top (
      reg_load_eflags,
      reg_eflags,
      reg_load_eip,
-     reg_eip			     
+     reg_eip,
+     pending_int,
+     hold_int			     
 );
 
            input      clk;
@@ -67,7 +69,11 @@ module sys_cont_top (
 	   output     [31:0] reg_eflags;
   	   output     reg_load_eip;  
 	   output     [31:0] reg_eip;
+           output     pending_int;
+           input      hold_int;
 
+           wire       not_hold_int;
+   
   	   wire       reg_load_eflags_int;  
 	   wire       [31:0] reg_eflags_int;
   	   wire       reg_load_eip_int;  
@@ -152,6 +158,10 @@ module sys_cont_top (
            // Interrupt Handling
            //
 
+           wire 		     mask_int_vec;
+   
+           assign pending_int = or_int_vec;
+   
   	   assign       reg_load_eflags_int = 'h0;  
 	   assign       reg_eflags_int = 'h0;
   	   assign       reg_load_eip_int = 'h0;  
@@ -179,6 +189,9 @@ module sys_cont_top (
            );
    
            logic_tree #(.WIDTH(4),.OPERATION(1)) vec_or (int_vec_r, or_int_vec);
+
+           inv1$ (not_hold_int, hold_int); 
+           and2$ (mask_int_vec, not_hold_int, or_int_vec);
 
            mux  #(.WIDTH(32),.INPUTS(4)) idt_select ( {IDT_ADDRESS3, IDT_ADDRESS2, IDT_ADDRESS1, IDT_ADDRESS0}, mem_address, int_serviced);
 
@@ -215,7 +228,7 @@ module sys_cont_top (
                 reg_load_cs_int,
                 reg_cs_int,
                 int_clear,
-                or_int_vec		       
+                mask_int_vec		       
            );
 
            ////////////////////////////////
