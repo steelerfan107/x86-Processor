@@ -120,7 +120,7 @@ module decode_stage_1 (
    input [3:0]         s0_immediete_bytes;
    input [23:0]        s0_prefix;
    input[1:0]          s0_prefix_bytes;
-   input [2:0] 	       s0_rom_control;   
+   input [3:0] 	       s0_rom_control;   
    input               s0_rom_in_control;   
    input [IADDRW-1:0]  s0_pc;
    input               s0_branch_taken;
@@ -282,7 +282,7 @@ module decode_stage_1 (
    and2$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control);
    
    // Int Handle and EIP
-   mux #(.INPUTS(2),.WIDTH(3))  int_rc_mux ({3'd6,s0_rom_control}        , rom_control   , handle_int);   
+   mux #(.INPUTS(2),.WIDTH(4))  int_rc_mux ({4'd6,s0_rom_control}        , rom_control   , handle_int);   
    mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,rom_in_control_mask}   , rom_in_control, handle_int);
 
    register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, write_eip);   
@@ -355,16 +355,16 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(3))  op1_mux({rom_op1,dec_op1},s1_op1, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  op0_reg_mux({rom_op0_reg,dec_op0_reg},s1_op0_reg, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  op1_reg_mux({rom_op1_reg,dec_op1_reg},s1_op1_reg, rom_in_control);  
-   mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({rom_modrm,dec_modrm},s1_modrm, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(8))  sib_mux({rom_sib,dec_sib},s1_sib, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({dec_modrm,dec_modrm},s1_modrm, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(8))  sib_mux({dec_sib,dec_sib},s1_sib, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(32)) imm_mux({rom_imm,dec_imm},s1_imm, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(32)) disp_mux({rom_disp,dec_disp},s1_disp, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(4))  alu_op_mux({rom_alu_op,dec_alu_op},s1_alu_op, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(3))  flag_0_mux({rom_flag_0,dec_flag_0},s1_flag_0, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({rom_seg_override,dec_seg_override},s1_seg_override, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({rom_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({dec_seg_override,dec_seg_override},s1_seg_override, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({dec_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);   
    //mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
    //mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 

@@ -103,10 +103,7 @@ module op_and_rm_decode (
      .flag1_1(dec_flag_1[1]), 
      .flag1_0(dec_flag_1[0]), 
      .stack_op_1(dec_stack_op[1]), 
-     .stack_op_0(dec_stack_op[0]), 
-     .rom_control_2(rom_control[2]), 
-     .rom_control_1(rom_control[1]), 
-     .rom_control_0(rom_control[0])				   
+     .stack_op_0(dec_stack_op[0])				   
   );
 
 endmodule
