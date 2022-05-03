@@ -71,8 +71,8 @@ module icache(
     input bus_busy_in;
 
 
-    wire [4:0] index = req_address[31:27];
-    wire [22:0] phys_tag = phys_addr[26:4];
+    wire [4:0] index = req_address[8:4];
+    wire [22:0] phys_tag = phys_addr[31:9];
 
     // this should always be 0 for 16B-aligned requests
     wire [3:0] byte_offset = req_address[3:0];
