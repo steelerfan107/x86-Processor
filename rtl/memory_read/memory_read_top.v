@@ -102,7 +102,7 @@ module memory_read_top (
     output [63:0] e_op_a;           // value for operand a
     output [63:0] e_op_b;           // value for operand b
     output [2:0] e_op_a_reg;        // register number for operand a
-    output [2:0] e_op_a_address;    // address for operand a
+    output [31:0] e_op_a_address;    // address for operand a
     output e_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
     output [31:0] e_stack_ptr;      // stack pointer address
     output [47:0] e_imm;            // immediate
@@ -117,7 +117,7 @@ module memory_read_top (
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+32+48+4+3+3+32+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1;
 
     wire [PIPEWIDTH-1:0] pipe_in_datam, pipe_out_data;
 
