@@ -33,7 +33,9 @@ module memory_subsystem_top (
     dmem_w_wr_size,  
     dmem_w_dp_valid,      // unused
     dmem_w_dp_ready,      // unused
-    dmem_w_dp_read_data   // unused
+    dmem_w_dp_read_data,   // unused
+
+    tlb_contents,
 );
 
     // Instruction Memory Interface Parameters
@@ -85,6 +87,8 @@ module memory_subsystem_top (
     output              dmem_w_dp_valid;     // unused 
     input               dmem_w_dp_ready;     // unused
     output [IDATAW-1:0] dmem_w_dp_read_data; // unused
+
+    input [351:0] tlb_contents;
 
     // Interconnect - Busses
     wire [BUSDATAW-1:0] bus_data;
@@ -142,7 +146,31 @@ module memory_subsystem_top (
         .io_en(dec_io_en)
     );
 
-    //tlb tlb();
+    wire tlb_i_hit;
+    wire tlb_i_rd_wr;
+    wire [31:0] tlb_i_pa;
+    wire tlb_i_pcd;
+
+    wire tlb_d_hit;
+    wire tlb_d_rd_wr;
+    wire [31:0] tlb_d_pa;
+    wire tlb_d_pcd;
+
+    wire d_virt_addr;
+
+    TLB tlb(
+        .contents(tlb_contents),
+        .i_addr_in(imem_address),
+        .i_hit(tlb_i_hit),
+        .i_rd_wr_out(tlb_i_rd_wr),
+        .i_pa_out(tlb_i_pa),
+        .i_PCD_out(tlb_i_pcd),
+        .d_addr_in(d_virt_addr),
+        .d_hit(tlb_d_hit),
+        .d_rd_wr_out(tlb_d_rd_wr),
+        .d_pa_out(tlb_d_pa),
+        .d_PCD_out(tlb_d_pcd)
+    );
     //dcache dcache();
 
     wire icache_grant;
@@ -155,8 +183,8 @@ module memory_subsystem_top (
         .dp_valid(imem_dp_valid),
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
-        .phys_addr(),   // from TLB
-        .tlb_hit(),     // from TLB
+        .phys_addr(tlb_i_pa),   // from TLB
+        .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),
         .mem_data_valid(bus_data_valid),

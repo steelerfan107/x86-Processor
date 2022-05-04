@@ -9,9 +9,10 @@ module icache(
     dp_ready,
     dp_read_data,
 
-    // from the TLB
+    //  TLB
     phys_addr,
     tlb_hit,
+    tlb_pcd,
     
     // interface to interconnect
     mem_addr,
@@ -49,9 +50,10 @@ module icache(
     input               dp_ready;
     output [IDATAW-1:0] dp_read_data;
 
-    // from the TLB
+    //  TLB
     input [31:0] phys_addr;
     input tlb_hit;
+    input tlb_pcd;
     
     // Interface to Interconnect
     output [BUSADDRW-1:0]  mem_addr;
