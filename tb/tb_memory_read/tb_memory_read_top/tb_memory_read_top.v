@@ -46,7 +46,7 @@ module TOP;
     wire [63:0] e_op_a;           // value for operand a
     wire [63:0] e_op_b;           // value for operand b
     wire [2:0] e_op_a_reg;        // register number for operand a
-    wire [2:0] e_op_a_address;    // address for operand a
+    wire [32:0] e_op_a_address;    // address for operand a
     wire e_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
     wire [31:0] e_stack_ptr;      // stack pointer address
     wire [47:0] e_imm;            // immediate
