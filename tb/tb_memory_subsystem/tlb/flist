@@ -19,6 +19,7 @@
 ../../../rtl/lib/decoder5_32.v
 ../../../rtl/memory_subsystem/icache.v
 ../../../rtl/memory_subsystem/iRAM.v
+../../../rtl/memory_subsystem/simple_read_master.v
 ../../../rtl/memory_subsystem/icache_controller.v
 ../../../rtl/memory_subsystem/icache_combinational_logic.v
 ../../../rtl/memory_subsystem/interconnect/arb_decoder.v

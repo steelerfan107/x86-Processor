@@ -35,7 +35,15 @@ module memory_subsystem_top (
     dmem_w_dp_ready,      // unused
     dmem_w_dp_read_data,   // unused
 
-    tlb_contents,
+    // System Controller Read Interface
+    sys_r_valid,
+    sys_r_ready,
+    sys_r_address,
+    sys_r_dp_valid,
+    sys_r_dp_ready,
+    sys_r_dp_read_data,
+
+    tlb_contents
 );
 
     // Instruction Memory Interface Parameters
@@ -87,6 +95,14 @@ module memory_subsystem_top (
     output              dmem_w_dp_valid;     // unused 
     input               dmem_w_dp_ready;     // unused
     output [IDATAW-1:0] dmem_w_dp_read_data; // unused
+
+    // System Controller Read Interface
+    input sys_r_valid;
+    output sys_r_ready;
+    input [31:0] sys_r_address;
+    output sys_r_dp_valid;
+    input sys_r_dp_ready;
+    output [31:0] sys_r_dp_read_data;
 
     input [351:0] tlb_contents;
 
@@ -171,7 +187,38 @@ module memory_subsystem_top (
         .d_pa_out(tlb_d_pa),
         .d_PCD_out(tlb_d_pcd)
     );
+    
     //dcache dcache();
+
+    // system controller interface 
+    // make lower priority than dcache so that writes complete
+    // FIXME check that writes complete, since dcache might release the bus in
+    // between writes for unaligned writes
+    wire sys_grant;
+    simple_read_master srm(
+        .clk(clk),
+        .reset(reset),
+        
+        .req_valid(sys_r_valid),
+        .req_ready(sys_r_ready),
+        .req_address(sys_r_address),
+        .dp_valid(sys_r_dp_valid),
+        .dp_ready(sys_r_dp_ready),
+        .dp_read_data(sys_r_dp_read_data),
+
+        .mem_addr(),
+        .mem_req(),
+        .mem_data_valid(),
+        .mem_data(),
+        .mem_rd_wr(),
+        .mem_en(),
+
+        .grant_in(arb_grant),
+        .grant_out(sys_grant),
+
+        .bus_busy_out(bus_busy_sys_controller),
+        .bus_busy_in(bus_busy)
+    );
 
     wire icache_grant;
     icache icache(
@@ -191,7 +238,7 @@ module memory_subsystem_top (
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
         .mem_en(bus_en),
-        .grant_in(arb_grant),
+        .grant_in(sys_grant),
         .grant_out(icache_grant),
         .bus_busy_out(bus_busy_icache_out),
         .bus_busy_in(bus_busy)

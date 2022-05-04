@@ -28,15 +28,15 @@ module simple_read_master(
 
     input req_valid;
     output req_ready;
-    input req_address;
+    input [31:0] req_address;
     output dp_valid;
     input dp_ready;
-    output dp_read_data;
+    output [31:0] dp_read_data;
 
-    output mem_addr;
+    output [31:0] mem_addr;
     output mem_req;
     input mem_data_valid;
-    input mem_data;
+    input [31:0] mem_data;
     output mem_rd_wr;
     output mem_en;
 
@@ -52,16 +52,18 @@ module simple_read_master(
     
     assign mem_ready = mem_data_valid;
 
-    wire [1:0] new_state;
-    wire [1:0] state;
+    wire new_state1;
+    wire new_state0;
+    wire state0;
+    wire state1;
 
     wire reset_n;
 
     inv1$ reset_inv(reset_n, reset);
 
     dff$ 
-        fsm0(clk, new_state[0], state[0], , reset_n, 1'b1),
-        fsm1(clk, new_state[1], state[1], , reset_n, 1'b1);
+        fsm0(clk, new_state0, state0, , reset_n, 1'b1),
+        fsm1(clk, new_state1, state1, , reset_n, 1'b1);
 
     // pass along grant signal?
     mux2$ grant_mux(grant_out, 1'b0, grant_in, grant_pass);
