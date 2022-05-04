@@ -10,7 +10,7 @@ module TOP;
     reg clk;
     reg reset;
 
-    reg register_size;
+    reg [1:0] register_size;
 
     reg [2:0] op0;
     reg [2:0] op0_reg;  
@@ -27,6 +27,8 @@ module TOP;
     reg [2:0] wb_reg;
     reg [1:0] wb_size;
     reg wb_enable;
+
+    reg next_stage_ready;
 
     register_access_stall uut (
         is_stall,
@@ -50,7 +52,9 @@ module TOP;
         wb_data,
         wb_reg,
         wb_size,
-        wb_enable
+        wb_enable,
+
+        next_stage_ready
     );
 
     initial begin

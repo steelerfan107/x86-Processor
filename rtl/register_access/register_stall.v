@@ -32,14 +32,16 @@ module register_access_stall (
     wb_data,
     wb_reg,
     wb_size,
-    wb_enable
+    wb_enable,
+
+    next_stage_ready
 );
     output is_stall;    // 1 if the stage should stall
 
     input clk;
     input reset;
 
-    input register_size;
+    input [1:0] register_size;
 
     input [2:0] op0;
     input [2:0] op0_reg;  
@@ -56,6 +58,8 @@ module register_access_stall (
     input [2:0] wb_reg;
     input [1:0] wb_size;
     input wb_enable;
+
+    input next_stage_ready;
 
     // wires
     wire [2:0] op0_r0;
@@ -109,6 +113,9 @@ module register_access_stall (
 
         is_stall,
 
+        wb_reg,
+        wb_enable,
+
         op0_r0,
         op0_r0_is_valid,
 
@@ -155,11 +162,11 @@ module register_stall_modify_table (
 
     // add 1
     wire [3:0] reg_plus_one;
-    slow_addr plus_one (reg_out, 4'd1, reg_plus_one, );
+    slow_addr #(.WIDTH(4)) plus_one (reg_out, 4'd1, reg_plus_one, );
 
     // sub 1
     wire [3:0] reg_minus_one;
-    slow_addr minus_one (reg_out, 4'hf, reg_minus_one, );
+    slow_addr #(.WIDTH(4)) minus_one (reg_out, 4'hf, reg_minus_one, );
 
     // decide on what to use
     //
@@ -212,6 +219,9 @@ module register_stall_table (
 
     is_stall,
 
+    wb_reg,
+    wb_is_valid,
+
     op0_r0,
     op0_r0_is_valid,
 
@@ -232,6 +242,9 @@ module register_stall_table (
     input reset;
 
     output is_stall;
+
+    input [2:0] wb_reg;
+    input wb_is_valid;
 
     input [2:0] op0_r0;
     input op0_r0_is_valid;
@@ -273,7 +286,7 @@ module register_stall_table (
     r6_in,
     r7_in;
 
-    wire [3:0]
+    wire 
     r0_en,
     r1_en,
     r2_en,
@@ -283,15 +296,47 @@ module register_stall_table (
     r6_en,
     r7_en;
 
+    // TODO: Wire this so it has the register OP0 accesses, if it accesses a reg
+    wire [2:0] op0_reg = 3'd0;
+
+    // doing this to prevent port width mismatch warning
+    wire [31:0] 
+    r0_out_32,
+    r1_out_32,
+    r2_out_32,
+    r3_out_32,
+    r4_out_32,
+    r5_out_32,
+    r6_out_32,
+    r7_out_32;
+
+    assign r0_out_32[3:0] = r0_out;
+    assign r1_out_32[3:0] = r1_out;
+    assign r2_out_32[3:0] = r2_out;
+    assign r3_out_32[3:0] = r3_out;
+    assign r4_out_32[3:0] = r4_out;
+    assign r5_out_32[3:0] = r5_out;
+    assign r6_out_32[3:0] = r6_out;
+    assign r7_out_32[3:0] = r7_out;
+
+    assign r0_out_32[31:4] = 28'd0;
+    assign r1_out_32[31:4] = 28'd0;
+    assign r2_out_32[31:4] = 28'd0;
+    assign r3_out_32[31:4] = 28'd0;
+    assign r4_out_32[31:4] = 28'd0;
+    assign r5_out_32[31:4] = 28'd0;
+    assign r6_out_32[31:4] = 28'd0;
+    assign r7_out_32[31:4] = 28'd0;
+
     register_32_reset 
-    r0 ({24'd0, r0_out}, {24'd0, r0_in}, 0, r0_en, clk, reset), 
-    r1 ({24'd0, r1_out}, {24'd0, r1_in}, 0, r1_en, clk, reset), 
-    r2 ({24'd0, r2_out}, {24'd0, r2_in}, 0, r2_en, clk, reset), 
-    r3 ({24'd0, r3_out}, {24'd0, r3_in}, 0, r3_en, clk, reset), 
-    r4 ({24'd0, r4_out}, {24'd0, r4_in}, 0, r4_en, clk, reset), 
-    r5 ({24'd0, r5_out}, {24'd0, r5_in}, 0, r5_en, clk, reset), 
-    r6 ({24'd0, r6_out}, {24'd0, r6_in}, 0, r6_en, clk, reset), 
-    r7 ({24'd0, r7_out}, {24'd0, r7_in}, 0, r7_en, clk, reset);
+    r0 (r0_out_32, {28'd0, r0_in}, 0, r0_en, clk, reset), 
+    r1 (r1_out_32, {28'd0, r1_in}, 0, r1_en, clk, reset), 
+    r2 (r2_out_32, {28'd0, r2_in}, 0, r2_en, clk, reset), 
+    r3 (r3_out_32, {28'd0, r3_in}, 0, r3_en, clk, reset), 
+    r4 (r4_out_32, {28'd0, r4_in}, 0, r4_en, clk, reset), 
+    r5 (r5_out_32, {28'd0, r5_in}, 0, r5_en, clk, reset), 
+    r6 (r6_out_32, {28'd0, r6_in}, 0, r6_en, clk, reset), 
+    r7 (r7_out_32, {28'd0, r7_in}, 0, r7_en, clk, reset);
 
     // decide if they should be written
     register_stall_modify_table 
@@ -307,28 +352,28 @@ module register_stall_table (
     // check if there is a stall condition
     wire is_stall;
     register_stall_is_reg_in_table table_checker (
-        is_stall,
+        .reg_in_table(is_stall),
 
-        r0_out,
-        r1_out,
-        r2_out,
-        r3_out,
-        r4_out,
-        r5_out,
-        r6_out,
-        r7_out,
+        .r0(r0_out),
+        .r1(r1_out),
+        .r2(r2_out),
+        .r3(r3_out),
+        .r4(r4_out),
+        .r5(r5_out),
+        .r6(r6_out),
+        .r7(r7_out),
 
-        op0_r0,
-        op0_r0_is_valid,
+        .op0_r0(op0_r0),
+        .op0_r0_is_valid(op0_r0_is_valid),
 
-        op0_r1,
-        op0_r1_is_valid,
+        .op0_r1(op0_r1),
+        .op0_r1_is_valid(op0_r1_is_valid),
 
-        op1_r0,
-        op1_r0_is_valid,
+        .op1_r0(op1_r0),
+        .op1_r0_is_valid(op1_r0_is_valid),
 
-        op1_r1,
-        op1_r1_is_valid,
+        .op1_r1(op1_r1),
+        .op1_r1_is_valid(op1_r1_is_valid)
     );
 
     
@@ -400,7 +445,7 @@ module register_stall_is_reg_in_table (
     wire is_op0_r0_not_empty;
     register_stall_reg_not_empty not_empty0 (is_op0_r0_not_empty, op0_r0_mux_out);
 
-    and2$ and0 (in_table[0], is_op0_r0_empty, op0_r0_is_valid);
+    and2$ and0 (in_table[0], is_op0_r0_not_empty, op0_r0_is_valid);
 
     // mux for each op0_r1
     wire [3:0] op0_r1_mux_out;
@@ -413,7 +458,7 @@ module register_stall_is_reg_in_table (
     wire is_op0_r1_not_empty;
     register_stall_reg_not_empty not_empty1 (is_op0_r1_not_empty, op0_r1_mux_out);
 
-    and2$ and1 (in_table[1], is_op0_r1_empty, op0_r1_is_valid);
+    and2$ and1 (in_table[1], is_op0_r1_not_empty, op0_r1_is_valid);
 
     // mux for each op1_r0
     wire [3:0] op1_r0_mux_out;
@@ -426,7 +471,7 @@ module register_stall_is_reg_in_table (
     wire is_op1_r0_not_empty;
     register_stall_reg_not_empty not_empty2 (is_op1_r0_not_empty, op1_r0_mux_out);
 
-    and2$ and2 (in_table[2], is_op1_r0_empty, op1_r0_is_valid);
+    and2$ and2 (in_table[2], is_op1_r0_not_empty, op1_r0_is_valid);
 
     // mux for each op0_r0
     wire [3:0] op1_r1_mux_out;
@@ -439,7 +484,7 @@ module register_stall_is_reg_in_table (
     wire is_op1_r1_not_empty;
     register_stall_reg_not_empty not_empty3 (is_op1_r1_not_empty, op1_r1_mux_out);
 
-    and2$ and3 (in_table[3], is_op1_r1_empty, op1_r1_is_valid);
+    and2$ and3 (in_table[3], is_op1_r1_not_empty, op1_r1_is_valid);
 
 
     // see if any are valid
@@ -539,19 +584,19 @@ module register_stall_access_calculator (
 
     register_stall_r0_is_valid logic1 (op0_r0_is_valid, op0, mod_rm);
 
-    register_stall_r1_is_valid logic2 (op0_r1_is_valid, op0, mod_rmm, sib);
+    register_stall_r1_is_valid logic2 (op0_r1_is_valid, op0, mod_rm, sib);
 
     // mux selecting output of r0
     mux #(.WIDTH(3), .INPUTS(8)) op0_r0_mux (
         {
-            8'h0,   // 7
+            3'h0,   // 7
             op0_reg,    //6
-            8'h0,   //5
+            3'h0,   //5
             mod_rm_r0,  //4
-            8'h0,   //3
-            8'h0,   //2
+            3'h0,   //3
+            3'h0,   //2
             op0_reg,   //1
-            8'h0   //0
+            3'h0   //0
         },
         op0_r0,
         op0_reg
@@ -567,19 +612,19 @@ module register_stall_access_calculator (
 
     register_stall_r0_is_valid logic3 (op1_r0_is_valid, op1, mod_rm);
 
-    register_stall_r1_is_valid logic4 (op1_r1_is_valid, op1, mod_rmm, sib);
+    register_stall_r1_is_valid logic4 (op1_r1_is_valid, op1, mod_rm, sib);
 
     // mux selecting output of r0
     mux #(.WIDTH(3), .INPUTS(8)) op1_r0_mux (
         {
-            8'h0,   // 7
+            3'h0,   // 7
             op1_reg,    //6
-            8'h0,   //5
+            3'h0,   //5
             mod_rm_r0,  //4
-            8'h0,   //3
-            8'h0,   //2
+            3'h0,   //3
+            3'h0,   //2
             op1_reg,   //1
-            8'h0   //0
+            3'h0   //0
         },
         op1_r0,
         op1_reg
@@ -631,8 +676,11 @@ module register_stall_r0_is_valid (
     modrm_not_4 (modrm_not[4], modrm[4]);
 
     // modrm != 00101
+    wire modrm_00101;
+    and5$ modrm_00101_and (modrm_00101, modrm_not[4], modrm_not[3], modrm[2], modrm_not[1], modrm[0]);
+
     wire modrm_not_00101;
-    nand5$ nand0 (modrm_not_00101, modrm_not[4], modrm_not[3], modrm[2], modrm_not[1], modrm[0]);
+    inv1$ modrm_not_00101_inv (modrm_not_00101, modrm_00101);
 
     // op1 is 4 (100)
     wire op1_is_4;
@@ -687,6 +735,12 @@ module register_stall_r1_is_valid (
     inv2 (rm_not[0], rm[0]),
     inv3 (rm_not[1], rm[1]),
     inv4 (rm_not[2], rm[2]);
+
+    wire [2:0] op1_not;
+    inv1$ 
+    inv_op1_0 (op1_not[0], op1[0]),
+    inv_op1_1 (op1_not[1], op1[1]),
+    inv_op1_2 (op1_not[2], op1[2]);
 
     wire mod_not_11;
     nand2$ nand0 (mod_not_11, mod[1], mod[0]);
