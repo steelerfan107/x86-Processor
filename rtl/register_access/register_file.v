@@ -211,31 +211,34 @@ module register_writeback_select(
     input [2:0] reg_num;
     input [1:0] reg_size;
 
-    wire [1:0] not_reg_size;
+    wire num2 = reg_num[2];
+    wire num1 = reg_num[1];
+    wire num0 = reg_num[0];
 
-    inv1$ 
-    inv1_0 (not_reg_size[0], reg_size[0]),
-    inv1_1 (not_reg_size[1], reg_size[1]);
+    wire size1 = reg_size[1];
+    wire size0 = reg_size[0];
 
-    // s2 = (num2&!size1);
-    and2$ and_s2 (selected_reg[2], reg_num[2], not_reg_size[1]);
-
-    // s1 = (num1&!size0) | (num1&!size1);
-    wire [1:0] s1_and_out;
-    and2$ 
-    and_s1_0 (s1_and_out[0], reg_num[1], not_reg_size[0]),
-    and_s1_1 (s1_and_out[1], reg_num[1], not_reg_size[1]);
-
-    or2$ or_s1 (selected_reg[1], s1_and_out[0], s1_and_out[1]);
+    wire and0;
+    wire and1;
+    wire and2;
+    wire or0;
+    wire and3;
+    wire and4;
+    wire or1;
 
 
-    // s0 = (num0&!size0) | (num0&!size1);
-    wire [1:0] s0_and_out;
-    and2$ 
-    and_s0_0 (s0_and_out[0], reg_num[0], not_reg_size[0]),
-    and_s0_1 (s0_and_out[1], reg_num[0], not_reg_size[1]);
+    and2$ and_gate0(.out(and0), .in0(num2), .in1(size1));
+    and2$ and_gate1(.out(and1), .in0(num1), .in1(size0));
+    and2$ and_gate2(.out(and2), .in0(num1), .in1(size1));
+    and2$ and_gate3(.out(and3), .in0(num0), .in1(size0));
+    and2$ and_gate4(.out(and4), .in0(num0), .in1(size1));
 
-    or2$ or_s0 (selected_reg[0], s0_and_out[0], s0_and_out[1]);
+    or2$ or_gate0(.out(or0), .in0(and1), .in1(and2));
+    or2$ or_gate1(.out(or1), .in0(and3), .in1(and4));
+
+    assign selected_reg[2] = and0;
+    assign selected_reg[1] = or0;
+    assign selected_reg[0] = or1;
 
 endmodule
 
@@ -333,14 +336,14 @@ module register_input_size_selector (
 
     // 8 muxes, one for each reg
     reg_mux4_32 
-    reg_mux0 (reg_mux_out0, data, ax, al, , size),
-    reg_mux1 (reg_mux_out1, data, cx, cl, , size),
-    reg_mux2 (reg_mux_out2, data, dx, dl, , size),
-    reg_mux3 (reg_mux_out3, data, bx, bl, , size),
-    reg_mux4 (reg_mux_out4, data, sp, ah, , size),
-    reg_mux5 (reg_mux_out5, data, bp, ch, , size),
-    reg_mux6 (reg_mux_out6, data, si, dh, , size),
-    reg_mux7 (reg_mux_out7, data, di, bh, , size);
+    reg_mux0 (reg_mux_out0, ,al, ax, data, size),
+    reg_mux1 (reg_mux_out1, ,cl, cx, data, size),
+    reg_mux2 (reg_mux_out2, ,dl, dx, data, size),
+    reg_mux3 (reg_mux_out3, ,bl, bx, data, size),
+    reg_mux4 (reg_mux_out4, ,ah, sp, data, size),
+    reg_mux5 (reg_mux_out5, ,ch, bp, data, size),
+    reg_mux6 (reg_mux_out6, ,dh, si, data, size),
+    reg_mux7 (reg_mux_out7, ,bh, di, data, size);
 
     // mux these outputs to the final output
     reg_mux8_32 mux_final (

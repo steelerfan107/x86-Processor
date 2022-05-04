@@ -1,0 +1,27 @@
+// Dcache Public Test Program
+// EE 382N Spring 2018
+//
+0x0:	ba 00 0a 00 00	//movl    $0xa00, %edx			// EDX = 0x00000A00
+0x5:	66 8e da        //movw    %dx, %ds                      // DS = 0x0A00, DS_base = 0x0A000000
+0x8:	66 81 c2 00 01  //addw    $0x100, %dx                   // DX = 0x0B00 CF=0, OF=0, AF=0, PF=1, ZF=0, SF=0
+0xd:	66 8e e2        //movw    %dx, %fs                      // FS = 0x0B00, FS_base = 0x0B000000
+0x10:	b8 0b 0a 09 08  //movl    $0x08090a0b, %eax             // EAX = 0x08090A0B
+0x15:	bb fd 00 00 00  //movl    $0xfd, %ebx                   // EBX = 0x000000FD
+0x1a:	c7 43 ff 06 05  //movl    $0x03040506, 0xffffffff(%ebx)	// M[VA=0x0A000000 + 0xFD - 0x1 (0x0A0000FC)] = 0x03040506 
+	04 03                                                   //
+0x21:	89 43 03	//movl    %eax, 0x3(%ebx)               // M[VA=0x0A000000 + 0xFD + 0x3 (0x0A000100)] = 0x08090A0B
+                                                                //
+0x24:	d1 3b		//sarl-1  (%ebx)			// M[VA=0x0A000000 + 0xFD (0x0A0000FD)] = 0x05818202
+                                                                // CF=1, OF=0, AF=0/1(undefined), PF=0, ZF=0, SF=0 
+                                                                // 
+0x26:	88 63 02        //movb    %ah, 0x2(%ebx)                // M[VA=0x0A000000 + 0xFD + 0x2 (0x0A0000FF)] = 0A
+                                                                //
+0x29:	89 83 00 08 00  //movl    %eax, 0x0800(%ebx)            // M[VA=0x0A000000 + 0xFD + 0x800 (0x0A0008FD)] = 0x08090A0B
+	00                                                      // 
+0x2f:	64 89 13	//movl    %edx, %fs:(%ebx)              // M[VA=0x0B000000 + 0xFD (0x0B0000FD)] = 0x00000b00
+                                                                //
+0x32:	03 03		//addl    (%ebx), %eax                  // EAX += M[VA=0x0A000000 + 0xFD (0x0A0000FD)]
+                                                                //
+								// EAX = 0x08090a0b + 0x050a8202 = 0x0d138c0d					
+								// CF=0, OF=0, AF=0, PF=0, ZF=0, SF=0
+0x34:	f4		//hlt                                  

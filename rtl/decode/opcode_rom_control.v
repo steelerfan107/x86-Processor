@@ -1,14 +1,17 @@
 module opcode_rom_control (
+  sizeop,
   opcode,
   rom_control,
   rom_in_control			   	
 );
 
+   input           sizeop;
    input [15:0]    opcode;
-   output [2:0]    rom_control;
+   output [3:0]    rom_control;
    output          rom_in_control;
 
    opcode_rom_control_cloud orcc (
+     sizeop,
      opcode[15],
      opcode[14],
      opcode[13],
@@ -25,6 +28,7 @@ module opcode_rom_control (
      opcode[2],
      opcode[1],
      opcode[0],
+     rom_control[3],
      rom_control[2],
      rom_control[1],
      rom_control[0],

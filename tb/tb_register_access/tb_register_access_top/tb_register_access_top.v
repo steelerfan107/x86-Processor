@@ -191,13 +191,90 @@ module TOP;
 
     initial begin
         $display("============ \n Begin Test \n============");
+        clk = 0;
+        reset = 1;
 
+        // Control Interface
+        flush = 0;
+
+        r_ready = 0;
+
+        // Decode Interface
+        d_valid = 1;
+        d_size = 0;
+        d_set_d_flag = 0;
+        d_clear_d_flag = 0;;
+        d_op0 = 0;
+        d_op1 = 0;
+        d_op0_reg = 0;
+        d_op1_reg = 0;
+        d_modrm = 0;
+        d_sib = 0;
+        d_imm = 0;
+        d_disp = 0;
+        d_alu_op = 0;
+        d_flag_0 = 0;
+        d_flag_1 = 0;
+        d_stack_op = 0;
+        d_seg_override = 0;
+        d_seg_override_valid = 0;
+        d_pc = 0;
+        d_branch_taken = 0;
+
+        // register file writeback
+        wb_reg_number = 0;
+        wb_reg_en = 0;
+        wb_reg_size = 0;
+        wb_reg_data = 0;
+
+        // segment register writeback
+        wb_seg_number = 0;
+        wb_seg_en = 0;
+        wb_seg_data = 0;
+
+        // mmx register writeback
+        wb_mmx_number = 0;
+        wb_mmx_en = 0;
+        wb_mmx_data = 0;
+
+        #10
+
+        reset = 0;
+
+        #10
+
+        $display("Testing OP1 and OP2 Register Numbers with ModR/M");
+
+        d_op0 = 1;
+        d_op1 = 1;
+
+        d_op0_reg = 2;
+        d_op1_reg = 3;
+
+        #10
+
+        if (r_op0_reg != 2) $display("OP0 Mode 1 Reg FAIL"); 
+        if (r_op1_reg != 3) $display("OP1 Mode 1 Reg FAIL"); 
+
+        d_op0 = 4;
+        d_op1 = 4;
+
+        d_modrm = 8'hFF;
+
+        #10
+        $display("OP0 Reg %d", r_op0_reg);
+        $display("OP1 Reg %d", r_op1_reg);
+        
+        if (r_op0_reg != 7) $display("OP0 Mode 4 Reg FAIL");
+        if (r_op1_reg != 7) $display("OP1 Mode 4 Reg FAIL");
 
         $display("==========\n End Test \n==========");
     end
 
 
     initial #1000 $finish;
+
+    always #5 clk = ~clk;
 
     initial begin
         $vcdplusfile("register_access_top.dump.vpd");
