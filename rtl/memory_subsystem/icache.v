@@ -20,7 +20,6 @@ module icache(
     mem_data,
     mem_rd_wr,
     mem_en,
-    mem_done,
 
     // Arbiter Interface
     grant_in,
@@ -61,7 +60,6 @@ module icache(
     input  [BUSDATAW-1:0]  mem_data;
     output                 mem_rd_wr;
     output                 mem_en;
-    output                 mem_done;
 
     // Arbitration Signals
     input  grant_in;
@@ -69,6 +67,8 @@ module icache(
 
     output bus_busy_out;
     input bus_busy_in;
+
+    assign mem_rd_wr = 1'b0;
 
 
     wire [4:0] index = req_address[8:4];

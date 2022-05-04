@@ -93,8 +93,8 @@ module memory_subsystem_top (
     wire bus_req_icache;
     wire bus_req;
 
-    wire bus_done_icache;
-    wire bus_done;
+    //wire bus_done_icache;
+    //wire bus_done;
 
     wire bus_data_valid;
 
@@ -102,11 +102,17 @@ module memory_subsystem_top (
     wire bus_en;
 
     wire bus_busy_icache;
+    wire bus_busy_dcache;
+    wire bus_busy_sys_controller;
+    wire bus_busy_dma;
     wire bus_busy;
 
-    or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
-    or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
-    or3$(bus_busy, bus_busy_icache, 1'b0, 1'b0);
+    or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
+
+
+    //or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
+    //or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
+    //or3$(bus_busy, bus_busy_icache, 1'b0, 1'b0);
 
 
     wire arb_grant;
@@ -115,7 +121,7 @@ module memory_subsystem_top (
         .clk(clk),
         .reset(reset),
         .req(bus_req),
-        .done(bus_done),
+        //.done(bus_done),
         .grant(arb_grant)
         .busy(bus_busy)
     );
