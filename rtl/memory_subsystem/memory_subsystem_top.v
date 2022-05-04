@@ -116,13 +116,12 @@ module memory_subsystem_top (
 
 
     wire arb_grant;
-    wire bus_busy;
     arbiter arb(
         .clk(clk),
         .reset(reset),
         .req(bus_req),
         //.done(bus_done),
-        .grant(arb_grant)
+        .grant(arb_grant),
         .busy(bus_busy)
     );
 
@@ -150,9 +149,9 @@ module memory_subsystem_top (
     icache icache(
         .clk(clk),
         .reset(reset),
-        .valid(imem_valid),
-        .ready(imem_ready),
-        .address(imem_address),
+        .req_valid(imem_valid),
+        .req_ready(imem_ready),
+        .req_address(imem_address),
         .dp_valid(imem_dp_valid),
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
@@ -164,24 +163,22 @@ module memory_subsystem_top (
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
         .mem_en(bus_en),
-        .mem_done(bus_done_icache),
         .grant_in(arb_grant),
         .grant_out(icache_grant),
-        .bus_busy_out(bus_busy_icache_out)
+        .bus_busy_out(bus_busy_icache_out),
         .bus_busy_in(bus_busy)
     );
 
     //dma_top dma();
     
-    main_memory_top mem(
+    main_memory_top main_memory_top(
         .clk(clk),
         .reset(reset),
         .en(dec_mem_en),
         .rd_wr(dec_rd_wr),
         .addr(bus_addr),
         .data(bus_data),
-        .valid(bus_data_valid),
-        .bus_busy(bus_busy)
+        .valid(bus_data_valid)
     );
 
     //io_device_top io_device();

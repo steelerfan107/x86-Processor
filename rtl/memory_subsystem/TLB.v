@@ -16,7 +16,7 @@ module TLB(
     d_PCD_out
 );
 
-    input [43:0] contents [0:7];
+    input [351:0] contents;
     
     // icache port
     input [31:0] i_addr_in;
@@ -34,7 +34,7 @@ module TLB(
 
 
     TLB_port icache_port(
-        .contents(contents),
+        .contents_full(contents),
         .addr_in(i_addr_in),
         .hit(i_hit),
         .rd_wr_out(i_rd_wr_out),
@@ -42,7 +42,7 @@ module TLB(
         .PCD_out(i_PCD_out)
     );
     TLB_port dcache_port(
-        .contents(contents),
+        .contents_full(contents),
         .addr_in(d_addr_in),
         .hit(d_hit),
         .rd_wr_out(d_rd_wr_out),

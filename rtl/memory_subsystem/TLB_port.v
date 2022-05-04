@@ -1,5 +1,5 @@
 module TLB_port(
-    contents,
+    contents_full,
 
     addr_in,
     hit,
@@ -8,8 +8,18 @@ module TLB_port(
     PCD_out
 );
 
+    input [351:0] contents_full;
 
-    input [43:0] contents [0:7];
+    wire [43:0] contents [0:7];
+
+    assign contents[7] = contents_full[351:308];
+    assign contents[6] = contents_full[307:264];
+    assign contents[5] = contents_full[263:220];
+    assign contents[4] = contents_full[219:176];
+    assign contents[3] = contents_full[175:132];
+    assign contents[2] = contents_full[131:88];
+    assign contents[1] = contents_full[87:44];
+    assign contents[0] = contents_full[43:0];
     
     // icache port
     input [31:0] addr_in;
@@ -33,12 +43,13 @@ module TLB_port(
 
     wire [2:0] pte_entry_id;
 
-    pencoder8_3v$(1'b0, comp_outputs, pte_entry_id, enc_valid)
+    pencoder8_3v$ enc(1'b0, comp_outputs, pte_entry_id, enc_valid);
 
     // this is a behavioral mux but I think it is ok per the spec
     wire [23:0] mux_out = contents[pte_entry_id][23:0];
 
-    wire phys_page = mux_out[23:4];
+    wire [19:0] phys_page = mux_out[23:4];
+
 
     wire v = mux_out[3];
     wire pr = mux_out[2];

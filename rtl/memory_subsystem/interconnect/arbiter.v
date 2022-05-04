@@ -22,10 +22,10 @@ module arbiter(
 
     wire n_reset;
     wire n_cur_state;
-    wire n_done;
+    //wire n_done;
     inv1$ inv1(n_reset, reset);
     inv1$ inv2(n_cur_state, cur_state);
-    inv1$ inv3(n_done, done);
+    //inv1$ inv3(n_done, done);
     
 
     //dff$ dff(clk, new_state, cur_state, , n_reset, 1'b1);
