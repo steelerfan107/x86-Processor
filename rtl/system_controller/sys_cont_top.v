@@ -1,7 +1,8 @@
 module sys_cont_top (
      clk,
      reset,
-     int_vec,		     
+     int_vec,	
+     cs_register,	     
      mem_valid,
      mem_ready,
      mem_address,
@@ -24,6 +25,8 @@ module sys_cont_top (
      decode_end_int,
      reg_load_cs,
      reg_cs,
+     ret_near,
+     ret_far,
      iretd,
      iretd_halt,
      iretd_pop_valid,
@@ -39,6 +42,7 @@ module sys_cont_top (
            input      clk;
            input      reset;
            input      [3:0] int_vec;
+           input      [15:0] cs_register;
            output     mem_valid;
 	   input      mem_ready;  
 	   output     [31:0] mem_address; 
@@ -61,6 +65,8 @@ module sys_cont_top (
 	   input      decode_end_int;  
 	   output     reg_load_cs;  
 	   output     [15:0] reg_cs;
+           input      ret_near;
+           input      ret_far;
            input      iretd;
            output     iretd_halt;
            input      iretd_pop_valid;
@@ -71,6 +77,8 @@ module sys_cont_top (
 	   output     [31:0] reg_eip;
            output     pending_int;
            input      hold_int;
+
+           wire [2:0] 	      start_state;
 
            wire       not_hold_int;   
   	   wire       reg_load_eflags_int;  
@@ -247,7 +255,7 @@ module sys_cont_top (
            );
       
            //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
-           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_one);
+           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_three);
            assign       reg_eip_iretd = iretd_pop_data;
 	     
            //assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
@@ -255,16 +263,24 @@ module sys_cont_top (
            assign       reg_cs_iretd = iretd_pop_data[15:0];
 
            //assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
+           wire           not_ret_near;
+           wire [15:0]    used_cs;
+           inv1$ (not_ret_near,  ret_near);      
+	     
+           ao_mux #(.WIDTH(16),.NINPUTS(2)) (  { cs_register , temp_cs }
+                                            , used_cs
+                                            ,  {  ret_near , not_ret_near});
+   
            and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
-           slow_addr #(.WIDTH(32)) ({16'b0,temp_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
+           slow_addr #(.WIDTH(32)) ({16'b0,used_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
            //assign       fetch_load_address_iretd = iretd_pop_data;  
 
            //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
-           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_three);
+           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_one);
            assign       reg_eflags_iretd = iretd_pop_data;   
    
            assign       last_state = fetch_load_iretd;
-       
+   
            assign       flush_fetch_iretd = iretd_halt;
            assign       flush_decode_0_iretd = 'h0;
            assign       flush_decode_1_iretd = 'h0;
@@ -299,8 +315,11 @@ module sys_cont_top (
            and3$ s2a (select2, select0n, select1n, iretd_pop_valid);
            and3$ s3a (select3, select0n, select1n, select2n);
 
+           ao_mux #(.WIDTH(3),.NINPUTS(3)) (  {  3'd1, 3'd2, 3'd3 }
+                                            , start_state
+                                            , {  iretd, ret_far, ret_near });
    
-           ao_mux #(.WIDTH(3),.NINPUTS(4)) (  { curr_state_iretd, curr_state_iretd_p1, 3'd0, {2'b0,iretd} }
+           ao_mux #(.WIDTH(3),.NINPUTS(4)) (  { curr_state_iretd, curr_state_iretd_p1, 3'd0, start_state }
                                             , next_state_iretd
                                             , { select3, select2, select1, select0 });
 				 

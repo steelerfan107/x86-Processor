@@ -16,6 +16,8 @@ module decode_stage_1 (
    handle_int_done,
    busy_ahead_of_decode,		        
    halt,
+   ret_near,
+   ret_far,	
    iretd,
    iretd_halt,
 		       
@@ -91,8 +93,10 @@ module decode_stage_1 (
    output               handle_int_done;  
    input                busy_ahead_of_decode; 
    output               halt;
-   output               iretd_halt;
-   input                iretd;
+   output               ret_near;
+   output               ret_far;
+   input                iretd_halt;
+   output               iretd;
 
    // Repeat Interface
    input [31:0]         ecx_register;
@@ -149,7 +153,7 @@ module decode_stage_1 (
    output               s1_movs;
    output [IADDRW-1:0]  s1_pc;
    output               s1_branch_taken;
-
+   
    wire 		pre_s1_valid;
    wire 		pre_s1_ready;   
 
@@ -276,7 +280,11 @@ module decode_stage_1 (
    
    // IRETd Logic
    wire 		iretd_halt_mask;
+   inv1$ ( iretd_halt_mask, iretd_halt);
+   
    compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
+   compare #(.WIDTH(7)) ret_n_comp (7'hC1, s0_opcode[15:9], ret_near);
+   compare #(.WIDTH(7)) ret_f_comp (7'hC5, s0_opcode[15:9], ret_far);
 
    wire 		rom_in_control_mask;
    and2$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control);
@@ -343,7 +351,7 @@ module decode_stage_1 (
    );
  
    assign dec_valid = s0_valid;
-   and2$ dra (dec_ready, repeat_halt_mask, pre_s1_ready);
+   and3$ dra (dec_ready, repeat_halt_mask, pre_s1_ready, iretd_halt_mask);
 
    // Output Muxes
    mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,dec_ready},s0_ready, rom_in_control);     
