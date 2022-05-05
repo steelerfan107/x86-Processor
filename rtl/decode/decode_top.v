@@ -37,7 +37,9 @@ module decode_top (
    ras_address,
    ras_push,
 
-   // IRETd Interface
+   // RET Interface
+   ret_near,
+   ret_far,		   
    iretd,
    iretd_halt,		  
    
@@ -111,6 +113,8 @@ module decode_top (
    output               ras_push;
 
    // IRETd Interface
+   input                ret_near;
+   input                ret_far;   
    output               iretd;
    input                iretd_halt;
 	   	   
@@ -293,6 +297,8 @@ module decode_top (
        handle_int_done,
        busy_ahead_of_decode,					  
        halt,
+       ret_near,
+       ret_far,					  
        iretd,
        iretd_halt,			       
        write_eip,

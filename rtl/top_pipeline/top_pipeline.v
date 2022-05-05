@@ -167,7 +167,9 @@ module top_pipeline (
    wire                    write_eip; // Connect
    wire [31:0]             eip; // Connect
    wire [31:0]	           eflags_reg; // Connect
-   
+
+   wire                    ret_near;
+   wire                    ret_far;
    wire                    iretd;
    wire                    iretd_halt;
    wire                    iretd_pop_valid;
@@ -346,6 +348,8 @@ module top_pipeline (
       eflags_reg,				  
       ras_address,
       ras_push,
+      ret_near,
+      ret_far,
       iretd,
       iretd_halt,		  
       f_valid,
@@ -616,7 +620,8 @@ module top_pipeline (
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     interrupt[3:0],		     
+     interrupt[3:0],
+     r_cs,		     
      emem_valid,
      emem_ready,
      emem_address,
@@ -639,6 +644,8 @@ module top_pipeline (
      handle_int_done,
      reg_load_cs,
      reg_cs,
+     ret_near,
+     ret_far,			     
      iretd,
      iretd_halt,
      (wb_sys_controller_valid & wb_valid), //iretd_pop_valid,
