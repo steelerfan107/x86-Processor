@@ -12,6 +12,10 @@ module register_access_top (
     // Control Interface
     flush,
 
+    // Direct Segment Write
+    //write_cs,
+    //write_cs_enable,     
+
     // Decode Interface
     d_valid,
     d_ready,
@@ -101,6 +105,10 @@ module register_access_top (
 
     // Control Interface
     input flush;
+
+    // Direct Segment Write
+    // input  write_cs;
+    //input [15:0] write_cs_enable;     
 
     // Decode Interface
     input d_valid;
@@ -423,6 +431,9 @@ module register_access_top (
         .write_data(wb_seg_data),
         .write_enable(wb_seg_en),
 
+        //.write_cs(write_cs),
+        //.write_cs_enable(write_cs_enable),
+						  
         .cs_out(p_cs),
         .ds_out(p_ds),
         .es_out(p_es),

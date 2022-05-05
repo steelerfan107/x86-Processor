@@ -67,6 +67,15 @@ module TOP;
 
    reg [43:0] contents [0:7];
 
+   // icache port
+   wire [31:0] i_addr_in;
+   wire i_hit;
+   wire i_rd_wr_out;
+   wire i_PCD_out;
+   wire [31:0] i_pa_out;
+   
+   wire [351:0] contents_concat;
+   
    // Interface to Interconnect
    wire [32-1:0]  mem_addr;
    wire           mem_req;
@@ -92,7 +101,7 @@ module TOP;
         contents_concat,
 
         // icache port
-        req_address,
+        imem_address,
         i_hit,
         i_rd_wr_out,
         i_pa_out,
@@ -124,10 +133,10 @@ module TOP;
         .mem_data       (mem_data       ),
         .mem_rd_wr      (mem_rd_wr      ),
         .mem_en         (mem_en         ),
-        .grant_in       (grant_in       ),
+        .grant_in       (1'b1           ),
         .grant_out      (grant_out      ),
         .bus_busy_out   (bus_busy_out   ),
-        .bus_busy_in    (bus_busy_in    )
+        .bus_busy_in    (1'b0           )
   );
 
    
@@ -187,7 +196,7 @@ module TOP;
         $readmemb("rom/dec_rom_program_0_0", uut_pipeline.uut_decode.ds1.rom_block.b0.mem);
         $readmemb("rom/dec_rom_program_0_1", uut_pipeline.uut_decode.ds1.rom_block.b1.mem);
 
-        contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b1, 1'b1};
+        contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
         contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
@@ -272,9 +281,9 @@ module test_memory(
 
     wire [31:0]			rom_data;
 
-    assign rom_data = (addr[3:2] == 3) ? rom_data_3 : 
-                      (addr[3:2] == 2) ? rom_data_2 :    
-                      (addr[3:2] == 1) ? rom_data_1 : rom_data_0;
+    assign rom_data = (addr[3:2] == 3) ? rom_data_0 : 
+                      (addr[3:2] == 2) ? rom_data_1 :    
+                      (addr[3:2] == 1) ? rom_data_2 : rom_data_3;
  
     rom32b32w$ test_rom_0 (
      addr[8:4],
