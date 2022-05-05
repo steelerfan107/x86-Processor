@@ -103,7 +103,7 @@ module TOP;
         contents_concat,
 
         // icache port
-        imem_address,
+        tlb_va,
         i_hit,
         i_rd_wr_out,
         i_pa_out,
