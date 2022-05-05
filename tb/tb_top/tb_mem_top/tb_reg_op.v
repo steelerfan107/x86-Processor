@@ -98,6 +98,7 @@ module TOP;
    };
 
     wire [31:0] tlb_va;
+    wire page_fault;
 
    TLB tlb(
         contents_concat,
@@ -130,6 +131,7 @@ module TOP;
         .virt_addr      (tlb_va              ),
         .tlb_hit        (i_hit               ),
         .tlb_pcd        (i_PCD_out      ),
+        .page_fault     (page_fault     ),
         .mem_addr       (mem_addr       ),
         .mem_req        (mem_req        ),
         .mem_data_valid (mem_data_valid ),

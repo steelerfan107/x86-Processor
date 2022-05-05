@@ -14,6 +14,9 @@ module icache(
     phys_addr,
     tlb_hit,
     tlb_pcd,
+
+    // interrupt
+    page_fault,
     
     // interface to interconnect
     mem_addr,
@@ -56,6 +59,7 @@ module icache(
     output [31:0] virt_addr;
     input tlb_hit;
     input tlb_pcd;
+    output page_fault;
     
     // Interface to Interconnect
     output [BUSADDRW-1:0]  mem_addr;
@@ -130,7 +134,8 @@ module icache(
         .grant_pass      (ctrl_grant_pass),
         .bus_busy        (bus_busy_in),
         .busy_out        (bus_busy_out),
-        .req_addr_en     (req_addr_en)
+        .req_addr_en     (req_addr_en),
+        .page_fault      (page_fault)
     );
 
     // pass along grant signal?
