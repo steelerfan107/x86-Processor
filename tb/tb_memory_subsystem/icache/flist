@@ -18,7 +18,10 @@
 ../../../rtl/lib/compare.v
 ../../../rtl/lib/decoder5_32.v
 ../../../rtl/memory_subsystem/icache.v
+../../../rtl/memory_subsystem/TLB.v
+../../../rtl/memory_subsystem/TLB_port.v
 ../../../rtl/memory_subsystem/iRAM.v
 ../../../rtl/memory_subsystem/icache_controller.v
 ../../../rtl/memory_subsystem/icache_combinational_logic.v
 tb_icache.v
+test_memory.v

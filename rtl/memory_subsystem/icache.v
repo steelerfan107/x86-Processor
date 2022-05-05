@@ -159,6 +159,7 @@ module icache(
 
     idataRAM dataram(clk, reset, index, ctrl_write, accum_out, dp_read_data);
 
+    assign mem_en = bus_busy_out;
     assign mem_addr = pa_out;
 
 endmodule
