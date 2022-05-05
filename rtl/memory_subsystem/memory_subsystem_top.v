@@ -252,7 +252,7 @@ module memory_subsystem_top (
     main_memory_top main_memory_top(
         .clk(clk),
         .reset(reset),
-        .en(dec_mem_en),
+        .en(1'b1), //dec_mem_en),
         .rd_wr(dec_rd_wr),
         .addr(bus_addr),
         .data(bus_data),
