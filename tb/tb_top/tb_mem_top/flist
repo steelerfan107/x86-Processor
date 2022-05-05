@@ -52,4 +52,11 @@
 ../../../rtl/memory_read/address_dependency_table.v
 ../../../rtl/top_pipeline/top_pipeline.v
 ../../../rtl/execute/execute_top.v
+../../../rtl/lib/decoder5_32.v
+../../../rtl/memory_subsystem/icache.v
+../../../rtl/memory_subsystem/TLB.v
+../../../rtl/memory_subsystem/TLB_port.v
+../../../rtl/memory_subsystem/iRAM.v
+../../../rtl/memory_subsystem/icache_controller.v
+../../../rtl/memory_subsystem/icache_combinational_logic.v
 tb_reg_op.v

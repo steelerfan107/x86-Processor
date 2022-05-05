@@ -22,6 +22,8 @@ module execute_top (
     e_opsize,
     e_size_of_txn,
     e_branch_taken,
+    e_to_sys_controller,
+    e_pc,
 
     // Writeback Interface
     wb_ready,
@@ -31,7 +33,9 @@ module execute_top (
     wb_opsize,
     wb_mem_or_reg,
     wb_valid,
-    wb_branch_taken
+    wb_branch_taken,
+    wb_to_sys_controller,
+    wb_pc
 );
     // Clock Interface
     input clk;
@@ -51,6 +55,8 @@ module execute_top (
     input [1:0] e_opsize;
     input e_size_of_txn;
     input e_branch_taken;
+    input e_to_sys_controller;
+    input [31:0] e_pc;
 
     // Writeback Interface
     input wb_ready;
@@ -61,9 +67,9 @@ module execute_top (
     output wb_mem_or_reg;
     output wb_valid;
     output wb_branch_taken;
-
+    output wb_to_sys_controller;
+    output [31:0] wb_pc;
    
-
     wire [63:0] a;
     wire [63:0] b;
     wire [15:0] sext16_b;
@@ -82,7 +88,7 @@ module execute_top (
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+2+1+1;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+33;
 
     wire [31:0] p_dest_address;
     wire [31:0] p_dest_reg;
@@ -90,7 +96,9 @@ module execute_top (
     wire [1:0] p_opsize;
     wire p_mem_or_reg;
     wire p_branch_taken;
-   
+    wire p_to_sys_controller;    
+    wire [31:0] p_pc;
+
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
 
     assign p_dest_address = 'h0;   
@@ -106,7 +114,9 @@ module execute_top (
         p_result,
         p_opsize,
         p_mem_or_reg,
-        p_branch_taken		    
+        p_branch_taken,
+        p_to_sys_controller,
+        p_pc	    
     };
 
     assign {
@@ -115,7 +125,9 @@ module execute_top (
         wb_result,
         wb_opsize,
         wb_mem_or_reg,
-        wb_branch_taken		    
+        wb_branch_taken,
+        wb_to_sys_controller,
+        wb_pc
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
@@ -123,27 +135,27 @@ module execute_top (
     genvar i;
     generate
     for(i = 0; i < 64; i = i+1) begin : opa_buffer_block
-        bufferH64$ instance(.out(a[i]), .in(e_op_a[i]));
+        // bufferH64$ instance(.out(a[i]), .in(e_op_a[i]));
     end
     endgenerate
 
     generate
     for(i = 0; i < 64; i = i+1) begin : opb_buffer_block
-        bufferH64$ instance(.out(b[i]), .in(e_op_b[i]));
+        // bufferH64$ instance(.out(b[i]), .in(e_op_b[i]));
     end
     endgenerate
 
-    SEXT16 sext16(.in(b[7:0]), .out(sext16_b), .en(e_opsize[0]));
-    SEXT32 sext32(.in(b[7:0]), .out(sext32_b), .en(e_opsize[1]));
+    // SEXT16 sext16(.in(b[7:0]), .out(sext16_b), .en(e_opsize[0]));
+    // SEXT32 sext32(.in(b[7:0]), .out(sext32_b), .en(e_opsize[1]));
 
-    ALU alu(.a(a[31:0]), .b(b[31:0]), .opsize(e_opsize), .alu_op(e_op), .set_eflags(e_alu_set_eflags), .eflags_out(e_alu_eflags_out));
+    // ALU alu(.a(a[31:0]), .b(b[31:0]), .opsize(e_opsize), .alu_op(e_op), .set_eflags(e_alu_set_eflags), .eflags_out(e_alu_eflags_out));
 
-    SIMD simd_unit(.mm(a), .mm64(b), .simd_op(e_op[2:0]), .out(e_simd_out));
+    //SIMD simd_unit(.mm(a), .mm64(b), .simd_op(e_op[2:0]), .out(e_simd_out));
 
-    eflags eflags(.eflags_in(), .set_eflags(), .eflags_out(e_eflags_out));
+    // eflags eflags(.eflags_in(), .set_eflags(), .eflags_out(e_eflags_out));
 
-    CMOVC cmovc(.a(a[31:0]), .b(b[31:0]), .CF(eflags_out[1]), .out(e_cmovc_out));
-    CMPXCHG cmpxchg();
-    DAA daa(.CF(e_eflags_out[1]), .AF(e_eflags_out[2]), .CF_out(), .AF_out()); //need EAX/AX/AL
-    XCHG xchg(.dest(a), .src(b), .out(e_xchg_out));
+    // CMOVC cmovc(.a(a[31:0]), .b(b[31:0]), .CF(eflags_out[1]), .out(e_cmovc_out));
+    //CMPXCHG cmpxchg();
+    // DAA daa(.CF(e_eflags_out[1]), .AF(e_eflags_out[2]), .CF_out(), .AF_out()); //need EAX/AX/AL
+    // XCHG xchg(.dest(a), .src(b), .out(e_xchg_out));
 endmodule
