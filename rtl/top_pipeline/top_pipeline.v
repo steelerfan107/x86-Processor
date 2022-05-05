@@ -540,7 +540,7 @@ module top_pipeline (
       reset,
 
       // Control Interface
-      flush,
+      addr_gen_flush,
 
       // Write Back Interface (To Pop Addr Dependency)
       wb_valid,
@@ -595,7 +595,8 @@ module top_pipeline (
       exe_flush,
       e_valid,
       e_ready,
-      1'b0,		       
+      1'b0,
+      e_op_a_reg,		       
       e_op0,
       e_op1,
       32'h0,
