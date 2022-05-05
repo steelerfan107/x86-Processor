@@ -276,7 +276,7 @@ module decode_stage_1 (
    
    // IRETd Logic
    wire 		iretd_halt_mask;
-   compare #(.WIDTH(8)) halt_comp (8'hCF, s0_opcode[15:8], iretd);
+   compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
 
    wire 		rom_in_control_mask;
    and2$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control);
