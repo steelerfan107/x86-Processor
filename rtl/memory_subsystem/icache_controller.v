@@ -27,7 +27,9 @@ module icache_controller(
     bus_grant,
     grant_pass,
     bus_busy,
-    busy_out
+    busy_out,
+
+    req_addr_en
 
     
 );
@@ -62,6 +64,8 @@ module icache_controller(
     input bus_busy;
     output busy_out;
 
+    output req_addr_en;
+
     wire [2:0] state;
     wire [2:0] new_state;
   
@@ -79,6 +83,7 @@ module icache_controller(
         .bus_grant      (bus_grant),
         .bus_busy       (bus_busy),
 
+        .req_addr_en    (req_addr_en),
         .busy_out       (busy_out),
         .write          (write),
         .write_num_src  (write_num_src),

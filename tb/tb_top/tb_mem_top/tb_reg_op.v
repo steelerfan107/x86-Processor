@@ -97,6 +97,8 @@ module TOP;
         contents[7]
    };
 
+    wire [31:0] tlb_va;
+
    TLB tlb(
         contents_concat,
 
@@ -125,6 +127,7 @@ module TOP;
         .dp_ready       (imem_dp_ready       ),
         .dp_read_data   (imem_dp_read_data   ),
         .phys_addr      (i_pa_out            ),
+        .virt_addr      (tlb_va              ),
         .tlb_hit        (i_hit               ),
         .tlb_pcd        (i_PCD_out      ),
         .mem_addr       (mem_addr       ),
