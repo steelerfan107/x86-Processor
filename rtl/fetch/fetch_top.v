@@ -149,7 +149,7 @@ module fetch_top (
        .load(load),
        .cs_register(cs_register), 
        .imem_valid(imem_valid),
-       .imem_ready(imem_ready),
+       .imem_ready(imem_dp_valid),
        .imem_address(imem_address)				  
    );
    
