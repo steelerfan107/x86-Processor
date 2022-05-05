@@ -14,6 +14,7 @@ module execute_top (
     // Pipestage Interface
     e_valid,
     e_ready,
+    e_dest_reg, 
     e_mmr,
     e_op_a,
     e_op_b,
@@ -48,6 +49,7 @@ module execute_top (
     input e_valid;
     output e_ready;
     input e_mmr;
+    input [2:0] e_dest_reg;
     input [63:0] e_op_a;
     input [63:0] e_op_b;
     input [31:0] e_stack_ptr;
@@ -101,12 +103,14 @@ module execute_top (
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
 
+    assign p_sys_controller_valid = e_to_sys_controller;
     assign p_dest_address = 'h0;   
-    assign p_dest_reg = 'h0;
+    assign p_dest_reg = e_dest_reg;
     assign p_result = (~|e_op) ? e_op_b : e_op_a + e_op_b;
-    assign p_opsize = 'h0;
+    assign p_opsize = e_opsize;
     assign p_mem_or_reg = 'h0;
     assign p_branch_taken = 'h0;
+    assign p_pc = e_pc;  
 
     assign pipe_in_data = {
         p_dest_address,
