@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-//or$ modules larger than 4 inputs
+/*//or$ modules larger than 4 inputs
 module or5$(output out,
 input in0, 
 input in1, 
@@ -879,7 +879,7 @@ or16$ g_or0(.in0(in0), .in1(in1), .in2(in2), .in3(in7), .in4(in9), .in5(in11), .
 or16$ g_or1(.in0(in3), .in1(in4), .in2(in5), .in3(in6), .in4(in8), .in5(in10), .in6(in12), .in7(in14), .in8(in16), .in9(in18), .in10(in20), .in11(in22), .in12(in24), .in13(in26), .in14(in28), .in15(in30), .out(OR1));
 or2$ g_or_out(.in0(OR0), .in1(OR1), .out(out));
 
-endmodule
+endmodule*/
 
 `timescale 1ns/1ps
 module or128$(output out,

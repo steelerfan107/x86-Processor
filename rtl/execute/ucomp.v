@@ -104,11 +104,18 @@ input [31:0] a;
 input [31:0] b;
 output agb, eq, bga;
 
-wire agb16;
-wire eq16;
-wire bga16;
+wire agb4, agb8, agb12, agb16, agb20, agb24, agb28;
+wire eq4, eq8, eq12, eq16, eq20, eq24, eq28;
+wire bga4, bga8, bga12, bga16, bga20, bga24, bga28;
 
-ucomp16 c16(.a(a[15:0]), .b(b[15:0]), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .agb_out(agb16), .eq_out(eq16), .bga_out(bga16));
-ucomp32 c32(.a(a[31:16]), .b(b[31:16]), .agb_in(agb16), .eq_in(eq16), .bga_in(bga16), .agb_out(agb), .eq_out(eq), .bga_out(bga));
+
+ucomp4 c4(.a(a[3:0]), .b(b[3:0]), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .agb_out(agb4), .eq_out(eq4), .bga_out(bga4));
+ucomp4 c8(.a(a[7:4]), .b(b[7:4]), .agb_in(agb4), .eq_in(eq4), .bga_in(bga4), .agb_out(agb8), .eq_out(eq8), .bga_out(bga8));
+ucomp4 c12(.a(a[11:8]), .b(b[11:8]), .agb_in(agb8), .eq_in(eq8), .bga_in(bga8), .agb_out(agb12), .eq_out(eq12), .bga_out(bga12));
+ucomp4 c16(.a(a[15:12]), .b(b[15:12]), .agb_in(agb12), .eq_in(eq12), .bga_in(bga12), .agb_out(agb16), .eq_out(eq16), .bga_out(bga16));
+ucomp4 c20(.a(a[19:16]), .b(b[19:16]), .agb_in(agb16), .eq_in(eq16), .bga_in(bga16), .agb_out(agb20), .eq_out(eq20), .bga_out(bga20));
+ucomp4 c24(.a(a[23:20]), .b(b[23:20]), .agb_in(agb20), .eq_in(eq20), .bga_in(bga20), .agb_out(agb24), .eq_out(eq24), .bga_out(bga24));
+ucomp4 c28(.a(a[27:24]), .b(b[27:24]), .agb_in(agb24), .eq_in(eq24), .bga_in(bga24), .agb_out(agb28), .eq_out(eq28), .bga_out(bga28));
+ucomp4 c32(.a(a[31:28]), .b(b[31:28]), .agb_in(agb28), .eq_in(eq28), .bga_in(bga28), .agb_out(agb), .eq_out(eq), .bga_out(bga));
 
 endmodule

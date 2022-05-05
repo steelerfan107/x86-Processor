@@ -358,7 +358,7 @@ module  or2$(out, in0, in1);
 endmodule
 `endcelldefine
 
-`celldefine
+/*`celldefine
 module or3$(out,in0, in1, in2);
  input in0, in1, in2;
  output out;
@@ -366,6 +366,8 @@ module or3$(out,in0, in1, in2);
  logic_tree #(.WIDTH(3),.OPERATION(1)) lt ({in0, in1, in2}, out);
 endmodule
 `endcelldefine
+*/
+/*
 `celldefine
 module or4$(out,in0, in1, in2, in3);
  input in0, in1, in2, in3;
@@ -374,6 +376,7 @@ module or4$(out,in0, in1, in2, in3);
  logic_tree #(.WIDTH(4),.OPERATION(1)) lt ({in0, in1, in2, in3}, out);
 endmodule
 `endcelldefine
+*/
 `celldefine
 module or5$(out,in0, in1, in2, in3, in4);
  input in0, in1, in2, in3, in4;

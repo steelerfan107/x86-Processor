@@ -36,7 +36,7 @@ output [63:0] out;
     for(i = 0; i < 4; i = i+1) begin : comp16_block
         comp16 comp(.a(mm[((i*16)+15):(i*16)]), .b(mm64[((i*16)+15):(i*16)]), .agb(agb[i]), .eq(eq[i]), .bga(bga[i]));
         xor2$ mux_select(.out(s_comp[i]), .in0(compare_op), .in1(bga[i]));
-        mux #(.INPUTS(2), .WIDTH(16)) comp_mux(.Y(pcompare_out[((i*16)+15):(i*16)]), .IN0(mm[((i*16)+15):(i*16)]), .IN1(mm64[((i*16)+15):(i*16)]), .S0(s_comp[i]));
+        mux #(.INPUTS(2), .WIDTH(16)) comp_mux(.out(pcompare_out[((i*16)+15):(i*16)]), .in({(mm64[((i*16)+15):(i*16)]), mm[((i*16)+15):(i*16)]}),  .select(s_comp[i]));
     end
     endgenerate
 
