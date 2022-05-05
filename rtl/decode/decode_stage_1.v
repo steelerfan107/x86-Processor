@@ -287,7 +287,7 @@ module decode_stage_1 (
    compare #(.WIDTH(7)) ret_f_comp (7'hC5, s0_opcode[15:9], ret_far);
 
    wire 		rom_in_control_mask;
-   and2$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control);
+   and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
    
    // Int Handle and EIP
    mux #(.INPUTS(2),.WIDTH(4))  int_rc_mux ({4'd6,s0_rom_control}        , rom_control   , handle_int);   
