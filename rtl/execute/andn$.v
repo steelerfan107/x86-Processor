@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-//and$ modules larger than 4 inputs
+/*//and$ modules larger than 4 inputs
 module and5$(output out,
 input in0, 
 input in1, 
@@ -527,7 +527,7 @@ and12$ g_and1(.in0(in6), .in1(in7), .in2(in8), .in3(in9), .in4(in10), .in5(in11)
 and2$ g_and_out(.in0(AND0), .in1(AND1), .out(out));
 
 endmodule
-
+*/
 `timescale 1ns / 1ps
 module and25$(output out,
 input in0, 

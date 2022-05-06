@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
-module DAA(AL, CF, AF, AL_out, CF_out, AF_out, set_eflags);
+module DAA(AL, CF, AF, AL_out, set_eflags, daa_eflags_out);
 input [7:0] AL;
 input CF, AF;
 output [7:0] AL_out;
-output CF_out, AF_out;
 output [5:0] set_eflags;
+output [5:0] daa_eflags_out;
 
 wire [7:0] old_AL;
 assign old_AL = AL;
@@ -37,7 +37,7 @@ wire CF_if_true0;
 or2$ cf0(.out(CF_if_true0), .in0(old_CF), .in1(if_true_carry0));
 mux2_8$ AL_mux0(.Y(AL), .IN0(AL), .IN1(AL_if_true0), .S0(if_out0));
 mux2$ CF_mux0(.outb(CF), .in0(CF), .in1(CF_if_true0), .s0(if_out0));
-mux2$ AF_mux0(.outb(AF), .in0(1'b0), .in1(1'b1), .s0(if_out0));
+mux2$ AF_mux0(.outb(daa_eflags_out[2]), .in0(1'b0), .in1(1'b1), .s0(if_out0));
 
 //old_AL > 99H
 wire comp_out1;
@@ -50,9 +50,13 @@ or2$ if1(.out(if_out1), .in0(comp_out1), .in1(old_CF));
 wire [7:0] AL_if_true1;
 CLA8 add60H(.a(AL), .b(8'h60), .Cin(1'b0), .s(AL_if_true1));
 mux2_8$ AL_mux1(.Y(AL_out), .IN0(AL), .IN1(AL_if_true1), .S0(if_out1));
-mux2$ CF_mux1(.outb(CF_out), .in0(1'b0), .in1(1'b1), .s0(if_out1));
+mux2$ CF_mux1(.outb(daa_eflags_out[1]), .in0(1'b0), .in1(1'b1), .s0(if_out1));
 
-assign AF_out = AF;
+assign daa_eflags_out[5] = 1'bz;
+assign daa_eflags_out[4] = AL_out[7];
+ucomp8 comp_zero(.a(AL_out), .b(8'h00), .eq(daa_eflags_out[3]));
+pfgen daa_pf(.in(AL), .pf(daa_eflags_out[0]));
+
 assign set_eflags = 6'bz11111;
 
 endmodule
