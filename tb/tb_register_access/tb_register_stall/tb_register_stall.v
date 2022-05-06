@@ -80,6 +80,9 @@ module TOP;
         wb_size = 0;
         wb_enable = 0;
 
+        #12.5
+        reset = 0;
+
 
         $display("==========\n End Test \n==========");
     end

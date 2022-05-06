@@ -104,8 +104,26 @@ module register_access_stall (
         op1_reg_corrected,
 
         mod_rm,
-        sib
+        sib,
+        register_size
     );
+
+    // see if op0 is writing to a register
+    wire op0_is_reg;
+    wire [2:0] op0_reg_write;
+
+    register_stall_is_op0_write register_stall_is_op0_write0 (
+        op0_is_reg,
+        op0_reg_write,
+
+        register_size,
+
+        op0,
+        op0_reg,
+        mod_rm
+    );
+
+
 
     register_stall_table logic1 (
         clk,
@@ -115,6 +133,9 @@ module register_access_stall (
 
         wb_reg,
         wb_enable,
+
+        op0_reg_write,
+        op0_is_reg,
 
         op0_r0,
         op0_r0_is_valid,
@@ -134,6 +155,73 @@ module register_access_stall (
 endmodule
 
 
+// determines of op0 is starting a reg write
+// reg write occurs when op0 is a reg, or modrm with mod 11
+// decides what the reg is
+
+module register_stall_is_op0_write (
+    is_reg,
+    reg_num,
+
+    register_size,
+
+    op0,
+    op0_reg,
+    mod_rm
+);
+
+    output is_reg;
+    output [2:0] reg_num;
+
+    input [1:0] register_size;
+
+    input [2:0] op0;
+    input [2:0] op0_reg;
+    input [7:0] mod_rm;
+
+    wire [1:0] mod = mod_rm[7:6];
+    wire [2:0] rm = mod_rm[2:0];
+
+    // is reg if:
+        // - op0 is 1
+        // - op0 is 4 and mod is 11
+    
+    // check if op0 is 1
+    wire [2:0] op0_not;
+    inv1$ 
+    op0_not_inv_0 (op0_not[0], op0[0]),
+    op0_not_inv_1 (op0_not[1], op0[1]),
+    op0_not_inv_2 (op0_not[2], op0[2]);
+
+    wire is_op0_1;
+    and3$ is_op0_1_and (is_op0_1, op0_not[2], op0_not[1], op0[0]);
+
+    // check if op0 is 4 (100)
+    wire is_op0_4;
+    and3$ os_op0_4_and (is_op0_4, op0[2], op0_not[1], op0_not[0]);
+
+    // check if its mod rm reg
+    wire is_mod_rm_reg;
+    and3$ is_mod_rm_reg_and (is_mod_rm_reg, is_op0_4, mod[1], mod[0]);
+
+    // set is_reg
+    or2$ is_reg_or (is_reg, is_mod_rm_reg, is_op0_1);
+
+    // set size of rm selection
+    wire [2:0] rm_reg;
+    register_writeback_select rm_size (rm_reg, rm, register_size);
+
+    // select which value to use for output 
+    ao_mux #(.WIDTH(3), .NINPUTS(2)) output_mux (
+        {rm_reg, op0_reg},
+        reg_num,
+        {is_mod_rm_reg, is_op0_1}
+    );
+
+
+endmodule
+
+
 // decides if a register in reg table should be modified
 // +1 if op0 matches the register that the block modifies and the next segment is ready for new data
 // -1 if writeback matches the register that the block modifies
@@ -143,7 +231,9 @@ module register_stall_modify_table (
 
     assigned_reg,
     op0_reg,
+    op0_reg_is_valid,
     wb_reg,
+    wb_reg_is_valid,
     next_stage_ready,
     reg_out
 );
@@ -155,7 +245,9 @@ module register_stall_modify_table (
 
     input [2:0] assigned_reg;   // reg number that this block is monitoring
     input [2:0] op0_reg;
+    input op0_reg_is_valid;
     input [2:0] wb_reg;
+    input wb_reg_is_valid;
     input next_stage_ready;     // only add to table if the data is passed through the pipeline
     input [3:0] reg_out;
 
@@ -175,7 +267,7 @@ module register_stall_modify_table (
     
     wire [1:0] mux_control;
 
-    // mux_control[0] = 1 if assigned_reg == op0_reg
+    // mux_control[0] = 1 if assigned_reg == op0_reg and op0_reg is valid
     wire [2:0] add_and_result;
     and2$ 
     and0 (add_and_result[0], assigned_reg[0], op0_reg[0]), 
@@ -183,9 +275,9 @@ module register_stall_modify_table (
     and2 (add_and_result[2], assigned_reg[2], op0_reg[2]);
 
     // see if match
-    and3$ and3 (mux_control[0], add_and_result[0], add_and_result[1], add_and_result[2]);
+    and4$ and3 (mux_control[0], add_and_result[0], add_and_result[1], add_and_result[2], op0_reg_is_valid);
 
-    // mux_control[1] = 1 if assigned_reg == wb_reg
+    // mux_control[1] = 1 if assigned_reg == wb_reg and wb_reg is valid
     wire [2:0] sub_and_result;
     and2$ 
     and4 (sub_and_result[0], assigned_reg[0], wb_reg[0]), 
@@ -193,7 +285,7 @@ module register_stall_modify_table (
     and6 (sub_and_result[2], assigned_reg[2], wb_reg[2]);
 
     // see if match
-    and3$ and7 (mux_control[1], sub_and_result[0], sub_and_result[1], sub_and_result[2]);
+    and4$ and7 (mux_control[1], sub_and_result[0], sub_and_result[1], sub_and_result[2], wb_reg_is_valid);
 
     // select input to reg with a mux
     ao_mux #(.WIDTH(4), .NINPUTS(2)) reg_in_mux (
@@ -222,6 +314,9 @@ module register_stall_table (
     wb_reg,
     wb_is_valid,
 
+    op0_reg,
+    op0_reg_is_valid,
+
     op0_r0,
     op0_r0_is_valid,
 
@@ -245,6 +340,9 @@ module register_stall_table (
 
     input [2:0] wb_reg;
     input wb_is_valid;
+
+    input [2:0] op0_reg;
+    input op0_reg_is_valid;
 
     input [2:0] op0_r0;
     input op0_r0_is_valid;
@@ -296,8 +394,6 @@ module register_stall_table (
     r6_en,
     r7_en;
 
-    // TODO: Wire this so it has the register OP0 accesses, if it accesses a reg
-    wire [2:0] op0_reg = 3'd0;
 
     // doing this to prevent port width mismatch warning
     wire [31:0] 
@@ -340,14 +436,14 @@ module register_stall_table (
 
     // decide if they should be written
     register_stall_modify_table 
-    r0_modifier (r0_en, r0_in, 3'd0, op0_reg, wb_reg, next_stage_ready, r0_out), 
-    r1_modifier (r1_en, r1_in, 3'd1, op0_reg, wb_reg, next_stage_ready, r1_out), 
-    r2_modifier (r2_en, r2_in, 3'd2, op0_reg, wb_reg, next_stage_ready, r2_out), 
-    r3_modifier (r3_en, r3_in, 3'd3, op0_reg, wb_reg, next_stage_ready, r3_out), 
-    r4_modifier (r4_en, r4_in, 3'd4, op0_reg, wb_reg, next_stage_ready, r4_out), 
-    r5_modifier (r5_en, r5_in, 3'd5, op0_reg, wb_reg, next_stage_ready, r5_out), 
-    r6_modifier (r6_en, r6_in, 3'd6, op0_reg, wb_reg, next_stage_ready, r6_out), 
-    r7_modifier (r7_en, r7_in, 3'd7, op0_reg, wb_reg, next_stage_ready, r7_out);
+    r0_modifier (r0_en, r0_in, 3'd0, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r0_out), 
+    r1_modifier (r1_en, r1_in, 3'd1, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r1_out), 
+    r2_modifier (r2_en, r2_in, 3'd2, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r2_out), 
+    r3_modifier (r3_en, r3_in, 3'd3, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r3_out), 
+    r4_modifier (r4_en, r4_in, 3'd4, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r4_out), 
+    r5_modifier (r5_en, r5_in, 3'd5, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r5_out), 
+    r6_modifier (r6_en, r6_in, 3'd6, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r6_out), 
+    r7_modifier (r7_en, r7_in, 3'd7, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r7_out);
 
     // check if there is a stall condition
     wire is_stall;
@@ -532,7 +628,8 @@ module register_stall_access_calculator (
     op1_reg,
 
     mod_rm,
-    sib
+    sib,
+    register_size
 );
 
     output [2:0] op0_r0;
@@ -555,6 +652,7 @@ module register_stall_access_calculator (
 
     input [7:0] mod_rm;
     input [7:0] sib;
+    input [1:0] register_size;
 
     // OP Types:
     //
@@ -575,7 +673,9 @@ module register_stall_access_calculator (
         mod_rm_r1, // if r1 is being used it has to be bc of mod rm and SIB
 
         mod_rm,
-        sib
+        sib,
+        register_size
+
     );
 
     // ---------- //
@@ -773,7 +873,8 @@ module register_stall_mod_rm_registers (
     r1,
 
     mod_rm,
-    sib
+    sib,
+    reg_size
 );
 
     output [2:0] r0;
@@ -781,11 +882,24 @@ module register_stall_mod_rm_registers (
 
     input [7:0] mod_rm;
     input [7:0] sib;
+    input [1:0] reg_size;
 
     // r0 will either be the rm value, or the sib index (or none at all but the valid bit checks for that)
-    wire [2:0] rm = mod_rm[2:0];
+    // if mod is 11 then rm needs to be set for proper size
+    wire [2:0] rm_unsized = mod_rm[2:0];
     wire [2:0] sib_index = sib[5:3];
     wire [2:0] sib_base = sib[2:0];
+
+    wire [2:0] rm;
+    wire [2:0] rm_sized;
+    register_writeback_select register_writeback_select0 (rm_sized, rm_unsized, reg_size);
+    // if mod is 11, use the sized one
+    mux #(.WIDTH(3), .INPUTS(4)) rm_mux (
+        {rm_sized, rm_unsized, rm_unsized, rm_unsized},
+        rm,
+        mod_rm[7:6]
+    );
+
 
     wire is_rm;
 
