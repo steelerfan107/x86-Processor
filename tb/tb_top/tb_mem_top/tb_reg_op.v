@@ -271,7 +271,7 @@ module TOP;
         $display("==========\n End Test \n==========");
   end
    
-  initial #2000 $finish;
+  initial #20000 $finish;
 
   always @ (posedge clk or posedge reset) begin
        if (reset) begin
@@ -291,7 +291,7 @@ module TOP;
        emem_ready        = ~ememory_valid;     
   end
    
-  always #5  clk          = ~clk;
+  always #100  clk          = ~clk;
 
   initial begin
         $vcdplusfile("fsys_reg.dump.vpd");

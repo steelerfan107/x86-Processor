@@ -99,7 +99,10 @@ module fetch_top (
    wire [3:0]		 bytes_read_o;  
 	
    or2$ ir (internal_reset, flush, reset);
-
+   
+   wire 		 outstanding, outstanding_in, drop, drop_in, n_drop;
+   wire                  masked_dp_valid;
+   
    // EIP Logic
    wire 		 out_accept;
    wire [31:0] 		 minus_cs;
@@ -121,7 +124,40 @@ module fetch_top (
                n_pc_out,
                out_accept 				    
            );
+
+   // Logic to drop outstanding response if flush occurs
+   wire 		 memory_accept;
+   wire                  outstanding_a_flush;
    
+   and2$( memory_accept, imem_valid, imem_ready);
+   nand2$( not_data_accept, imem_dp_valid, imem_dp_ready);
+
+   mux2$ ( outstanding_in , memory_accept, not_data_accept, outstanding);
+
+   and2$ ( outstanding_a_flush, outstanding, flush);
+   mux2$ ( drop_in , outstanding_a_flush, not_data_accept, drop);
+
+   
+   register #(.WIDTH(1)) outstanding_reg (
+               clk,
+               reset,
+               outstanding_in,
+               outstanding,
+               nc0,
+               1'b1				    
+           );   
+ 
+   register #(.WIDTH(1)) drop_reg (
+               clk,
+               reset,
+               drop_in,
+               drop,
+               n_drop,	
+               1'b1			    
+           ); 
+
+   and2$ ( masked_dp_valid,  n_drop, imem_dp_valid);
+  
    // Instruction Queue
    instruction_queue iq (
       .clk(clk),
@@ -129,7 +165,7 @@ module fetch_top (
       .load_address(load_address),
       .load(load),
       .flush(flush),			 
-      .valid_i(imem_dp_valid),
+      .valid_i(masked_dp_valid),
       .ready_i(imem_dp_ready),		  
       .data_i(imem_dp_read_data),
       .valid_o(f_valid),
@@ -164,7 +200,7 @@ module fetch_top (
    
    assign bp_pc = 'h0;
    assign ras_pop = 'h0;
-   assign f_pc = pc_out;
+   assign f_pc = pc_p_bytes_read;
    assign f_branch_taken = 'h0;   
    
 endmodule
