@@ -14,6 +14,7 @@ module execute_top (
     // Pipestage Interface
     e_valid,
     e_ready,
+    e_dest_reg, 
     e_mmr,
     e_op_a,
     e_op_b,
@@ -47,6 +48,7 @@ module execute_top (
     wb_cs_out,
     wb_br_misprediction
 
+
 );
     // Clock Interface
     input clk;
@@ -59,6 +61,7 @@ module execute_top (
     input e_valid;
     output e_ready;
     input e_mmr;
+    input [2:0] e_dest_reg;
     input [63:0] e_op_a;
     input [63:0] e_op_b;
     input [31:0] e_eax;
@@ -90,6 +93,7 @@ module execute_top (
     output wb_jump_load_cs;
     output [31:0] wb_cs_out;
     output wb_br_misprediction;
+
    
     wire [63:0] a;
     wire [63:0] b;
@@ -127,6 +131,35 @@ module execute_top (
     assign p_mem_or_reg = 'h0;
     assign p_branch_taken = 'h0;
 
+
+    // -------   //
+    // Pipestage //
+    // -------   //
+    // Some Temp Logic
+   
+    localparam PIPEWIDTH = 32+32+64+2+1+1+33;
+
+    wire [31:0] p_dest_address;
+    wire [31:0] p_dest_reg;
+    wire [63:0] p_result;
+    wire [1:0] p_opsize;
+    wire p_mem_or_reg;
+    wire p_branch_taken;
+    wire p_to_sys_controller;    
+    wire [31:0] p_pc;
+
+    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
+
+    assign p_sys_controller_valid = e_to_sys_controller;
+    assign p_dest_address = 'h0;   
+    assign p_dest_reg = e_dest_reg;
+    assign p_result = (~|e_op) ? e_op_b : e_op_a + e_op_b;
+    assign p_opsize = e_opsize;
+    assign p_mem_or_reg = 'h0;
+    assign p_branch_taken = 'h0;
+    assign p_pc = e_pc;  
+
+
     assign pipe_in_data = {
         p_dest_address,
         p_dest_reg,
@@ -150,16 +183,17 @@ module execute_top (
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
+
     genvar i;
     generate
     for(i = 0; i < 64; i = i+1) begin : opa_buffer_block
-        bufferH64$ instance(.out(a[i]), .in(e_op_a[i]));
+         bufferH64$ instance(.out(a[i]), .in(e_op_a[i]));
     end
     endgenerate
 
     generate
     for(i = 0; i < 64; i = i+1) begin : opb_buffer_block
-        bufferH64$ instance(.out(b[i]), .in(e_op_b[i]));
+         bufferH64$ instance(.out(b[i]), .in(e_op_b[i]));
     end
     endgenerate
 
@@ -194,3 +228,4 @@ module execute_top (
 
     
 endmodule
+

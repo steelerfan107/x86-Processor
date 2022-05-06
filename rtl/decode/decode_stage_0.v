@@ -74,7 +74,7 @@ module decode_stage_0 (
    output [3:0] 	s0_immediete_bytes;   
    output [23:0] 	s0_prefix;   
    output [1:0] 	s0_prefix_bytes;
-   output [2:0]         s0_rom_control;   
+   output [3:0]         s0_rom_control;   
    output               s0_rom_in_control;    
    output [IADDRW-1:0] 	s0_pc;   
    output 		s0_branch_taken;
@@ -90,9 +90,18 @@ module decode_stage_0 (
 
    wire 		vr_gate;
    wire                 have_modrm;
-   wire 		size_prefix;   
+   wire 		size_prefix;  
+   wire                 halt_detect, halt_capture, halt_capture_n;
    wire 		nc0, nc1;
    wire [63:0] 		nc3;
+
+   // Halt Logic
+   or2$ halt_or (halt, halt_capture, halt_detect);
+   
+   register halt_reg (clk, (reset | flush), halt_detect, halt_capture, halt_capture_n, 1'b1);
+
+   compare #(.WIDTH(8)) halt_comp  (8'hF4, opcode_aligned[63:56], halt_detect);
+   compare #(.WIDTH(8)) iretd_comp (8'hCF, opcode_aligned[63:56], iretd_detect);
 
    // Allign Displacement and Immediete
    byte_shifter_16B  disp_n_imm_shift (f_instruction[127:0], {s0_displace_n_imm,nc3} , poa_bytes);
@@ -102,7 +111,7 @@ module decode_stage_0 (
    byte_shifter_8B             addressing_shift ({8'b0,f_instruction[119:72],8'b0}, addressing_aligned , po_bytes);
 
    // Opcode Processing
-   opcode_rom_control     orc              (opcode_aligned[63:48], s0_rom_control, s0_rom_in_control);   
+   opcode_rom_control     orc              (size_prefix, opcode_aligned[63:48], s0_rom_control, s0_rom_in_control);   
    opcode_imm_size_detect osd              (opcode_aligned[63:48], s0_opcode, s0_opcode_bytes, s0_immediete_bytes, size_prefix, have_modrm);
    byte_shifter_8B        opcode_shifter   ({f_instruction[127:88],24'b0}, opcode_aligned, s0_prefix_bytes);
 
@@ -118,7 +127,9 @@ module decode_stage_0 (
    slow_addr  #(.WIDTH(4))      imm_disp_addr  (s0_displacement_bytes, s0_immediete_bytes, imm_p_disp[3:0], imm_p_disp[4]);
    slow_addr  #(.WIDTH(5))       ins_len_addr  ({1'b0,poa_bytes}, imm_p_disp, f_bytes_read, nc0);
     
-   mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {2'b0,f_valid_bytes}, vr_gate, nc1);
+   mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {2'b0,f_valid_bytes}, vr_gate_byte, nc1);
+
+   or2$ gate (vr_gate, vr_gate_byte, halt);
    
    and2$ ready_and (f_ready,~vr_gate,s0_ready);
    and2$ valid_and (s0_valid,~vr_gate,f_valid);

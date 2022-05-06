@@ -56,6 +56,7 @@ assign daa_eflags_out[5] = 1'bz;
 assign daa_eflags_out[4] = AL_out[7];
 ucomp8 comp_zero(.a(AL_out), .b(8'h00), .eq(daa_eflags_out[3]));
 pfgen daa_pf(.in(AL), .pf(daa_eflags_out[0]));
+
 assign set_eflags = 6'bz11111;
 
 endmodule

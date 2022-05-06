@@ -94,13 +94,33 @@ module fetch_top (
 
    wire 		 internal_reset;
 
-   wire 		 iq_valid;
+   wire 		 iq_valid, nc0;
    wire 		 iq_ready;
-   wire [3:0]		 bytes_read_o;
-   
+   wire [3:0]		 bytes_read_o;  
 	
-   
    or2$ ir (internal_reset, flush, reset);
+
+   // EIP Logic
+   wire 		 out_accept;
+   wire [31:0] 		 minus_cs;
+   wire [31:0] 		 pc_in, pc_out, n_pc_out, pc_p_bytes_read;
+
+   assign minus_cs = load_address - cs_register;
+   
+   and2$ out_acc ( out_accept, f_valid, f_ready);
+
+   slow_addr #(.WIDTH(32)) ({26'b0,f_bytes_read},pc_out,pc_p_bytes_read,nc0); 
+   
+   mux  #(.WIDTH(32),.INPUTS(2)) idt_select ( {minus_cs, pc_p_bytes_read}, pc_in, load);
+   
+   register #(.WIDTH(32)) pc_reg (
+               clk,
+               reset,
+               pc_in,
+               pc_out,
+               n_pc_out,
+               out_accept 				    
+           );
    
    // Instruction Queue
    instruction_queue iq (
@@ -133,15 +153,18 @@ module fetch_top (
        .imem_address(imem_address)				  
    );
    
-   // Wrapper Tieoffs 
-   assign imem_valid = 1'b1;
+   // Wrapper Tieoffs
+   inv1$ finv (flush_not, flush);
+   or2$ imem_vo (imem_v, flush_not, load);   
+   
+   assign imem_valid = imem_v;
    assign imem_wr_en = 'h0;
    assign imem_wr_data = 'h0;
    assign imem_wr_size = 'h0;
    
    assign bp_pc = 'h0;
    assign ras_pop = 'h0;
-   assign f_pc = imem_address - {26'b0,f_valid_bytes};
+   assign f_pc = pc_out;
    assign f_branch_taken = 'h0;   
    
 endmodule

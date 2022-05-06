@@ -42,8 +42,8 @@ module op_and_rm_decode (
    wire [2:0] 		 reg0_cloud;
    wire [2:0] 		 reg1_cloud;
    
-   mux #(.WIDTH(3), .INPUTS(4)) mr0 ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg0_cloud},dec_op0_reg,reg0_sel);
-   mux #(.WIDTH(3), .INPUTS(4)) mr1 ({3'b0,mask_op[10:8],mask_dec_modrm[5:3],reg1_cloud},dec_op1_reg,reg0_sel);   
+   mux #(.WIDTH(3), .INPUTS(4)) mr0 ({3'b0,mask_op[10:8],mask_modrm[5:3],reg0_cloud},dec_op0_reg,reg0_sel);
+   mux #(.WIDTH(3), .INPUTS(4)) mr1 ({3'b0,mask_op[10:8],mask_modrm[5:3],reg1_cloud},dec_op1_reg,reg1_sel);   
    
    opcode_modrm_control_cloud opcode_modrm_control_cloud (
      .modrm7(mask_modrm[7]), 
@@ -103,10 +103,7 @@ module op_and_rm_decode (
      .flag1_1(dec_flag_1[1]), 
      .flag1_0(dec_flag_1[0]), 
      .stack_op_1(dec_stack_op[1]), 
-     .stack_op_0(dec_stack_op[0]), 
-     .rom_control_2(rom_control[2]), 
-     .rom_control_1(rom_control[1]), 
-     .rom_control_0(rom_control[0])				   
+     .stack_op_0(dec_stack_op[0])				   
   );
 
 endmodule

@@ -10,13 +10,38 @@ module decode_top (
    reset,
 		   
    // Control Interface
-   flush,
+   flush_0,
+   flush_1,
+   pending_int,
+   hold_int,		   
    handle_int,
+   handle_int_done,
+   busy_ahead_of_decode,		   
    halt,
+
+   // EIP Modification Interface		       
+   write_eip,
+   eip,
+
+   // Repeat Interface
+   ecx_register,
+   wb_valid,
+   wb_reg,
+   wb_data, 
+   wb_size,
+		   
+   // EFLAGS Interface  
+   eflags_reg,		   
 
    // Return Address Stack Interface
    ras_address,
-   ras_push,		  
+   ras_push,
+
+   // RET Interface
+   ret_near,
+   ret_far,		   
+   iretd,
+   iretd_halt,		  
    
    // Fetch Interface  
    f_valid,
@@ -47,6 +72,7 @@ module decode_top (
    d_stack_op,
    d_seg_override,
    d_seg_override_valid,
+   d_movs,
    d_pc,
    d_branch_taken	  		  
 		  
@@ -59,14 +85,39 @@ module decode_top (
    input                reset;
 
    // Control Interface
-   input 	        flush;
+   input 	        flush_0;
+   input 	        flush_1;
+   input                pending_int;
+   output               hold_int;   
    input                handle_int;
+   output               handle_int_done;  
+   input                busy_ahead_of_decode; 
    output               halt;
+
+   // Repeat Interface
+   input [31:0]         ecx_register;
+   output               wb_valid;
+   output [2:0]         wb_reg;
+   output [31:0]        wb_data;  
+   output [2:0]         wb_size;  
+   
+   // EIP Modification Interface		       
+   input                write_eip;
+   input [31:0]         eip;
+
+   // EFLAGS Interface  
+   input [31:0] 	eflags_reg;   
 
    // Return Address Stack Interface
    output [IADDRW-1:0] 	ras_address;
    output               ras_push;
-	   
+
+   // IRETd Interface
+   input                ret_near;
+   input                ret_far;   
+   output               iretd;
+   input                iretd_halt;
+	   	   
    // Fetch Interface  
    input                f_valid;
    output               f_ready;
@@ -96,6 +147,7 @@ module decode_top (
    output [1:0]         d_stack_op;   
    output [2:0]		d_seg_override;   
    output 		d_seg_override_valid;
+   output               d_movs;
    output [IADDRW-1:0]  d_pc;
    output               d_branch_taken;
 
@@ -110,7 +162,7 @@ module decode_top (
    wire [3:0] 	        s0_immediete_bytes;   
    wire [23:0] 	        s0_prefix;   
    wire [1:0] 	        s0_prefix_bytes;
-   wire [2:0] 		s0_rom_control;
+   wire [3:0] 		s0_rom_control;
    wire                 s0_rom_in_control;
    wire [IADDRW-1:0] 	s0_pc;   
    wire 		s0_branch_taken;   
@@ -126,13 +178,13 @@ module decode_top (
    wire [3:0] 	        s0_immediete_bytes_r;   
    wire [23:0] 	        s0_prefix_r;   
    wire [1:0] 	        s0_prefix_bytes_r; 
-   wire [2:0] 		s0_rom_control_r;
+   wire [3:0] 		s0_rom_control_r;
    wire                 s0_rom_in_control_r;  
    wire [IADDRW-1:0] 	s0_pc_r;   
    wire 		s0_branch_taken_r;
    wire                 s0_size_override_r;
    
-   localparam S0_PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 + 1 + 1 + 1 + 3;
+   localparam S0_PIPEWIDTH = IADDRW + 2 +24 +4 + 2 + 16 + 4 + 2 + 16 + 64 + 1 + 1 + 1 + 3 + 1;
 
    // Stage 1 Pipe  
    wire 		s1_valid;   
@@ -154,18 +206,21 @@ module decode_top (
    wire [1:0]           s1_stack_op;   
    wire [2:0]		s1_seg_override;   
    wire 	        s1_seg_override_valid;
+   wire                 s1_movs;
    wire [IADDRW-1:0]    s1_pc;
    wire                 s1_branch_taken;
+
+   wire 		nc0;
    
-   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3;   
+   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3 + 1;   
 
    // Stage 0 and Pipe
    
    decode_stage_0 #(.IADDRW(IADDRW)) ds0 (
        clk,
        reset,
-       flush,
-       handle_int,
+       flush_0,
+       nc0,	    
        halt,
        f_valid,
        f_ready,
@@ -229,16 +284,31 @@ module decode_top (
       s0_size_override_r
    } = s0_data_r;     
    
-   pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, reset, s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
+   pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, (reset | flush_0), s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
    
-   // Stage 0 and Pipe
-   
+   // Stage 0 and Pipe   
    decode_stage_1 #(.IADDRW(IADDRW)) ds1 (
        clk,
        reset,
-       flush,
+       flush_1,
+       pending_int,
+       hold_int,
        handle_int,
+       handle_int_done,
+       busy_ahead_of_decode,					  
        halt,
+       ret_near,
+       ret_far,					  
+       iretd,
+       iretd_halt,			       
+       write_eip,
+       eip,
+       ecx_register,
+       wb_valid,
+       wb_reg,
+       wb_data, 
+       wb_size,					  
+       eflags_reg,					  
        s0_valid_r,
        s0_ready_r,
        s0_displace_n_imm_r,
@@ -274,6 +344,7 @@ module decode_top (
        s1_stack_op,
        s1_seg_override,
        s1_seg_override_valid,
+       s1_movs,					  
        s1_pc,
        s1_branch_taken					  
    );
@@ -299,6 +370,7 @@ module decode_top (
        s1_stack_op,
        s1_seg_override,
        s1_seg_override_valid,
+       s1_movs,
        s1_pc,
        s1_branch_taken      
    };
@@ -321,10 +393,11 @@ module decode_top (
        d_stack_op,
        d_seg_override,
        d_seg_override_valid,
+       d_movs,	     
        d_pc,
        d_branch_taken
    } = s1_data_r;     
    
-   pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, reset, s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);
+   pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, (reset| flush_1), s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);
 
 endmodule  

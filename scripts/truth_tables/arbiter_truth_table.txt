@@ -1,0 +1,8 @@
+.i 3
+.o 2
+.ilb state req done
+.ob grant next_state
+.p 2
+1-0 11
+01- 11
+.e

@@ -1,14 +1,15 @@
-.i 16
-.o 4
-.ilb op15 op14 op13 op12 op11 op10 op9 op8 op7 op6 op5 op4 op3 op2 op1 op0
-.ob rom_control_2 rom_control_1 rom_control_0 rom_in_control
+.i 17
+.o 5
+.ilb sizeop op15 op14 op13 op12 op11 op10 op9 op8 op7 op6 op5 op4 op3 op2 op1 op0
+.ob rom_control_3 rom_control_2 rom_control_1 rom_control_0 rom_in_control
 
-11110100-------- 0011
-11001111-------- 0101
-10100100-------- 0111 # to the outputs, both in order specified above.
-10100101-------- 0111
-10100101-------- 0111
-11000011-------- 1001
-11001011-------- 1001
-11000010-------- 1011
-11001010-------- 1011
+111101000-------- 10001
+011101000-------- 10011
+111111111-------- 10101
+011111111-------- 10111 # to the outputs, both in order specified above.
+010011010-------- 00111
+011001111-------- 00101
+011000011-------- 01001
+011001011-------- 01011
+011000010-------- 01001
+011001010-------- 01011

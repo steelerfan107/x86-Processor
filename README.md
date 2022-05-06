@@ -15,6 +15,25 @@ Volume 1: Basic Arch | [Link](http://users.ece.utexas.edu/~patt/22s.382N/handout
 Volume 2: Instruction Set Reference |[Link](http://users.ece.utexas.edu/~patt/22s.382N/handouts/x86%20Instruction%20Set%20Reference.pdf "Volume 2: Instruction Set Reference") 
 Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s.382N/handouts/x86%20System%20Programming%20Guide.pdf "Volume 3: System Programming Guide") 
 
+## lst_to_hex.py
+Run this while in scripts dir:
+python3 lst_to_hex.py tests/<test_name> <memory_name> <total_width_of_bus(bytes)> <memory_width (bytes)> <memory_depth (lines)> <total_memory (bytes)> <test_name>
+
+This will generate output files in the test_generation dir. There will be a <test_name>_readable file and a set of memory files with _y_x postfixes.
+
+The lst file is in the format:
+
+```
+// Reg32 Sanity Test
+// Eric T.
+
+0x0:     B8 00 00 11 11 // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
+         89 99          // This is an illegal op but just to show format.
+                        // Another Comment
+0x7:     B9 00 00 00 01 // Move 0x1111_1111 to ECX (Move imm to r32) - Row 61
+0x2000:  B9 00 00 00 01 // Can do jumps also
+```
+
 ## Using the Space
 ### Setup 
 1. source scripts/setup.csh
@@ -39,6 +58,11 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 - Inputs: a, b
 - Outputs : out
 - Parameters : WIDTH - Width of inputs
+
+### decoder5_32.v
+- 5-to-32 decoder
+- Inputs : in[4:0]
+- Outputs : out[31:0]
 
 ### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
@@ -93,6 +117,6 @@ Volume 3: System Programming Guide |[Link](http://users.ece.utexas.edu/~patt/22s
 
 ### fifo.v
 - A first in first out buffer.
-- Inputs :
-- Outputs :
+- Inputs : clk, reset, flush, wr_en, wr_data [31:0], rd_en
+- Outputs : rd_data [31:0], empty, nearly_full, full
 - Parameters : 

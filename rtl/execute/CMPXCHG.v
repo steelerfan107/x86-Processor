@@ -5,7 +5,10 @@ input [31:0] r32; //always a register value, src
 input [31:0] eax_in;
 output [31:0] dest;
 output [31:0] eax_out;
+
 output [5:0] eflags;
+input [31:0] eax_in;
+input [31:0] eax_out; 
 
 wire zf;
 

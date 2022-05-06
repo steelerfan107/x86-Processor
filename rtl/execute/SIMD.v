@@ -43,5 +43,5 @@ output [63:0] out;
     //movq block, simd_op 100
     wire [63:0] movq_out;
     assign movq_out = mm64;
-    mux #(.INPUTS(5), .WIDTH(64)) simd_out(.in({pcompare_out, pcompare_out, paddd_out, paddw_out, movq_out,}), .out(out), .select(simd_op));
+    mux #(.INPUTS(5), .WIDTH(64)) simd_out(.in({pcompare_out, pcompare_out, paddd_out, paddw_out, movq_out}), .out(out), .select(simd_op));
 endmodule
