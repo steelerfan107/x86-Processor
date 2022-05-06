@@ -74,8 +74,8 @@ module decode_top (
    d_seg_override_valid,
    d_movs,
    d_pc,
-   d_branch_taken	  		  
-		  
+   d_branch_taken,
+   d_opcode	  		  		  
 );
    // Instruction Memory Interface Parameters
    parameter IADDRW = 32;
@@ -150,6 +150,7 @@ module decode_top (
    output               d_movs;
    output [IADDRW-1:0]  d_pc;
    output               d_branch_taken;
+   output [15:0] 	d_opcode;
 
    wire 		s0_valid;   
    wire 		s0_ready;   
@@ -209,10 +210,11 @@ module decode_top (
    wire                 s1_movs;
    wire [IADDRW-1:0]    s1_pc;
    wire                 s1_branch_taken;
+   wire [15:0] 		s1_opcode;
 
    wire 		nc0;
    
-   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3 + 1;   
+   localparam S1_PIPEWIDTH = IADDRW + 1 + 1 + 3 + 2 + 3 + 3 + 4 + 32 + 48 + 8 + 8 +3 + 3 + 3 + 3 + 1 + 1 + 3 + 1 + 16;   
 
    // Stage 0 and Pipe
    
@@ -346,7 +348,8 @@ module decode_top (
        s1_seg_override_valid,
        s1_movs,					  
        s1_pc,
-       s1_branch_taken					  
+       s1_branch_taken,
+       s1_opcode				  
    );
 
    wire [S1_PIPEWIDTH-1:0]		s1_data;
@@ -372,7 +375,8 @@ module decode_top (
        s1_seg_override_valid,
        s1_movs,
        s1_pc,
-       s1_branch_taken      
+       s1_branch_taken,
+       s1_opcode      
    };
    
    assign {  
@@ -395,7 +399,8 @@ module decode_top (
        d_seg_override_valid,
        d_movs,	     
        d_pc,
-       d_branch_taken
+       d_branch_taken,
+       d_opcode
    } = s1_data_r;     
    
    pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, (reset| flush_1), s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);

@@ -75,7 +75,8 @@ module decode_stage_1 (
    s1_seg_override_valid,
    s1_movs,
    s1_pc,
-   s1_branch_taken	       
+   s1_branch_taken,
+   s1_opcode	       
 );
 
    // Instruction Memory Interface Parameters
@@ -153,6 +154,7 @@ module decode_stage_1 (
    output               s1_movs;
    output [IADDRW-1:0]  s1_pc;
    output               s1_branch_taken;
+   output [15:0] 	s1_opcode;
    
    wire 		pre_s1_valid;
    wire 		pre_s1_ready;   
@@ -178,6 +180,7 @@ module decode_stage_1 (
    wire    		dec_seg_override_valid,rom_seg_override_valid;
    wire    [IADDRW-1:0] dec_pc,rom_pc;
    wire                 dec_branch_taken,rom_branch_taken;
+   wire    [15:0]       dec_opcode,rom_opcode;
    
    wire 		rom_in_control;
    wire [3:0] 		rom_control;
@@ -372,7 +375,9 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({dec_seg_override,dec_seg_override},s1_seg_override, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({dec_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({dec_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);
+   mux #(.INPUTS(2),.WIDTH(16)) opcode_mux({rom_opcode,mask_op},s1_opcode, rom_in_control);   
+   
    //mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
    //mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 
@@ -409,7 +414,8 @@ module decode_stage_1 (
       rom_seg_override,   
       rom_seg_override_valid,
       rom_pc,
-      rom_branch_taken,  
+      rom_branch_taken,
+      rom_opcode,					   
       rom_in_control,
       rom_control,
       eflags_reg,

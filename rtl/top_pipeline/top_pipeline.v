@@ -161,7 +161,8 @@ module top_pipeline (
    wire 		   d_seg_override_valid;
    wire                    d_movs;
    wire [IADDRW-1:0]       d_pc;
-   wire                    d_branch_taken;   
+   wire                    d_branch_taken;  
+   wire [15:0] 		   d_opcode; 
 	
    wire                    handle_int_done;
    wire                    write_eip; // Connect
@@ -222,6 +223,7 @@ module top_pipeline (
    wire   [63:0]           r_mm7;
    wire   [31:0]           r_pc;
    wire                    r_branch_taken;
+   wire   [15:0]           r_opcode;
 
    wire   [2:0]            wb_reg_number;
    wire                    wb_reg_en;
@@ -258,7 +260,8 @@ module top_pipeline (
    wire [1:0]              a_stack_op;
    wire [31:0]             a_pc;
    wire                    a_branch_taken;
-   wire                    a_to_sys_controller; 
+   wire                    a_to_sys_controller;
+   wire [15:0] 		   a_opcode;
 
    // Pipestage interface
    wire                    e_valid;
@@ -278,10 +281,11 @@ module top_pipeline (
    wire   [2:0]            e_flag_1;
    wire   [31:0]           e_pc;
    wire                    e_branch_taken;
-   wire                    e_to_sys_controller; 
+   wire                    e_to_sys_controller;
+   wire [15:0] 		   e_opcode;
    
-   // Writeback Interface
-   wire                    wb_ready = 1'b1; // TODO
+   // Writeback Interfacre
+   wire                    wb_ready = 1'b1;
    wire  [31:0]            wb_dest_address;
    wire  [31:0]            wb_dest_reg;
    wire  [63:0]            wb_result;
@@ -289,7 +293,12 @@ module top_pipeline (
    wire                    wb_mem_or_reg;
    wire                    wb_valid;
    wire                    wb_branch_taken;
-   wire                    wb_sys_controller_valid;
+   wire                    wb_to_sys_controller;
+   wire  [31:0]            wb_pc;
+   wire                    wb_jump_load_address;
+   wire                    wb_jump_load_cs;
+   wire  [31:0]            wb_cs_out;
+   wire                    wb_br_misprediction;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -380,7 +389,8 @@ module top_pipeline (
       d_seg_override_valid,
       d_movs,
       d_pc,
-      d_branch_taken  		  		  
+      d_branch_taken,
+      d_opcode		  		  
    );
 
    and2$ wb_and ( wb_accept, wb_valid, wb_ready );
@@ -411,6 +421,7 @@ module top_pipeline (
       d_movs,
       d_pc,
       d_branch_taken,
+      d_opcode,					    
       r_valid,
       r_ready,
       r_size,
@@ -454,6 +465,7 @@ module top_pipeline (
       r_mm7,
       r_pc,
       r_branch_taken,
+      r_opcode,					    
       wb_reg_number,
       wb_reg_en,
       wb_reg_size,
@@ -513,6 +525,7 @@ module top_pipeline (
       r_mm7,
       r_pc,
       r_branch_taken,
+      r_opcode,					 
       a_valid,
       a_ready,
       a_size,
@@ -531,7 +544,8 @@ module top_pipeline (
       a_stack_op,
       a_pc,
       a_branch_taken,
-      a_to_sys_controller
+      a_to_sys_controller,
+      a_opcode
   );  
 
   memory_read_top uut_memory_read (
@@ -567,7 +581,8 @@ module top_pipeline (
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
-
+      a_opcode,
+				   
       // Pipestage interface
       e_valid,
       e_ready,
@@ -586,36 +601,47 @@ module top_pipeline (
       e_flag_1,
       e_pc,
       e_branch_taken,
-      e_to_sys_controller	
+      e_to_sys_controller,
+      e_opcode	
   );
    
   execute_top uut_execute(
-      clk,
-      reset,
-      exe_flush,
-      e_valid,
-      e_ready,
-      1'b0,
-      e_op_a_reg,		       
-      e_op0,
-      e_op1,
-      32'h0,
-      e_alu_op,
-      e_size,
-      1'b0,
-      e_branch_taken,
-      e_to_sys_controller,
-      e_pc,			       
-      wb_ready,
-      wb_dest_address,
-      wb_dest_reg,
-      wb_result,
-      wb_opsize,
-      wb_mem_or_reg,
-      wb_valid,					 			       
-      wb_branch_taken,
-      wb_sys_controller_valid,
-      wb_pc		       
+    clk,
+    reset,
+    exe_flush,
+    e_valid,
+    e_ready,
+    e_op_a_reg, 
+    1'b0,
+    e_op_a,
+    e_op_b,
+    r_eax,
+    e_stack_ptr,
+    e_alu_op,
+    e_opcode, 
+    e_size,
+    e_flag_0,
+    e_flag_1,
+    e_set_d_flag,
+    e_clear_d_flag,
+    1'b0,
+    e_branch_taken,
+    e_to_sys_controller,
+    e_pc,
+    wb_ready,
+    wb_dest_address,
+    wb_dest_reg,
+    wb_result,
+    wb_opsize,
+    wb_mem_or_reg,
+    wb_valid,
+    wb_branch_taken,
+    wb_to_sys_controller,
+    wb_pc,
+    wb_jump_load_address,
+    wb_jump_load_cs,
+    wb_cs_out,
+    wb_br_misprediction		       
   );
 
   sys_cont_top uut_sys_cont (
@@ -649,7 +675,7 @@ module top_pipeline (
      ret_far,			     
      iretd,
      iretd_halt,
-     (wb_sys_controller_valid & wb_valid), //iretd_pop_valid,
+     (wb_to_sys_controller & wb_valid), //iretd_pop_valid,
      wb_result, //iretd_pop_data,
      reg_load_eflags,
      reg_eflags,
