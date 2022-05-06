@@ -19,6 +19,7 @@ module execute_top (
     e_op_a,
     e_op_b,
     e_eax,
+    e_cs,
     e_stack_ptr,
     e_op,
     e_opcode,
@@ -44,6 +45,7 @@ module execute_top (
     wb_to_sys_controller,
     wb_pc,
     wb_jump_load_address,
+    wb_jump_address,		    
     wb_jump_load_cs,
     wb_cs_out,
     wb_br_misprediction
@@ -65,6 +67,7 @@ module execute_top (
     input [63:0] e_op_a;
     input [63:0] e_op_b;
     input [31:0] e_eax;
+    input [15:0]  e_cs;
     input [31:0] e_stack_ptr;
     input [3:0] e_op;
     input [15:0] e_opcode;
@@ -90,6 +93,7 @@ module execute_top (
     output wb_to_sys_controller;
     output [31:0] wb_pc;
     output wb_jump_load_address;
+    output [31:0] wb_jump_address;   
     output wb_jump_load_cs;
     output [31:0] wb_cs_out;
     output wb_br_misprediction;
@@ -101,7 +105,6 @@ module execute_top (
     wire [5:0] e_alu_set_eflags; 
     wire [5:0] e_alu_eflags_out; 
     wire [6:0] e_eflags_out;
-    wire [31:0] e_cs; //not sure what this is concerning far jump atm
     
 
     // -------   //
@@ -149,25 +152,25 @@ module execute_top (
     genvar i;
     generate
     for(i = 0; i < 64; i = i+1) begin : opa_buffer_block
-         bufferH64$ instance(.out(a[i]), .in(e_op_a[i]));
+         //bufferH64$ instance(.out(a[i]), .in(e_op_a[i]));
     end
     endgenerate
 
     generate
     for(i = 0; i < 64; i = i+1) begin : opb_buffer_block
-         bufferH64$ instance(.out(b[i]), .in(e_op_b[i]));
+         //bufferH64$ instance(.out(b[i]), .in(e_op_b[i]));
     end
     endgenerate
 
     ALU alu(
-        .a(a), 
-        .b(b),
+        .a(e_op_a), 
+        .b(e_op_b),
         .eax(eax),
         .eip(e_pc),
         .cs(e_cs),
         .eflags_in(e_eflags_out[5:0]),
         .opsize(e_opsize),
-        .opcode(opcode), 
+        .opcode(e_opcode), 
         .alu_op(e_op), 
         .flag_0_map(e_flag_0_map),
         .flag_1_map(e_flag_1_map),
@@ -178,7 +181,8 @@ module execute_top (
         .br_misprediction(wb_br_misprediction),
         .alu_out(e_alu_out),
         .set_eflags(e_alu_set_eflags), 
-        .eflags_out(e_alu_eflags_out));
+        .eflags_out(e_alu_eflags_out),
+        .jump_address(wb_jump_address));
     
     mux2$ mux_change_df(.outb(change_df), .in0(1'b0), .in1(1'b1), .s0(e_set_d_flag)); //if not set, then must be clear
     or2$ or_set_df(.out(set_df), .in0(e_set_d_flag), .in1(e_clear_d_flag));

@@ -5,7 +5,7 @@ module ALU(
     eflags_in, 
     opsize, opcode, alu_op, alu_out, 
     flag_0_map, flag_1_map, set_eflags, eflags_out, 
-    branch_taken, br_misprediction, jump_load_address, jump_load_cs, cs_out,
+    branch_taken, br_misprediction, jump_load_address, jump_load_cs, cs_out, jump_address
     );
 input [63:0] a; //destination operand
 input [63:0] b; //source operand
@@ -19,6 +19,7 @@ input [2:0] alu_op;
 input [2:0] flag_0_map;
 input [2:0] flag_1_map;
 input branch_taken;
+output [31:0] jump_address;
 output jump_load_address;
 output jump_load_cs;
 output [31:0] cs_out;
@@ -27,6 +28,8 @@ output [63:0] alu_out;
 output [5:0] set_eflags; 
 output [5:0] eflags_out;
 
+   assign jump_load_cs = 'h0;
+   assign cs_out = 'h0;
 
 /*
 PASS-MOV -alu_op 0, op 4
@@ -153,7 +156,7 @@ wire [31:0] jmp_out;
 wire [31:0] jmp_cs;
 wire zf_en, jmp_load_address, jmp_load_cs;
 and2$ and_zfen(.out(zf_en), .in0(flag_0_map[0]), .in1(flag_0_map[1]));
-JMP jmp(.EIP(eip), .CS(cs), .op0(a[31:0]), .opcode(opcode), .opsize(opsize), .ZF_en(zf_en), .CF_en(flag_1_map[0]), .eflags_in(eflags_in), .branch_taken(branch_taken), .br_misprediction(br_misprediction), .jump_load_address(jmp_load_address), .jump_address(jmp_out), .jump_load_cs(jmp_load_cs), .jump_cs(jmp_cs));
+JMP jmp(.EIP(eip), .CS(cs), .op0(a[31:0]), .opcode(opcode), .opsize(opsize), .ZF_en(zf_en), .CF_en(flag_1_map[0]), .eflags_in(eflags_in), .branch_taken(branch_taken), .br_misprediction(br_misprediction), .jump_load_address(jump_load_address), .jump_address(jump_address), .jump_load_cs(jmp_load_cs), .jump_cs(jmp_cs));
 
 /*NOT -alu_op 7
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

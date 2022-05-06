@@ -103,5 +103,5 @@ module JMP
   mux #(.WIDTH(32), .INPUTS(2)) jump_address_out(.in({jump_address_i_0, 32'h0000000}), .out(jump_address), .select(jump_addr_s1));
   mux2$ jump_load_address_out(.in0(jump_ld_addr1), .in1(jne_or_jnbe), .outb(jump_load_address), .s0(jump_ld_addr_s));
   
-  mux #(.WIDTH(32), .INPUTS(4)) mask_jump_addr(.in({jump_address, {16'h00, jump_address}, jump_address, jump_address}), .out(jump_address), .select(opsize)); 
+  //mux #(.WIDTH(32), .INPUTS(4)) mask_jump_addr(.in({jump_address, {16'h00, jump_address}, jump_address, jump_address}), .out(jump_address), .select(opsize)); 
 endmodule

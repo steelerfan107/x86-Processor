@@ -296,13 +296,16 @@ module top_pipeline (
    wire                    wb_to_sys_controller;
    wire  [31:0]            wb_pc;
    wire                    wb_jump_load_address;
+   wire  [31:0]            wb_jump_address;   
    wire                    wb_jump_load_cs;
    wire  [31:0]            wb_cs_out;
    wire                    wb_br_misprediction;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
-
+   
+   wire     [15:0]         r_cs_bypass;
+   
    wire 	           busy_ahead_of_decode;  
    wire 	           wb_accept;
 
@@ -312,7 +315,7 @@ module top_pipeline (
       fetch_flush,
       load_address,
       load,
-      r_cs,		  
+      r_cs_bypass,		  
       imem_valid,
       imem_ready,
       imem_address,
@@ -616,6 +619,7 @@ module top_pipeline (
     e_op_a,
     e_op_b,
     r_eax,
+    r_cs,
     e_stack_ptr,
     e_alu_op,
     e_opcode, 
@@ -639,6 +643,7 @@ module top_pipeline (
     wb_to_sys_controller,
     wb_pc,
     wb_jump_load_address,
+    wb_jump_address,
     wb_jump_load_cs,
     wb_cs_out,
     wb_br_misprediction		       
@@ -682,13 +687,20 @@ module top_pipeline (
      reg_load_eip,
      reg_eip,
      pending_int,
-     hold_int	  
+     hold_int,
+     wb_jump_load_address,
+     wb_jump_address,   
+     wb_jump_load_cs[15:0],
+     wb_cs_out  
   );   
 
   assign busy_ahead_of_decode = wb_valid | a_valid | r_valid;
    
   or2$ (wb_reg_en, wb_valid, dec_wb_valid);
-  
+
+  //mux  #(.WIDTH(16),.INPUTS(2)) ( {wb_jump_load_cs[15:0], r_cs}        , r_cs_bypass  , wb_jump_load_cs);
+  assign r_cs_bypass = r_cs;
+ 
   mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_reg, wb_dest_reg[2:0]} , wb_reg_number, dec_wb_valid);
   mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, wb_opsize}       , wb_reg_size  , dec_wb_valid);
   mux  #(.WIDTH(32),.INPUTS(2)) ( {dec_wb_data, wb_result[31:0]} , wb_reg_data  , dec_wb_valid);   
