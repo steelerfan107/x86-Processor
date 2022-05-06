@@ -231,6 +231,7 @@ module memory_subsystem_top (
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
         .phys_addr(tlb_i_pa),   // from TLB
+	    .virt_addr(tlb_va),  	  
         .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),

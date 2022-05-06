@@ -100,7 +100,6 @@ module icache(
     ivalidRAM validram(clk,reset, index, ctrl_write, 1'b1, valid_out);
 
     // 23-bit compare
-    // TODO
     wire tag_hit;
     compare #(.WIDTH(23)) comp(tag_out, phys_tag, tag_hit);
 
