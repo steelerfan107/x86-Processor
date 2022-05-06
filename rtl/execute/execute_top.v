@@ -103,62 +103,24 @@ module execute_top (
     wire [6:0] e_eflags_out;
     wire [31:0] e_cs; //not sure what this is concerning far jump atm
     
-   
-    // -------   //
-    // Pipestage //
-    // -------   //
-    // Some Temp Logic
-   
-    localparam PIPEWIDTH = 32+32+64+2+1+1+33;
-
-    wire [31:0] p_dest_address;
-    wire [31:0] p_dest_reg;
-    wire [63:0] p_result;
-    wire [1:0] p_opsize;
-    wire p_mem_or_reg;
-    wire p_branch_taken;
-    wire p_to_sys_controller;    
-    wire [31:0] p_pc;
-    wire change_df;
-    wire set_df;
-
-    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
-
-    assign p_dest_address = 'h0;   
-    assign p_dest_reg = 'h0;
-    assign p_result = (~|e_op) ? e_op_b : e_op_a + e_op_b;
-    assign p_opsize = 'h0;
-    assign p_mem_or_reg = 'h0;
-    assign p_branch_taken = 'h0;
-
 
     // -------   //
     // Pipestage //
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+2+1+1+33;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1;
 
-    wire [31:0] p_dest_address;
-    wire [31:0] p_dest_reg;
-    wire [63:0] p_result;
-    wire [1:0] p_opsize;
-    wire p_mem_or_reg;
-    wire p_branch_taken;
-    wire p_to_sys_controller;    
-    wire [31:0] p_pc;
+    wire [31:0]  p_dest_address = 'h0;;
+    wire  [31:0] p_dest_reg = e_dest_reg;
+    wire  [63:0] p_result = e_alu_out;
+    wire  [1:0]  p_opsize = e_opsize;
+    wire         p_mem_or_reg = 'h0;
+    wire         p_branch_taken = 'h0;
+    wire         p_to_sys_controller = e_to_sys_controller;
+    wire  [31:0] p_pc = e_pc;
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
-
-    assign p_sys_controller_valid = e_to_sys_controller;
-    assign p_dest_address = 'h0;   
-    assign p_dest_reg = e_dest_reg;
-    assign p_result = (~|e_op) ? e_op_b : e_op_a + e_op_b;
-    assign p_opsize = e_opsize;
-    assign p_mem_or_reg = 'h0;
-    assign p_branch_taken = 'h0;
-    assign p_pc = e_pc;  
-
 
     assign pipe_in_data = {
         p_dest_address,
@@ -166,14 +128,14 @@ module execute_top (
         p_result,
         p_opsize,
         p_mem_or_reg,
-        p_branch_taken,
-        p_to_sys_controller,
-        p_pc	    
+        e_branch_taken,
+        e_to_sys_controller,
+        e_pc	    
     };
 
     assign {
         wb_dest_address,
-        wb_dest_reg,
+        wb_dest_rege_dest_reg,
         wb_result,
         wb_opsize,
         wb_mem_or_reg,

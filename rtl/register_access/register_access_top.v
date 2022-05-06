@@ -39,6 +39,7 @@ module register_access_top (
     d_movs,
     d_pc,
     d_branch_taken,
+    d_opcode,
 
     // Address Generation Inferface
     r_valid,
@@ -84,6 +85,7 @@ module register_access_top (
     r_mm7,
     r_pc,
     r_branch_taken,
+    r_opcode,
 
     wb_reg_number,
     wb_reg_en,
@@ -133,6 +135,7 @@ module register_access_top (
     input d_movs;
     input [31:0] d_pc;
     input d_branch_taken;
+    input [15:0] d_opcode;
 
     // Address Generation Inferface
     output r_valid;
@@ -178,7 +181,8 @@ module register_access_top (
     output [63:0] r_mm7;
     output [31:0] r_pc;
     output r_branch_taken;
-
+    output [15:0] r_opcode;
+   
     // --------- //
     // Writeback //
     // --------- //
@@ -203,7 +207,7 @@ module register_access_top (
     // Pipestage (Bypass for now) //
     // ------                     //
    
-    localparam PIPEWIDTH = 1+32+1+3+2+3+3+4+32+48+8+8+3+3+3+3+1+1+3+8*32+6*16+8*64;
+    localparam PIPEWIDTH = 1+32+1+3+2+3+3+4+32+48+8+8+3+3+3+3+1+1+3+8*32+6*16+8*64+16;
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -273,7 +277,8 @@ module register_access_top (
        r_mm4,
        r_mm5,
        r_mm6,
-       r_mm7	    
+       r_mm7,
+       r_opcode	    
     } = pipe_in_data;
 
     assign pipe_in_data = {
@@ -317,7 +322,8 @@ module register_access_top (
        p_mm4,
        p_mm5,
        p_mm6,
-       p_mm7    
+       p_mm7,
+       d_opcode    
     };
 
    assign r_valid = d_valid;

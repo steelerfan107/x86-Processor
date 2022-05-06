@@ -25,7 +25,8 @@ module rom_block (
       rom_seg_override,   
       rom_seg_override_valid,
       rom_pc,
-      rom_branch_taken,  
+      rom_branch_taken, 
+      rom_opcode, 
       rom_in_control,
       rom_control,
       eflags_reg,
@@ -70,7 +71,7 @@ module rom_block (
    
    parameter IADDRW = 64;
    
-   localparam ROM_WIDTH = 3+1+1+3+3+5+5+8+8+4+3+3+2+1+1+2;
+   localparam ROM_WIDTH = 3+1+1+3+3+5+5+8+8+4+3+3+2+1+1+2+16;
 
    input                  clk;
    input                  reset;
@@ -105,6 +106,7 @@ module rom_block (
    input [31:0] 	  eip_reg;
    input [47:0] 	  dec_imm;
    output                 handle_int_done;
+   output [15:0] 	  rom_opcode;
    
    wire [2:0] 		  from_rom_size;
    wire  		  from_rom_set_d_flag;
@@ -122,7 +124,8 @@ module rom_block (
    wire  		  from_rom_seg_override;
    wire  		  from_rom_seg_override_valid;  
    wire [1:0] 		  from_rom_imm_select;
-
+   wire [15:0] 		  from_rom_opcode;
+   
    wire 		  in_accept, out_accept;
    wire 		  state, rom_control_or;
    wire 		  next_state;
@@ -237,6 +240,7 @@ module rom_block (
    assign     rom_stack_op = from_rom_stack_op;   
    assign     rom_seg_override = from_rom_seg_override; 
    assign     rom_seg_override_valid = from_rom_seg_override_valid;
+   assign     rom_opcode = from_rom_opcode;
    
    assign {
              from_rom_size,
@@ -254,7 +258,8 @@ module rom_block (
              from_rom_stack_op,
              from_rom_seg_override,
              from_rom_seg_override_valid,  
-             from_rom_imm_select	   
+             from_rom_imm_select,
+             from_rom_opcode	   
    } = rom_data[127:127-(ROM_WIDTH-1)];
       
 endmodule   

@@ -37,6 +37,7 @@ module memory_read_top (
     a_pc,
     a_branch_taken,
     a_to_sys_controller,
+    a_opcode,			
 
     // Pipestage interface
     e_valid,
@@ -56,7 +57,8 @@ module memory_read_top (
     e_flag_1,
     e_pc,
     e_branch_taken,
-    e_to_sys_controller	
+    e_to_sys_controller,
+    e_opcode
 
 );
 
@@ -92,6 +94,7 @@ module memory_read_top (
     input [31:0] a_pc;
     input a_branch_taken;
     input a_to_sys_controller;
+    input [15:0] a_opcode;
 
     // Pipestage interface
     output e_valid;
@@ -111,13 +114,14 @@ module memory_read_top (
     output [2:0] e_flag_1;
     output [31:0] e_pc;
     output e_branch_taken;
-    output e_to_sys_controller; 
+    output e_to_sys_controller;
+    output [15:0] e_opcode; 
 
     // --------- //
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16;
 
     // Pipestage interface
     wire p_valid;
@@ -157,7 +161,8 @@ module memory_read_top (
        e_flag_1,
        e_pc,
        e_branch_taken,
-       e_to_sys_controller	
+       e_to_sys_controller,
+       e_opcode	
     } = pipe_out_data;
 
     assign pipe_in_data = {
@@ -176,7 +181,8 @@ module memory_read_top (
        p_flag_1,
        p_pc,
        p_branch_taken,
-       p_to_sys_controller      
+       p_to_sys_controller,
+       a_opcode     
     };
    
     assign p_valid = a_valid;
@@ -202,7 +208,7 @@ module memory_read_top (
     wire pipestage_reset;
     or2$ or_pipestage (pipestage_reset, reset, flush);
 
-    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pip_in_data, e_valid, e_ready, pipe_out_data);
+    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pipe_in_data, e_valid, e_ready, pipe_out_data);
    
     wire    pop_address_dependency;
     wire    push_address_dependency;   
