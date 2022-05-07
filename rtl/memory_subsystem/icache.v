@@ -10,6 +10,7 @@ module icache(
     dp_read_data,
 
     //  TLB
+    virt_addr,
     phys_addr,
     tlb_hit,
     tlb_pcd,
@@ -52,6 +53,7 @@ module icache(
 
     //  TLB
     input [31:0] phys_addr;
+    output [31:0] virt_addr;
     input tlb_hit;
     input tlb_pcd;
     
@@ -72,12 +74,18 @@ module icache(
 
     assign mem_rd_wr = 1'b0;
 
+    wire [31:0] req_pending_addr;
+    wire req_addr_en;
 
-    wire [4:0] index = req_address[8:4];
+    register #(.WIDTH(32)) req_addr_reg(clk, reset, req_address, req_pending_addr, , req_addr_en);
+
+    assign virt_addr = req_pending_addr;
+
+    wire [4:0] index = req_pending_addr[8:4];
     wire [22:0] phys_tag = phys_addr[31:9];
 
     // this should always be 0 for 16B-aligned requests
-    wire [3:0] byte_offset = req_address[3:0];
+    wire [3:0] byte_offset = req_pending_addr[3:0];
 
     wire ctrl_write;
 
@@ -121,7 +129,8 @@ module icache(
         .bus_grant       (grant_in),
         .grant_pass      (ctrl_grant_pass),
         .bus_busy        (bus_busy_in),
-        .busy_out        (bus_busy_out)
+        .busy_out        (bus_busy_out),
+        .req_addr_en     (req_addr_en)
     );
 
     // pass along grant signal?
@@ -159,6 +168,7 @@ module icache(
 
     idataRAM dataram(clk, reset, index, ctrl_write, accum_out, dp_read_data);
 
+    assign mem_en = bus_busy_out;
     assign mem_addr = pa_out;
 
 endmodule

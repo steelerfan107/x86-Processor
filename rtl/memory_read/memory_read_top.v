@@ -37,6 +37,7 @@ module memory_read_top (
     a_pc,
     a_branch_taken,
     a_to_sys_controller,
+    a_opcode,			
 
     // Pipestage interface
     e_valid,
@@ -56,7 +57,8 @@ module memory_read_top (
     e_flag_1,
     e_pc,
     e_branch_taken,
-    e_to_sys_controller	
+    e_to_sys_controller,
+    e_opcode
 
 );
 
@@ -92,6 +94,7 @@ module memory_read_top (
     input [31:0] a_pc;
     input a_branch_taken;
     input a_to_sys_controller;
+    input [15:0] a_opcode;
 
     // Pipestage interface
     output e_valid;
@@ -111,46 +114,101 @@ module memory_read_top (
     output [2:0] e_flag_1;
     output [31:0] e_pc;
     output e_branch_taken;
-    output e_to_sys_controller; 
+    output e_to_sys_controller;
+    output [15:0] e_opcode; 
 
     // --------- //
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16;
 
-    wire [PIPEWIDTH-1:0] pipe_in_datam, pipe_out_data;
+    // Pipestage interface
+    wire p_valid;
+    wire p_ready;
+    wire [2:0] p_size;            // size of operand, following size defined in #decode channel
+    wire p_set_d_flag;
+    wire p_clear_d_flag;
+    wire [63:0] p_op_a;           // value for operand a
+    wire [63:0] p_op_b;           // value for operand b
+    wire [2:0] p_op_a_reg;        // register number for operand a
+    wire [31:0] p_op_a_address;    // address for operand a
+    wire p_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
+    wire [31:0] p_stack_ptr;      // stack pointer address
+    wire [47:0] p_imm;            // immediate
+    wire [3:0] p_alu_op;          // alu operation defined in #decode channel
+    wire [2:0] p_flag_0;
+    wire [2:0] p_flag_1;
+    wire [31:0] p_pc;
+    wire p_branch_taken;
+    wire p_to_sys_controller; 
+   
+    wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
     assign {
-        e_size,
-        e_set_d_flag,
-        e_clear_d_flag,
-        e_op_a,
-        e_op_b,
-        e_op_a_reg,
-        e_op_b_reg,
-        e_op_a_address,
-        e_op_b_address,
-        e_op_a_is_address,
-        e_op_b_is_address,
-        e_stack_ptr,
-        e_imm,
-        e_alu_op,
-        e_flag_0,
-        e_flag_1,
-        e_pc,
-        a_branch_taken
+       e_size,
+       e_set_d_flag,
+       e_clear_d_flag,
+       e_op_a,
+       e_op_b,
+       e_op_a_reg,
+       e_op_a_address,
+       e_op_a_is_address,
+       e_stack_ptr,
+       e_imm,
+       e_alu_op,
+       e_flag_0,
+       e_flag_1,
+       e_pc,
+       e_branch_taken,
+       e_to_sys_controller,
+       e_opcode	
     } = pipe_out_data;
 
     assign pipe_in_data = {
-        0   // not sure what to put here tbh
+       p_size,
+       p_set_d_flag,
+       p_clear_d_flag,
+       p_op_a,
+       p_op_b,
+       p_op_a_reg,
+       p_op_a_address,
+       p_op_a_is_address,
+       p_stack_ptr,
+       p_imm,
+       p_alu_op,
+       p_flag_0,
+       p_flag_1,
+       p_pc,
+       p_branch_taken,
+       p_to_sys_controller,
+       a_opcode     
     };
+   
+    assign p_valid = a_valid;
+    assign a_ready = p_ready;
+    assign p_size = a_size;            
+    assign p_set_d_flag = a_set_d_flag;
+    assign p_clear_d_flag = a_clear_d_flag;
+    assign p_op_a = a_op0;           
+    assign p_op_b = a_op1;           
+    assign p_op_a_reg = a_op0_reg;        
+    assign p_op_a_address = 'h0;    
+    assign p_op_a_is_address = a_op0_is_address;      
+    assign p_stack_ptr = 'h0;  
+    assign p_imm = a_imm;        
+    assign p_alu_op = a_alu_op;          
+    assign p_flag_0 = a_flag_0;
+    assign p_flag_1 = a_flag_1;
+    assign p_pc = a_pc;
+    assign p_branch_taken = a_branch_taken;
+    assign p_to_sys_controller = a_to_sys_controller; 
 
-
+   
     wire pipestage_reset;
     or2$ or_pipestage (pipestage_reset, reset, flush);
 
-    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, a_valid, a_ready, pip_in_data, e_valid, e_ready, pipe_out_data);
+    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pipe_in_data, e_valid, e_ready, pipe_out_data);
    
     wire    pop_address_dependency;
     wire    push_address_dependency;   

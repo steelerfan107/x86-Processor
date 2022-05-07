@@ -44,9 +44,9 @@ REP MOVS: None.
 
 RET: None. 
 
-SAL/SAR: The CF flag contains the value of the last bit shifted out of the destination operand; it is undefined for SHL and SHR instructions where the count is greater than or equal to the size (in bits)
-of the destination operand. The OF flag is affected only for 1-bit shifts (see “Description”
-above); otherwise, it is undefined. The SF, ZF, and PF flags are set according to the result. If the
+SAL/SAR: The CF flag contains the value of the last bit shifted out of the destination operand. 
+The OF flag is affected only for 1-bit shifts, otherwise, it is undefined. 
+The SF, ZF, and PF flags are set according to the result. If the
 count is 0, the flags are not affected. For a non-zero count, the AF flag is undefined.
 
 STD: The DF flag is set. The CF, OF, ZF, SF, AF, and PF flags are unaffected.
@@ -55,10 +55,11 @@ XCHG: None.
 */
 `timescale 1ns / 1ps
 module eflags(eflags_in, set_eflags, eflags_out);
-input [5:0] eflags_in;
-input [5:0] set_eflags;
-output [5:0] eflags_out;
+input [6:0] eflags_in;
+input [6:0] set_eflags;
+output [6:0] eflags_out;
 
+latch$ DF(.d(eflags_in[6]), .en(set_eflags[6]), .q(eflags_out[6]));
 latch$ OF(.d(eflags_in[5]), .en(set_eflags[5]), .q(eflags_out[5]));
 latch$ SF(.d(eflags_in[4]), .en(set_eflags[4]), .q(eflags_out[4]));
 latch$ ZF(.d(eflags_in[3]), .en(set_eflags[3]), .q(eflags_out[3]));

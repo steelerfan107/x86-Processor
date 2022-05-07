@@ -27,7 +27,9 @@ module icache_controller(
     bus_grant,
     grant_pass,
     bus_busy,
-    busy_out
+    busy_out,
+
+    req_addr_en
 
     
 );
@@ -62,10 +64,13 @@ module icache_controller(
     input bus_busy;
     output busy_out;
 
-    wire [1:0] state;
-    wire [1:0] new_state;
+    output req_addr_en;
+
+    wire [2:0] state;
+    wire [2:0] new_state;
   
-    icache_combinational_logic cloud(
+    icache_combinational_logic icl(
+        .state2         (state[2]),
         .state1         (state[1]),
         .state0         (state[0]),
         .write_num      (write_num[1]),
@@ -78,6 +83,7 @@ module icache_controller(
         .bus_grant      (bus_grant),
         .bus_busy       (bus_busy),
 
+        .req_addr_en    (req_addr_en),
         .busy_out       (busy_out),
         .write          (write),
         .write_num_src  (write_num_src),
@@ -87,6 +93,7 @@ module icache_controller(
         .grant_pass     (grant_pass),
         .pa_src         (pa_src),
         .pa_wr_en       (pa_wr_en),
+        .new_state2     (new_state[2]),
         .new_state1     (new_state[1]),
         .new_state0     (new_state[0])
     );
@@ -96,6 +103,7 @@ module icache_controller(
 
     dff$ 
         fsm0(clk, new_state[0], state[0], , reset_n, 1'b1),
-        fsm1(clk, new_state[1], state[1], , reset_n, 1'b1);
+        fsm1(clk, new_state[1], state[1], , reset_n, 1'b1),
+        fsm2(clk, new_state[2], state[2], , reset_n, 1'b1);
 
 endmodule

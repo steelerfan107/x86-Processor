@@ -56,7 +56,8 @@ module address_generation_top (
     r_mm7,
     r_pc,
     r_branch_taken,
-
+    r_opcode,
+			       
     // Memory Access Interface
     a_valid,
     a_ready,
@@ -76,8 +77,8 @@ module address_generation_top (
     a_stack_op,
     a_pc,
     a_branch_taken,
-    a_to_sys_controller			       
-
+    a_to_sys_controller,			       
+    a_opcode
 );
 
     // Clock Interface
@@ -131,7 +132,8 @@ module address_generation_top (
     input [63:0] r_mm7;
     input [31:0] r_pc;
     input r_branch_taken;
-
+    input [15:0] r_opcode;
+   
     // Memory Read Interface Interface
     output a_valid;
     input a_ready;
@@ -152,12 +154,13 @@ module address_generation_top (
     output [31:0] a_pc;
     output a_branch_taken;
     output a_to_sys_controller;
+    output [15:0] a_opcode;
    
     // -------   //
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -194,7 +197,8 @@ module address_generation_top (
       a_flag_1,
       a_stack_op,
       a_pc,
-      a_branch_taken	    
+      a_branch_taken,
+      a_opcode	    
     } = pipe_out_data;
 
     assign pipe_in_data = {
@@ -213,7 +217,8 @@ module address_generation_top (
       r_flag_1,
       r_stack_op,
       r_pc,
-      r_branch_taken		    
+      r_branch_taken,
+      r_opcode		    
     };   
  
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);

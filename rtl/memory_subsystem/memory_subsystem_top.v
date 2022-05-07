@@ -122,9 +122,9 @@ module memory_subsystem_top (
     wire bus_en;
 
     wire bus_busy_icache;
-    wire bus_busy_dcache;
-    wire bus_busy_sys_controller;
-    wire bus_busy_dma;
+    wire bus_busy_dcache = 'h0;
+    wire bus_busy_sys_controller = 'h0;
+    wire bus_busy_dma = 'h0;
     wire bus_busy;
 
     or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
@@ -162,6 +162,8 @@ module memory_subsystem_top (
         .io_en(dec_io_en)
     );
 
+    wire [31:0] tlb_va;
+   
     wire tlb_i_hit;
     wire tlb_i_rd_wr;
     wire [31:0] tlb_i_pa;
@@ -175,8 +177,8 @@ module memory_subsystem_top (
     wire d_virt_addr;
 
     TLB tlb(
-        .contents(tlb_contents),
-        .i_addr_in(imem_address),
+        .contents(tlb_contents),   
+        .i_addr_in(tlb_va),
         .i_hit(tlb_i_hit),
         .i_rd_wr_out(tlb_i_rd_wr),
         .i_pa_out(tlb_i_pa),
@@ -216,7 +218,7 @@ module memory_subsystem_top (
         .grant_in(arb_grant),
         .grant_out(sys_grant),
 
-        .bus_busy_out(bus_busy_sys_controller),
+        .bus_busy_out(bus_busy_sys_controller_nc),
         .bus_busy_in(bus_busy)
     );
 
@@ -231,6 +233,7 @@ module memory_subsystem_top (
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
         .phys_addr(tlb_i_pa),   // from TLB
+	.virt_addr      (tlb_va              ),  	  
         .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),
@@ -240,7 +243,7 @@ module memory_subsystem_top (
         .mem_en(bus_en),
         .grant_in(sys_grant),
         .grant_out(icache_grant),
-        .bus_busy_out(bus_busy_icache_out),
+        .bus_busy_out(bus_busy_icache),
         .bus_busy_in(bus_busy)
     );
 
@@ -249,7 +252,7 @@ module memory_subsystem_top (
     main_memory_top main_memory_top(
         .clk(clk),
         .reset(reset),
-        .en(dec_mem_en),
+        .en(1'b1), //dec_mem_en),
         .rd_wr(dec_rd_wr),
         .addr(bus_addr),
         .data(bus_data),

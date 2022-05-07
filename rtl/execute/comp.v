@@ -1,6 +1,6 @@
 //signed compare logic
 `timescale 1ns / 1ps
-module comp8(a, b, agb, eq, bga. overflow, carry);
+module comp8(a, b, agb, eq, bga, overflow, carry);
 input [7:0] a;
 input [7:0] b;
 output agb, eq, bga, overflow, carry;
@@ -40,7 +40,7 @@ or3$ bga_out(.out(bga), .in0(bnotdenot), .in1(abnotenot), .in2(adenot));
 endmodule
 
 `timescale 1ns / 1ps
-module comp16(a, b, agb, eq, bga. overflow, carry);
+module comp16(a, b, agb, eq, bga, overflow, carry);
 input [15:0] a;
 input [15:0] b;
 output agb, eq, bga, overflow, carry;
@@ -81,7 +81,7 @@ endmodule
 
 //signed compare logic
 `timescale 1ns / 1ps
-module comp32(a, b, agb, eq, bga, comp_out, inv, overflow, carry);
+module comp32(a, b, agb, eq, bga, overflow, carry);
 input [31:0] a;
 input [31:0] b;
 output agb, eq, bga, overflow, carry;

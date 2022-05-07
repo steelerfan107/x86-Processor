@@ -16,6 +16,8 @@ module decode_stage_1 (
    handle_int_done,
    busy_ahead_of_decode,		        
    halt,
+   ret_near,
+   ret_far,	
    iretd,
    iretd_halt,
 		       
@@ -73,7 +75,8 @@ module decode_stage_1 (
    s1_seg_override_valid,
    s1_movs,
    s1_pc,
-   s1_branch_taken	       
+   s1_branch_taken,
+   s1_opcode	       
 );
 
    // Instruction Memory Interface Parameters
@@ -91,8 +94,10 @@ module decode_stage_1 (
    output               handle_int_done;  
    input                busy_ahead_of_decode; 
    output               halt;
-   output               iretd_halt;
-   input                iretd;
+   output               ret_near;
+   output               ret_far;
+   input                iretd_halt;
+   output               iretd;
 
    // Repeat Interface
    input [31:0]         ecx_register;
@@ -149,7 +154,8 @@ module decode_stage_1 (
    output               s1_movs;
    output [IADDRW-1:0]  s1_pc;
    output               s1_branch_taken;
-
+   output [15:0] 	s1_opcode;
+   
    wire 		pre_s1_valid;
    wire 		pre_s1_ready;   
 
@@ -174,6 +180,7 @@ module decode_stage_1 (
    wire    		dec_seg_override_valid,rom_seg_override_valid;
    wire    [IADDRW-1:0] dec_pc,rom_pc;
    wire                 dec_branch_taken,rom_branch_taken;
+   wire    [15:0]       dec_opcode,rom_opcode;
    
    wire 		rom_in_control;
    wire [3:0] 		rom_control;
@@ -276,10 +283,14 @@ module decode_stage_1 (
    
    // IRETd Logic
    wire 		iretd_halt_mask;
-   compare #(.WIDTH(8)) halt_comp (8'hCF, s0_opcode[15:8], iretd);
+   inv1$ ( iretd_halt_mask, iretd_halt);
+   
+   compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
+   compare #(.WIDTH(7)) ret_n_comp (7'hC1, s0_opcode[15:9], ret_near);
+   compare #(.WIDTH(7)) ret_f_comp (7'hC5, s0_opcode[15:9], ret_far);
 
    wire 		rom_in_control_mask;
-   and2$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control);
+   and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
    
    // Int Handle and EIP
    mux #(.INPUTS(2),.WIDTH(4))  int_rc_mux ({4'd6,s0_rom_control}        , rom_control   , handle_int);   
@@ -343,7 +354,7 @@ module decode_stage_1 (
    );
  
    assign dec_valid = s0_valid;
-   and2$ dra (dec_ready, repeat_halt_mask, pre_s1_ready);
+   and3$ dra (dec_ready, repeat_halt_mask, pre_s1_ready, iretd_halt_mask);
 
    // Output Muxes
    mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,dec_ready},s0_ready, rom_in_control);     
@@ -364,7 +375,9 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  seg_override_mux({dec_seg_override,dec_seg_override},s1_seg_override, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({dec_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(1))  seg_override_valid_mux({dec_seg_override_valid,dec_seg_override_valid},s1_seg_override_valid, rom_in_control);
+   mux #(.INPUTS(2),.WIDTH(16)) opcode_mux({rom_opcode,mask_op},s1_opcode, rom_in_control);   
+   
    //mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
    //mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 
@@ -401,7 +414,8 @@ module decode_stage_1 (
       rom_seg_override,   
       rom_seg_override_valid,
       rom_pc,
-      rom_branch_taken,  
+      rom_branch_taken,
+      rom_opcode,					   
       rom_in_control,
       rom_control,
       eflags_reg,
