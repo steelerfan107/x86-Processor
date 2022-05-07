@@ -8,10 +8,49 @@ module TOP;
 
     reg clk;
     reg reset;
+   
+    // read interface 
+    reg rd_req_valid;
+    wire rd_req_ready;
+    reg [31:0] rd_req_address;
+    wire rd_dp_valid;
+    reg rd_dp_ready;
+    wire [63:0] rd_dp_read_data;
+
+    //  TLB
+    wire [31:0] virt_addr;
+    reg [31:0] phys_addr;
+    reg tlb_hit;
+    reg tlb_pcd;
+    reg tlb_rd_wr;
+
+    // write interface
+    // TODO ...
+    reg wr_req_valid;
+    wire wr_req_ready;
+    reg [31:0] wr_req_address;
+    reg [63:0] wr_req_data;
+    reg wr_size_in;
+
+    // interrupt
+    wire page_fault;
+
+    // interface to interconnect
+    wire [31:0] mem_addr;
+    wire mem_req;
+    wire mem_data_valid;
+    wire [31:0] mem_data;
+    wire mem_rd_wr;
+    wire mem_en;
+
+    // Arbiter Interface
+    reg grant_in;
+    wire grant_out;
+
+    wire bus_busy_out;
+    reg bus_busy_in;
 
 
-    // TLB  
-    // 
 
     reg [43:0] contents [0:7];
     
@@ -48,7 +87,7 @@ module TOP;
         contents_concat,
         
         // icache port
-        req_address,
+        d_addr_in,
         i_hit,
         i_rd_wr_out,
         i_pa_out,
@@ -65,9 +104,68 @@ module TOP;
     reg [5:0] in;
     wire [63:0] out;
  
-    dcache uut();
+    dcache uut(
+        .clk(clk),
+        .reset(reset),
+    
+        // read interface 
+        .rd_req_valid(rd_req_valid),
+        .rd_req_ready(rd_req_ready),
+        .rd_req_address(rd_req_address),
+        .rd_dp_valid(rd_dp_valid),
+        .rd_dp_ready(rd_dp_ready),
+        .rd_dp_read_data(rd_dp_read_data),
+
+        //  TLB
+        .virt_addr(d_addr_in),
+        .phys_addr(d_pa_out),
+        .tlb_hit(d_hit),
+        .tlb_pcd(d_PCD_out),
+        .tlb_rd_wr(d_rd_wr_out),
+
+        // write interface
+        // TODO ...
+        .wr_req_valid(wr_req_valid),
+        .wr_req_ready(wr_req_ready),
+        .wr_req_address(wr_req_address),
+        .wr_req_data(wr_req_data),
+        .wr_size_in(wr_size_in),
+
+        // interrupt
+        .page_fault(page_fault),
+
+        // interface to interconnect
+        .mem_addr(mem_addr),
+        .mem_req(mem_req),
+        .mem_data_valid(mem_data_valid),
+        .mem_data(mem_data),
+        .mem_rd_wr(mem_rd_wr),
+        .mem_en(mem_en),
+
+        // Arbiter Interface
+        .grant_in(grant_in),
+        .grant_out(grant_out),
+
+        .bus_busy_out(bus_busy_out),
+        .bus_busy_in(bus_busy_in)
+    );
+
+    test_memory mem(
+        clk,
+        reset,
+        mem_addr,
+        mem_en,
+        mem_data_valid,
+        mem_data,
+        mem_rd_wr
+    );
 
     initial begin
+        $readmemh("rom/rom_control_0_0", test_memory.test_rom_0.mem);
+        $readmemh("rom/rom_control_0_1", test_memory.test_rom_1.mem);
+        $readmemh("rom/rom_control_0_2", test_memory.test_rom_2.mem);
+        $readmemh("rom/rom_control_0_3", test_memory.test_rom_3.mem);
+
         $display("============ \n Begin Test \n============");
        
         contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
@@ -82,11 +180,41 @@ module TOP;
         clk = 0;
         reset = 1;
 
+        // read interface 
+        rd_req_valid = 0;
+        rd_req_address = 0;
+        rd_dp_ready = 1;
 
-        in = 6'd0;
+        //  TLB
+         phys_addr = 0;
+         tlb_hit = 0;
+         tlb_pcd = 0;
+         tlb_rd_wr = 0;
+
+        // write interface
+         wr_req_valid = 0;
+         wr_req_address = 0;
+         wr_req_data = 0;
+         wr_size_in = 0;
+
+        // Arbiter Interface
+         grant_in = 0;
+         bus_busy_in = 0;
+
+
+        #20
+        reset = 0;
+
         #20
         #20
+        rd_req_valid = 1;
+        rd_req_address = 32'h00000018;
+
+        #20
+
+        
         #20 
+        grant_in = 1;
         #20
         
 
@@ -97,9 +225,6 @@ module TOP;
     initial #1000 $finish;
 
 
-    always @(posedge clk) begin
-        in = in + 1;
-    end
 
     always #10 clk = ~clk;
 
@@ -110,3 +235,77 @@ module TOP;
 
 
 endmodule
+
+module test_memory(
+    clk,
+    reset,
+    addr,
+    en,
+    data_valid,
+    data,
+    rd_wr
+);
+    input clk;
+    input reset;
+
+    input [31:0] addr;
+    input en;
+    output data_valid;
+    output [31:0] data;
+    input rd_wr;
+
+    reg [31:0] memory [0:1023];
+
+    reg [31:0] out_data;
+
+    wire [31:0] 		rom_data_0, rom_data_1, rom_data_2, rom_data_3;
+
+    wire [31:0]			rom_data;
+
+    assign rom_data = (addr[3:2] == 3) ? rom_data_0 : 
+                      (addr[3:2] == 2) ? rom_data_1 :    
+                      (addr[3:2] == 1) ? rom_data_2 : rom_data_3;
+ 
+    rom32b32w$ test_rom_0 (
+     addr[8:4],
+     1'b1,
+     rom_data_0		      
+    );
+
+    rom32b32w$ test_rom_1 (
+     addr[8:4],
+     1'b1,
+     rom_data_1		      
+    );
+   
+    rom32b32w$ test_rom_2 (
+     addr[8:4],
+     1'b1,
+     rom_data_2		      
+    );
+   
+    rom32b32w$ test_rom_3 (
+     addr[8:4],
+     1'b1,
+     rom_data_3		      
+    );       
+
+    //always @(posedge clk, negedge reset) begin
+    //
+    //
+    //end
+
+    //always @(posedge clk) begin
+    //    out_data <= addr;
+    //end
+    //
+    always @(*) begin
+        out_data = rom_data;
+    end
+
+    assign data_valid = 1'b1;
+    assign data = en ? out_data : 32'dz;
+
+
+endmodule
+

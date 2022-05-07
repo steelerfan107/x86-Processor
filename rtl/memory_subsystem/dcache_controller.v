@@ -3,10 +3,10 @@ module dcache_controller(
     input reset,
     
     // read interface 
-    input rd_valid;
-    output rd_ready;
-    input dp_ready;
-    output dp_valid;
+    input rd_valid,
+    output rd_ready,
+    input dp_ready,
+    output dp_valid,
 
     // write interface
     input wr_valid,
@@ -14,42 +14,40 @@ module dcache_controller(
     input wr_size,
 
     // DCache Internal
-    input write_num;
-    input read_num;
-    input cache_hit;
-    output write;
-    output write_num_data;
-    output write_num_wr_en;
-    output read_num_sel;
-    output read_num_wr_en;
-    input read2;
-    output staging_wr_en;
-    output wr_data_reg_wr_en;
-    output drive_bus;
-    output pa_wr_en;
-    output rd_wr_addr;
-    output req_addr_en;
+    input write_num,
+    input read_num,
+    input cache_hit,
+    input tlb_rd_wr,
+    output write,
+    output write_num_data,
+    output write_num_wr_en,
+    output read_num_sel,
+    output read_num_wr_en,
+    input read2,
+    output pa_wr_en,
+    output rd_wr_addr,
+    output req_addr_en,
+    output valid_src,
 
     // TLB
-    input TLB_hit;
+    input TLB_hit,
+    input TLB_rd_wr,
+    input TLB_pcd,
 
     // Memory interface
-    input mem_ready;
-    output mem_req;
+    input mem_ready,
+    output mem_req,
+    output mem_rd_wr,
 
     // Bus
-    input bus_grant;
-    output grant_pass;
-    input bus_busy;
-    output busy_out;
+    input bus_grant,
+    output grant_pass,
+    input bus_busy,
+    output busy_out,
 
-    output req_addr_en;
-    output page_fault;
-
-
+    output page_fault
     
 );
-
     
     wire [2:0] state;
     wire [2:0] new_state;
@@ -69,11 +67,14 @@ module dcache_controller(
         .state0             (state[0]),
         .rd_valid           (rd_valid),
         .wr_valid           (wr_valid),
+        .wr_size            (wr_size),
         .dp_ready           (dp_ready),
         .write_num          (write_num), 
         .read_num           (read_num),
         .read2              (read2), 
         .TLB_hit            (TLB_hit),
+        .TLB_rd_wr          (tlb_rd_wr),
+        .TLB_pcd            (TLB_pcd),
         .cache_hit          (cache_hit), 
         .mem_ready          (mem_ready), 
         .bus_grant          (bus_grant), 
@@ -83,14 +84,16 @@ module dcache_controller(
         .wr_ready           (wr_ready),
         .rd_wr_addr         (rd_wr_addr),
         .req_addr_en        (req_addr_en),
-        .read_num_sel       (read_num_sel,
+        .read_num_sel       (read_num_sel),
         .read_num_wr_en     (read_num_wr_en),
         .dp_valid           (dp_valid),
         .busy_out           (busy_out),
         .write              (write), 
+        .valid_src          (valid_src),
         .write_num_data     (write_num_data),
         .write_num_wr_en    (write_num_wr_en), 
         .mem_req            (mem_req), 
+        .mem_rd_wr          (mem_rd_wr),
         .grant_pass         (grant_pass),
         .pa_wr_en           (pa_wr_en),
         .new_state2         (new_state[2]),

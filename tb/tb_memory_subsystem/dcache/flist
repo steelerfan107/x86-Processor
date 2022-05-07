@@ -23,5 +23,7 @@
 ../../../rtl/memory_subsystem/dRAM.v
 ../../../rtl/memory_subsystem/dcache.v
 ../../../rtl/memory_subsystem/dcache_controller.v
+../../../rtl/memory_subsystem/dcache_combinational_logic.v
 ../../../rtl/memory_subsystem/d_align.v
 tb_dcache.v
+

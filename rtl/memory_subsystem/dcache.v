@@ -15,6 +15,7 @@ module dcache(
     phys_addr,
     tlb_hit,
     tlb_pcd,
+    tlb_rd_wr,
 
     // write interface
     // TODO ...
@@ -22,7 +23,7 @@ module dcache(
     wr_req_ready,
     wr_req_address,
     wr_req_data,
-    wr_size,
+    wr_size_in,
 
     // interrupt
     page_fault,
@@ -58,6 +59,7 @@ module dcache(
     input [31:0] phys_addr;
     input tlb_hit;
     input tlb_pcd;
+    input tlb_rd_wr;
 
     // write interface
     // TODO ...
@@ -65,10 +67,10 @@ module dcache(
     output wr_req_ready;
     input [31:0] wr_req_address;
     input [63:0] wr_req_data;
-    input wr_size;
+    input wr_size_in;
 
     // interrupt
-    input page_fault;
+    output page_fault;
 
     // interface to interconnect
     output [31:0] mem_addr;
@@ -88,8 +90,10 @@ module dcache(
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
+    assign mem_en = bus_busy_out;
+
     wire [31:0] addr_mux_out;
-    mux #(.WIDTH(32), .INPUTS(2)) rd_wr_mux({rd_req_address, wr_req_address},  addr_mux_out, ctrl_rd_wr_addr);
+    mux #(.WIDTH(32), .INPUTS(2)) rd_wr_mux({wr_req_address, rd_req_address},  addr_mux_out, ctrl_rd_wr_addr);
 
     wire [31:0] req_pending_addr;
     wire ctrl_req_addr_en;
@@ -99,7 +103,7 @@ module dcache(
     wire virt_addr_mux_sel;
     wire [31:0] req_pending_addr_p8;
     slow_addr #(.WIDTH(32)) block_sel_adder(req_pending_addr, 32'd8, req_pending_addr_p8,);
-    mux #(.WIDTH(32), .INPUTS(2)) virt_addr_mux({req_pending_addr, req_pending_addr_p8},  virt_addr, virt_addr_mux_sel);
+    mux #(.WIDTH(32), .INPUTS(2)) virt_addr_mux({ req_pending_addr_p8, req_pending_addr},  virt_addr, virt_addr_mux_sel);
 
     wire [5:0] index = virt_addr[8:3];
     wire [22:0] phys_tag = phys_addr[31:9];
@@ -114,8 +118,17 @@ module dcache(
     wire [31:0] pa_p4;
     wire [31:0] pa_reg_out;
 
+    assign mem_addr = pa_out;
+
     wire ctrl_pa_src;
     wire ctrl_pa_wr_en;
+    wire wr_size;
+    wire write_num; 
+
+    wire write_num_n;
+    inv1$ write_num_inv(write_num_n, write_num);
+
+    assign ctrl_pa_src = write_num_n;
 
     mux2_16$ 
         pa_mux0(pa_out[15:0], pa_reg_out[15:0], pa_p4[15:0], ctrl_pa_src),
@@ -138,19 +151,56 @@ module dcache(
     wire ctrl_read_num_sel;
     wire ctrl_read_num_wr_en;
     wire ctrl_staging_wr_en;
-    wire ctrl_wr_data_reg_wr_en;
-    wire ctrl_drive_bus;
     wire ctrl_read2;
-
-    dcache_controller control();
+    wire ctrl_grant_pass;
 
     wire read_num;
+
+    dcache_controller control(
+        .clk(clk),
+        .reset(reset),
+        .rd_valid(rd_req_valid),
+        .rd_ready(rd_req_ready),
+        .dp_ready(rd_dp_ready),
+        .dp_valid(rd_dp_valid),
+        .wr_valid(wr_req_valid),
+        .wr_ready(wr_req_ready),
+        .wr_size(wr_size),
+        .write_num(write_num),
+        .read_num(read_num),
+        .cache_hit(cache_hit),
+        .tlb_rd_wr(tlb_rd_wr),
+        .write(ctrl_write),
+        .write_num_data(ctrl_write_num_data),
+        .write_num_wr_en(ctrl_write_num_wr_en),
+        .read_num_sel(ctrl_read_num_sel),
+        .read_num_wr_en(ctrl_read_num_wr_en),
+        .read2(ctrl_read2),
+        .pa_wr_en(ctrl_pa_wr_en),
+        .rd_wr_addr(ctrl_rd_wr_addr),
+        .req_addr_en(ctrl_req_addr_en),
+        .valid_src(valid_in),
+        .TLB_hit(tlb_hit),
+        .TLB_rd_wr(tlb_rd_wr),
+        .TLB_pcd(tlb_pcd),
+        .mem_ready(mem_data_valid),
+        .mem_rd_wr(mem_rd_wr),
+        .mem_req(mem_req),
+        .bus_grant(grant_in),
+        .grant_pass(ctrl_grant_pass),
+        .bus_busy(bus_busy_in),
+        .busy_out(bus_busy_out),
+        .page_fault(page_fault)
+    );
+
+
+    assign ctrl_staging_wr_en = ctrl_write & ~read_num;
 
     assign virt_addr_mux_sel = read_num;
     
     wire read_num_n;
     inv1$ read_num_inv(read_num_n, read_num);
-    and2$ staging_and(staging_wr_en, read_num_n, ctrl_write)
+    and2$ staging_and(staging_wr_en, read_num_n, ctrl_write);
 
     wire is_aligned;
     assign ctrl_read2 = is_aligned;
@@ -163,7 +213,6 @@ module dcache(
     mux2$ grant_mux(grant_out, 1'b0, grant_in, ctrl_grant_pass);
 
   
-    wire write_num; 
     // write_num reg and hardware here
     register #(.WIDTH(1)) write_num_reg(clk, reset, ctrl_write_num_data, write_num, , ctrl_write_num_wr_en);
   
@@ -184,16 +233,19 @@ module dcache(
         .in_high(dataram_out),
         .in_low(staging_reg_out),
         .offset(byte_offset),
-        .out(dp_read_data)
+        .out(rd_dp_read_data)
     );
 
     wire [63:0] wr_data_reg_out;
-    register #(.WIDTH(64)) wr_data_reg(clk, reset, wr_data, wr_data_reg_out, , ctrl_wr_data_reg_wr_en);
+    register #(.WIDTH(64)) wr_data_reg(clk, reset, wr_req_data, wr_data_reg_out, , ctrl_req_addr_en);
+    register #(.WIDTH(1)) wr_size_reg(clk, reset, wr_size_in, wr_size, , ctrl_req_addr_en);
  
     wire [31:0] mem_data_driver; 
-    mux #(.WIDTH(32), .INPUTS(2)) mem_data_mux(wr_data_reg_out, mem_data_driver, write_num);
+    mux #(.WIDTH(32), .INPUTS(2)) mem_data_mux(wr_data_reg_out, mem_data_driver, write_num_n);
      
     wire n_drive_bus; 
+    wire ctrl_drive_bus;
+    and2$ drive_bus_and(ctrl_drive_bus, mem_en, ctrl_rd_wr_addr);
     inv1$ drive_bus_inv(n_drive_bus, ctrl_drive_bus);
 
     tristate_bus_driver16$ data_bus_driver1(n_drive_bus, mem_data_driver[15:0], mem_data[15:0]);

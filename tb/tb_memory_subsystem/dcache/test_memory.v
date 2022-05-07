@@ -18,7 +18,7 @@ module test_memory(
 
     reg [31:0] memory [0:1023];
 
-    reg [31:0] out_data;
+    wire [31:0] out_data;
    
     //always @(posedge clk, negedge reset) begin
     //        
@@ -29,12 +29,13 @@ module test_memory(
     //    out_data <= addr;
     //end
     //
-    always @(*) begin
-        out_data = addr;
-    end
+    //always @(*) begin
+    //    out_data = addr;
+    //end
+    assign out_data = addr;
 
     assign data_valid = 1'b1;
-    assign data = en ? out_data : 32'dz;
+    assign data = en ? addr : 32'dz;
     
 
 endmodule
