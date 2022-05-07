@@ -62,7 +62,7 @@ module TOP;
         clk = 0;
         reset = 1;
 
-        register_size = 0;
+        register_size = 3;
 
         op0 = 0;
         op0_reg = 0;
@@ -77,11 +77,41 @@ module TOP;
 
         wb_data = 0;
         wb_reg = 0;
-        wb_size = 0;
+        wb_size = 3;
         wb_enable = 0;
+
+        next_stage_ready = 0;
 
         #12.5
         reset = 0;
+
+        // try adding to the table
+        next_stage_ready = 1;
+        op0 = 1;    // read reg
+        op0_reg = 0;
+
+        #10
+
+        // OP0 = R1, OP1 = R0
+        op0 = 1;
+        op0_reg = 1;
+        op1 = 1;
+        op1_reg = 0;
+
+        #10
+
+        // writeback = OP0
+        wb_reg = 0;
+        wb_enable = 1;
+
+        #10
+        wb_enable = 0;
+
+
+
+
+
+
 
 
         $display("==========\n End Test \n==========");

@@ -29,7 +29,7 @@ module register_access_stall (
     sib,
     sib_valid,
 
-    wb_data,
+    wb_data,    // not used...
     wb_reg,
     wb_size,
     wb_enable,
@@ -268,21 +268,22 @@ module register_stall_modify_table (
     wire [1:0] mux_control;
 
     // mux_control[0] = 1 if assigned_reg == op0_reg and op0_reg is valid
+    // using xnor to see if the assigned reg matches the reg that is being written to
     wire [2:0] add_and_result;
-    and2$ 
-    and0 (add_and_result[0], assigned_reg[0], op0_reg[0]), 
-    and1 (add_and_result[1], assigned_reg[1], op0_reg[1]), 
-    and2 (add_and_result[2], assigned_reg[2], op0_reg[2]);
+    xnor2$ 
+    xnor0 (add_and_result[0], assigned_reg[0], op0_reg[0]), 
+    xnor1 (add_and_result[1], assigned_reg[1], op0_reg[1]), 
+    xnor2 (add_and_result[2], assigned_reg[2], op0_reg[2]);
 
     // see if match
     and4$ and3 (mux_control[0], add_and_result[0], add_and_result[1], add_and_result[2], op0_reg_is_valid);
 
     // mux_control[1] = 1 if assigned_reg == wb_reg and wb_reg is valid
     wire [2:0] sub_and_result;
-    and2$ 
-    and4 (sub_and_result[0], assigned_reg[0], wb_reg[0]), 
-    and5 (sub_and_result[1], assigned_reg[1], wb_reg[1]), 
-    and6 (sub_and_result[2], assigned_reg[2], wb_reg[2]);
+    xnor2$ 
+    xnor4 (sub_and_result[0], assigned_reg[0], wb_reg[0]), 
+    xnor5 (sub_and_result[1], assigned_reg[1], wb_reg[1]), 
+    xnor6 (sub_and_result[2], assigned_reg[2], wb_reg[2]);
 
     // see if match
     and4$ and7 (mux_control[1], sub_and_result[0], sub_and_result[1], sub_and_result[2], wb_reg_is_valid);
@@ -406,23 +407,23 @@ module register_stall_table (
     r6_out_32,
     r7_out_32;
 
-    assign r0_out_32[3:0] = r0_out;
-    assign r1_out_32[3:0] = r1_out;
-    assign r2_out_32[3:0] = r2_out;
-    assign r3_out_32[3:0] = r3_out;
-    assign r4_out_32[3:0] = r4_out;
-    assign r5_out_32[3:0] = r5_out;
-    assign r6_out_32[3:0] = r6_out;
-    assign r7_out_32[3:0] = r7_out;
+    assign r0_out = r0_out_32[3:0];
+    assign r1_out = r1_out_32[3:0];
+    assign r2_out = r2_out_32[3:0];
+    assign r3_out = r3_out_32[3:0];
+    assign r4_out = r4_out_32[3:0];
+    assign r5_out = r5_out_32[3:0];
+    assign r6_out = r6_out_32[3:0];
+    assign r7_out = r7_out_32[3:0];
 
-    assign r0_out_32[31:4] = 28'd0;
-    assign r1_out_32[31:4] = 28'd0;
-    assign r2_out_32[31:4] = 28'd0;
-    assign r3_out_32[31:4] = 28'd0;
-    assign r4_out_32[31:4] = 28'd0;
-    assign r5_out_32[31:4] = 28'd0;
-    assign r6_out_32[31:4] = 28'd0;
-    assign r7_out_32[31:4] = 28'd0;
+    // assign r0_out_32[31:4] = 28'd0;
+    // assign r1_out_32[31:4] = 28'd0;
+    // assign r2_out_32[31:4] = 28'd0;
+    // assign r3_out_32[31:4] = 28'd0;
+    // assign r4_out_32[31:4] = 28'd0;
+    // assign r5_out_32[31:4] = 28'd0;
+    // assign r6_out_32[31:4] = 28'd0;
+    // assign r7_out_32[31:4] = 28'd0;
 
     register_32_reset 
     r0 (r0_out_32, {28'd0, r0_in}, 0, r0_en, clk, reset), 
