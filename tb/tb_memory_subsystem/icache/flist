@@ -1,0 +1,24 @@
+
+../../../rtl/lib/time.v -v
+../../../rtl/lib/lib1.v
+../../../rtl/lib/lib2.v
+../../../rtl/lib/lib3.v
+../../../rtl/lib/lib4.v
+../../../rtl/lib/lib5.v
+../../../rtl/lib/lib6.v
+../../../rtl/lib/register.v
+../../../rtl/lib/mux.v
+../../../rtl/lib/pipestage.v
+../../../rtl/lib/logic_tree.v
+../../../rtl/lib/logic_tree_bus.v
+../../../rtl/lib/ao_mux.v
+../../../rtl/lib/lut_select.v
+../../../rtl/lib/find_first.v
+../../../rtl/lib/slow_addr.v
+../../../rtl/lib/compare.v
+../../../rtl/lib/decoder5_32.v
+../../../rtl/memory_subsystem/icache.v
+../../../rtl/memory_subsystem/iRAM.v
+../../../rtl/memory_subsystem/icache_controller.v
+../../../rtl/memory_subsystem/icache_combinational_logic.v
+tb_icache.v

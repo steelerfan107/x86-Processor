@@ -37,21 +37,37 @@ module rom_block (
    localparam [4:0]  PROGRAM0_OFFSET = 0;
    localparam [4:0]  PROGRAM1_OFFSET = 6;
    localparam [4:0]  PROGRAM2_OFFSET = 7;
-   localparam [4:0]  PROGRAM3_OFFSET = 4;
+   localparam [4:0]  PROGRAM3_OFFSET = 18;
    localparam [4:0]  PROGRAM4_OFFSET = 4;
    localparam [4:0]  PROGRAM5_OFFSET = 4;
    localparam [4:0]  PROGRAM6_OFFSET = 4;
    localparam [4:0]  PROGRAM7_OFFSET = 4;
-
+   localparam [4:0]  PROGRAM8_OFFSET = 10;
+   localparam [4:0]  PROGRAM9_OFFSET = 12;
+   localparam [4:0]  PROGRAM10_OFFSET = 14;
+   localparam [4:0]  PROGRAM11_OFFSET = 16;
+   localparam [4:0]  PROGRAM12_OFFSET = 4;
+   localparam [4:0]  PROGRAM13_OFFSET = 4;
+   localparam [4:0]  PROGRAM14_OFFSET = 4;
+   localparam [4:0]  PROGRAM15_OFFSET = 4;
+   
    localparam [4:0]  PROGRAM0_LENGTH = 4-1;
    localparam [4:0]  PROGRAM1_LENGTH = 6-1;
    localparam [4:0]  PROGRAM2_LENGTH = 3-1;
-   localparam [4:0]  PROGRAM3_LENGTH = 5-1;
+   localparam [4:0]  PROGRAM3_LENGTH = 2-1;
    localparam [4:0]  PROGRAM4_LENGTH = 5-1;
    localparam [4:0]  PROGRAM5_LENGTH = 3-1;
    localparam [4:0]  PROGRAM6_LENGTH = 3-1;
    localparam [4:0]  PROGRAM7_LENGTH = 5-1;
-
+   localparam [4:0]  PROGRAM8_LENGTH = 2-1;
+   localparam [4:0]  PROGRAM9_LENGTH = 2-1;
+   localparam [4:0]  PROGRAM10_LENGTH = 2-1;
+   localparam [4:0]  PROGRAM11_LENGTH = 2-1;
+   localparam [4:0]  PROGRAM12_LENGTH = 5-1;
+   localparam [4:0]  PROGRAM13_LENGTH = 3-1;
+   localparam [4:0]  PROGRAM14_LENGTH = 3-1;
+   localparam [4:0]  PROGRAM15_LENGTH = 5-1;
+   
    parameter IADDRW = 64;
    
    localparam ROM_WIDTH = 3+1+1+3+3+5+5+8+8+4+3+3+2+1+1+2;
@@ -84,7 +100,7 @@ module rom_block (
    output    [IADDRW-1:0] rom_pc;
    output                 rom_branch_taken; 
    input 		  rom_in_control;
-   input     [2:0]        rom_control;
+   input     [3:0]        rom_control;
    input [31:0] 	  eflags_reg;
    input [31:0] 	  eip_reg;
    input [47:0] 	  dec_imm;
@@ -122,7 +138,7 @@ module rom_block (
    wire                   rom_control_is_six;
 
    // Int Program Done
-   compare #(.WIDTH(5)) control_compare (rom_control, 3'd6, rom_control_is_six); 
+   compare #(.WIDTH(4)) control_compare (rom_control, 4'd6, rom_control_is_six); 
 
    and2$ int_done_and (handle_int_done, rom_control_is_six, rom_ready);
 
@@ -131,7 +147,7 @@ module rom_block (
    and3$ onaa (out_accept, s1_ready, s1_valid, rom_in_control);
 
    // ROM in Control Logic
-   logic_tree #(.WIDTH(3), .OPERATION(1)) rcr (rom_control, rom_control_or);
+   logic_tree #(.WIDTH(4), .OPERATION(1)) rcr (rom_control, rom_control_or);
 
    // State Machine
    wire state_not;
@@ -147,7 +163,15 @@ module rom_block (
    register  #(.WIDTH(5)) micro_reg (clk, reset, micro_count_next, micro_count, micro_count_not, out_accept);
 
    // Control Select
-   mux #(.WIDTH(5),.INPUTS(8)) cs_mux ( {
+   mux #(.WIDTH(5),.INPUTS(16)) cs_mux ( {
+                                   PROGRAM15_LENGTH,
+                                   PROGRAM14_LENGTH,
+                                   PROGRAM13_LENGTH,
+                                   PROGRAM12_LENGTH,
+                                   PROGRAM11_LENGTH,
+                                   PROGRAM10_LENGTH,
+                                   PROGRAM9_LENGTH,
+                                   PROGRAM8_LENGTH,					  
                                    PROGRAM7_LENGTH,
                                    PROGRAM6_LENGTH,
                                    PROGRAM5_LENGTH,
@@ -158,7 +182,15 @@ module rom_block (
                                    PROGRAM0_LENGTH
                                   }, micro_length, rom_control);
    
-   mux #(.WIDTH(5),.INPUTS(8)) mo_mux ( {
+   mux #(.WIDTH(5),.INPUTS(16)) mo_mux ( {
+                                   PROGRAM15_OFFSET,
+                                   PROGRAM14_OFFSET,
+                                   PROGRAM13_OFFSET,
+                                   PROGRAM12_OFFSET,
+                                   PROGRAM11_OFFSET,
+                                   PROGRAM10_OFFSET,
+                                   PROGRAM9_OFFSET,
+                                   PROGRAM8_OFFSET,					  
                                    PROGRAM7_OFFSET,
                                    PROGRAM6_OFFSET,
                                    PROGRAM5_OFFSET,

@@ -22,6 +22,8 @@ module TOP;
    reg                   reset;
 
    // Control Interface
+   wire                  pending_int;
+   wire                  hold_int;
    wire	                 fetch_flush;
    wire                  handle_int;
    wire                  halt;
@@ -105,6 +107,7 @@ module TOP;
    wire [1:0]           d_stack_op;   
    wire [2:0]		d_seg_override;   
    wire 		d_seg_override_valid;
+   wire                 d_movs;
    wire [IADDRW-1:0]    d_pc;
    wire                 d_branch_taken;
 
@@ -178,6 +181,11 @@ module TOP;
    wire  [63:0] wb_mmx_data;
    wire [31:0] 	wb_pc;
 
+   wire               dec_wb_valid;
+   wire [2:0]         dec_wb_reg;
+   wire [31:0]        dec_wb_data;  
+   wire [2:0]         dec_wb_size; 
+
    wire a_valid;
    wire a_ready;
    wire [2:0] a_size;
@@ -211,7 +219,9 @@ module TOP;
    wire  wb_sys_controller_valid;
  
    wire     reg_load_cs;  
-   wire     [15:0] reg_cs;   
+   wire     [15:0] reg_cs;
+
+   wire 	   busy_ahead_of_decode;
    
    fetch_top uut_fetch (
       clk,
@@ -249,12 +259,20 @@ module TOP;
       clk,
       reset,
       decode_0_flush,
-      decode_1_flush,			  
+      decode_1_flush,
+      pending_int,
+      hold_int,			  
       handle_int,
       handle_int_done,
+      busy_ahead_of_decode,			  
       halt,
       wb_accept,
       wb_pc,
+      r_ecx,
+      dec_wb_valid,
+      dec_wb_reg,
+      dec_wb_data, 
+      dec_wb_size,			  
       eflags_reg,				  
       ras_address,
       ras_push,
@@ -286,6 +304,7 @@ module TOP;
       d_stack_op,
       d_seg_override,
       d_seg_override_valid,
+      d_movs,
       d_pc,
       d_branch_taken  		  		  
    );
@@ -315,6 +334,7 @@ module TOP;
       d_stack_op,
       d_seg_override,
       d_seg_override_valid,
+      d_movs,
       d_pc,
       d_branch_taken,
       r_valid,
@@ -503,14 +523,19 @@ address_generation_top uut_address_gen(
      reg_load_eflags,
      reg_eflags,
      reg_load_eip,
-     reg_eip		  
+     reg_eip,
+     pending_int,
+     hold_int	  
   );   
 
+  assign busy_ahead_of_decode = wb_valid | a_valid | r_valid;
+   
+  or2$ (wb_reg_en, wb_valid, dec_wb_valid);
   
-  assign wb_reg_number = wb_dest_reg[2:0];
-  assign wb_reg_en = wb_valid;
-  assign wb_reg_size = wb_opsize;
-  assign wb_reg_data = wb_result;
+  mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_reg, wb_dest_reg[2:0]} , wb_reg_number, dec_wb_valid);
+  mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, wb_opsize}       , wb_reg_size  , dec_wb_valid);
+  mux  #(.WIDTH(32),.INPUTS(2)) ( {dec_wb_data, wb_result[31:0]} , wb_reg_data  , dec_wb_valid);   
+   
   assign wb_seg_number = 'h0;
   assign wb_seg_en = 'h0;
   assign wb_seg_data = 'h0;
@@ -565,8 +590,8 @@ address_generation_top uut_address_gen(
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
-        #150
-        int_vec = 0; //1;     
+        #350
+        int_vec = 0;     
 	#50
         int_vec = 0;     	  
         $display("==========\n End Test \n==========");

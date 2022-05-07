@@ -59,6 +59,11 @@ The lst file is in the format:
 - Outputs : out
 - Parameters : WIDTH - Width of inputs
 
+### decoder5_32.v
+- 5-to-32 decoder
+- Inputs : in[4:0]
+- Outputs : out[31:0]
+
 ### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
 - Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]
@@ -112,6 +117,6 @@ The lst file is in the format:
 
 ### fifo.v
 - A first in first out buffer.
-- Inputs :
-- Outputs :
+- Inputs : clk, reset, flush, wr_en, wr_data [31:0], rd_en
+- Outputs : rd_data [31:0], empty, nearly_full, full
 - Parameters : 

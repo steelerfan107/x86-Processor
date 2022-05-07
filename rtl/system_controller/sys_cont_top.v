@@ -31,7 +31,9 @@ module sys_cont_top (
      reg_load_eflags,
      reg_eflags,
      reg_load_eip,
-     reg_eip			     
+     reg_eip,
+     pending_int,
+     hold_int			     
 );
 
            input      clk;
@@ -67,7 +69,10 @@ module sys_cont_top (
 	   output     [31:0] reg_eflags;
   	   output     reg_load_eip;  
 	   output     [31:0] reg_eip;
+           output     pending_int;
+           input      hold_int;
 
+           wire       not_hold_int;   
   	   wire       reg_load_eflags_int;  
 	   wire       [31:0] reg_eflags_int;
   	   wire       reg_load_eip_int;  
@@ -142,7 +147,7 @@ module sys_cont_top (
            logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lbeflags ({reg_eflags_int,reg_eflags_iretd},reg_eflags);
            logic_tree_bus #(.WIDTH(16), .INPUTS(2), .OPERATION(1)) lbcs ({reg_cs_int,reg_cs_iretd},reg_cs);
            logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lbeip ({reg_eip_int,reg_eip_iretd},reg_eip);
-           //logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lba ({fetch_load_address_int,fetch_load_address_iretd},fetch_load_address);
+           
            ao_mux #(.WIDTH(32),.NINPUTS(2)) ({fetch_load_address_int,fetch_load_address_iretd}
                                             , fetch_load_address
                                             ,{or_int_vec, not_zero_state});   
@@ -152,6 +157,10 @@ module sys_cont_top (
            // Interrupt Handling
            //
 
+           wire 		     mask_int_vec;
+   
+           assign pending_int = or_int_vec;
+   
   	   assign       reg_load_eflags_int = 'h0;  
 	   assign       reg_eflags_int = 'h0;
   	   assign       reg_load_eip_int = 'h0;  
@@ -179,6 +188,9 @@ module sys_cont_top (
            );
    
            logic_tree #(.WIDTH(4),.OPERATION(1)) vec_or (int_vec_r, or_int_vec);
+
+           inv1$ (not_hold_int, hold_int); 
+           and2$ (mask_int_vec, not_hold_int, or_int_vec);
 
            mux  #(.WIDTH(32),.INPUTS(4)) idt_select ( {IDT_ADDRESS3, IDT_ADDRESS2, IDT_ADDRESS1, IDT_ADDRESS0}, mem_address, int_serviced);
 
@@ -215,7 +227,7 @@ module sys_cont_top (
                 reg_load_cs_int,
                 reg_cs_int,
                 int_clear,
-                or_int_vec		       
+                mask_int_vec		       
            );
 
            ////////////////////////////////
@@ -223,9 +235,7 @@ module sys_cont_top (
            // Interrupt Return Handling
            //
 
-           wire [15:0] 		     temp_cs, n_temp_cs;
-
-   
+           wire [15:0] 		     temp_cs, n_temp_cs;   
    
            register #(.WIDTH(16)) temp_cs_reg (
                clk,
@@ -235,8 +245,7 @@ module sys_cont_top (
                n_temp_cs,
                reg_load_cs_iretd				    
            );
-   
-   
+      
            //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
            and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_one);
            assign       reg_eip_iretd = iretd_pop_data;
@@ -270,8 +279,7 @@ module sys_cont_top (
            compare #(.WIDTH(3)) one_state_comp   (curr_state_iretd, 1, curr_state_iretd_one);
            compare #(.WIDTH(3)) two_state_comp   (curr_state_iretd, 2, curr_state_iretd_two);
            compare #(.WIDTH(3)) three_state_comp (curr_state_iretd, 3, curr_state_iretd_three);
-
-           
+          
            //assign next_state_iretd_test = (zero_state)  ? iretd :
 	   //			     (last_state)       ? 0     :
 	   //			     (iretd_pop_valid)  ? curr_state_iretd_p1 : curr_state_iretd;
