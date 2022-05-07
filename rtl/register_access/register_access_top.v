@@ -334,8 +334,36 @@ module register_access_top (
     // ------ //
     // Stalls //
     // ------ //
+
+    wire register_file_stall;
     
-    // Read after write for all registers
+    // Register File Stall
+    register_access_stall register_access_stall0 (
+        register_file_stall,
+
+        clk,
+        reset,
+
+        d_size,
+
+        d_op0,
+        d_op0_reg,
+
+        d_op1,
+        d_op1_reg,
+
+        d_modrm,
+
+        d_sib,
+        ,   // not used...
+
+        ,    // not used...
+        wb_reg_number,
+        wb_reg_size,
+        wb_reg_en,
+
+        r_ready     // TODO: Not sure how to connect it to the next stage interface
+    );
 
 
 
