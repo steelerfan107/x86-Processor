@@ -11,6 +11,10 @@ module TOP;
     // Control Interface
     reg flush;
 
+    // Direct Segment Write
+    // reg  write_cs;
+    //reg [15:0] write_cs_enable;     
+
     // Decode Interface
     reg d_valid;
     wire d_ready;
@@ -31,8 +35,10 @@ module TOP;
     reg [1:0] d_stack_op;
     reg [2:0] d_seg_override;
     reg d_seg_override_valid;
+    reg d_movs;
     reg [31:0] d_pc;
     reg d_branch_taken;
+    reg [15:0] d_opcode;
 
     // Address Generation Inferface
     wire r_valid;
@@ -78,7 +84,8 @@ module TOP;
     wire [63:0] r_mm7;
     wire [31:0] r_pc;
     wire r_branch_taken;
-
+    wire [15:0] r_opcode;
+   
     // --------- //
     // Writeback //
     // --------- //
@@ -100,11 +107,16 @@ module TOP;
     reg [63:0] wb_mmx_data;
 
     register_access_top uut (
+        // Clock Interface
         clk,
         reset,
 
         // Control Interface
         flush,
+
+        // Direct Segment Write
+        //write_cs,
+        //write_cs_enable,     
 
         // Decode Interface
         d_valid,
@@ -126,8 +138,10 @@ module TOP;
         d_stack_op,
         d_seg_override,
         d_seg_override_valid,
+        d_movs,
         d_pc,
         d_branch_taken,
+        d_opcode,
 
         // Address Generation Inferface
         r_valid,
@@ -173,6 +187,7 @@ module TOP;
         r_mm7,
         r_pc,
         r_branch_taken,
+        r_opcode,
 
         wb_reg_number,
         wb_reg_en,
@@ -191,19 +206,22 @@ module TOP;
 
     initial begin
         $display("============ \n Begin Test \n============");
+        // Clock Interface
         clk = 0;
         reset = 1;
 
         // Control Interface
         flush = 0;
 
-        r_ready = 0;
+        // Direct Segment Write
+        // reg  write_cs;
+        //reg [15:0] write_cs_enable;     
 
         // Decode Interface
         d_valid = 1;
         d_size = 0;
         d_set_d_flag = 0;
-        d_clear_d_flag = 0;;
+        d_clear_d_flag = 0;
         d_op0 = 0;
         d_op1 = 0;
         d_op0_reg = 0;
@@ -218,8 +236,17 @@ module TOP;
         d_stack_op = 0;
         d_seg_override = 0;
         d_seg_override_valid = 0;
+        d_movs = 0;
         d_pc = 0;
         d_branch_taken = 0;
+        d_opcode = 0;
+
+        // Address Generation Inferface
+        r_ready = 1;
+    
+        // --------- //
+        // Writeback //
+        // --------- //
 
         // register file writeback
         wb_reg_number = 0;
