@@ -11,6 +11,7 @@ module TOP;
     wire [63:0] data_out;
 
     reg a_valid;
+    reg e_ready;
 
     wire a_ready;
     wire e_valid;
@@ -35,6 +36,7 @@ module TOP;
         data_out,
 
         a_valid,
+        e_ready,
 
         a_ready,
         e_valid,
@@ -60,6 +62,7 @@ module TOP;
         reset = 1;
 
         a_valid = 0;
+        e_ready = 0;
 
         op0_address = 0;
         op0_address_is_valid = 0;
@@ -76,6 +79,7 @@ module TOP;
         reset = 0;
 
         a_valid = 1;
+        e_ready = 1;
         op0_address_is_valid = 1;
         
         #10
@@ -109,7 +113,7 @@ module TOP;
     end
 
 
-    initial #1000 $finish;
+    initial #200 $finish;
 
     always #5 clk = ~clk;
 

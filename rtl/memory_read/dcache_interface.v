@@ -13,6 +13,7 @@ module dcache_interface (
     data_out,
 
     a_valid,
+    e_ready,
 
     a_ready,
     e_valid,
@@ -36,6 +37,7 @@ module dcache_interface (
     output [63:0] data_out;
 
     input a_valid;
+    input e_ready;
 
     output a_ready;
     output e_valid;
@@ -117,6 +119,7 @@ module dcache_interface (
         start,
 
         a_valid,
+        e_ready,
         op0_address_is_valid,
         op1_address_is_valid
     );
@@ -132,20 +135,22 @@ module dcache_interface_start_fsm (
     out,
 
     a_valid,
+    e_ready,
     op0_valid,
     op1_valid
 );
     output out;
 
     input a_valid;
+    input e_ready;
     input op0_valid;
     input op1_valid;
 
     wire op0_a_valid;
-    and2$ op0_and (op0_a_valid, a_valid, op0_valid);
+    and3$ op0_and (op0_a_valid, a_valid, op0_valid, e_ready);
 
     wire op1_a_valid;
-    and2$ op1_and (op1_a_valid, a_valid, op1_valid);
+    and3$ op1_and (op1_a_valid, a_valid, op1_valid, e_ready);
 
     or2$ out_or (out, op0_a_valid, op1_a_valid);
 endmodule

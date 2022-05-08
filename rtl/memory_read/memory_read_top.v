@@ -244,6 +244,7 @@ module memory_read_top (
         dcache_data_out,
 
         a_valid,   // valid in
+        e_ready,
 
         dcache_ready,   // ready out
         dcache_valid,   // valid out
