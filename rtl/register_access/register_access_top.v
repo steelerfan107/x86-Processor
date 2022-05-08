@@ -335,16 +335,21 @@ module register_access_top (
        d_opcode    
     };
 
-   assign r_valid = d_valid;
-   assign d_ready = r_ready;
-       
+   //assign r_valid = d_valid;
+   //assign d_ready = r_ready;
+    wire register_file_stall;     
+   and2$ (r_valid, d_valid, ~register_file_stall);
+   and2$ (d_ready, r_ready, ~register_file_stall);   
+  
    //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
    
     // ------ //
     // Stalls //
     // ------ //
 
-    wire register_file_stall;
+    wire  in_accept;
+
+    and2$ (in_accept, d_valid, d_ready);
     
     // Register File Stall
     register_access_stall register_access_stall0 (
@@ -358,10 +363,10 @@ module register_access_top (
         d_size,
 
         d_op0,
-        d_op0_reg,
+        p_op0_reg,
 
         d_op1,
-        d_op1_reg,
+        p_op1_reg,
 
         d_modrm,
 
@@ -373,8 +378,10 @@ module register_access_top (
         wb_reg_size,
         wb_reg_en,
 
-        r_ready     // TODO: Not sure how to connect it to the next stage interface
+        in_accept     // TODO: Not sure how to connect it to the next stage interface
     );
+
+    
 
     // --------------- //
     // Stack Logic     //
@@ -405,10 +412,10 @@ module register_access_top (
     wire [31:0] new_local_esi_push_m2;
     wire [31:0] new_local_esi_push_m4; 
 
-    compare #(.WIDTH(3)) esi_write (3'd7, wb_reg_number,reg_eq_esi);
+    compare #(.WIDTH(3)) esi_write (3'd6, wb_reg_number,reg_eq_esi);
    
-    and3$ (local_commit    , d_valid, d_ready, stack_operation);
-    and4$ (wb_commit       , wb_valid, wb_ready, n_wb_stack, reg_eq_esi);
+    and3$ (local_commit    , d_valid  , d_ready   , stack_operation);
+    and3$ (wb_commit       , wb_reg_en, n_wb_stack, reg_eq_esi);
 
     // After any non stack access to the ESI register load the tmp with what was written
     // Stack operations cant start anyways until all ESI writes are out of the pipeline ahead of it.
@@ -421,14 +428,14 @@ module register_access_top (
                1'b1				    
     );
    
-    or2$  (temp_esi_commit , wb_commit_delay, local_commit);
+    or2$  (temp_esi_commit , wb_commit, local_commit);
    
     slow_addr #(.WIDTH(32)) add4 (local_esi, 32'd4, ew_local_esi_pop_p4, nc0);
     slow_addr #(.WIDTH(32)) add2 (local_esi, 32'd2, new_local_esi_pop_p2, nc0);
 
-    slow_addr #(.WIDTH(32)) m4 (local_esi, 32'd11111100, new_local_esi_push_m4, nc0);
-    slow_addr #(.WIDTH(32)) m2 (local_esi, 32'b11111110, new_local_esi_push_m2, nc0);   
-    slow_addr #(.WIDTH(32)) m1 (local_esi, 32'b11111111, new_local_esi_push_m1, nc0);   
+    slow_addr #(.WIDTH(32)) m4 (local_esi, 32'hFFFFFFFC, new_local_esi_push_m4, nc0);
+    slow_addr #(.WIDTH(32)) m2 (local_esi, 32'hFFFFFFFE, new_local_esi_push_m2, nc0);   
+    slow_addr #(.WIDTH(32)) m1 (local_esi, 32'hFFFFFFFF, new_local_esi_push_m1, nc0);   
 
     mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({new_local_esi_pop_p4 , new_local_esi_pop_p2} , new_local_esi_pop , d_size[0]);	
     mux #(.INPUTS(4),.WIDTH(32)) push_sel ({new_local_esi_push_m4, 
@@ -436,8 +443,8 @@ module register_access_top (
                                             new_local_esi_push_m1,
                                             new_local_esi_push_m1}, new_local_esi_push, d_size);
     
-    mux #(.INPUTS(2),.WIDTH(32)) in_sel ({r_esi, r_esi, 
-                                          new_local_esi_pop, new_local_esi_push}, local_esi_in, {wb_commit_delay,stack_pop});	
+    mux #(.INPUTS(4),.WIDTH(32)) in_sel ({wb_reg_data, wb_reg_data, 
+                                          new_local_esi_pop, new_local_esi_push}, local_esi_in, {wb_commit,stack_pop});	
      
     slow_addr #(.WIDTH(32)) sub1 (r_ss, local_esi, p_stack_address, nc0);
 

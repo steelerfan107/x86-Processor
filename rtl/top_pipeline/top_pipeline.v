@@ -483,7 +483,7 @@ module top_pipeline (
       r_branch_taken,
       r_opcode,					    
       wb_reg_number,
-      wb_reg_en,
+      (wb_reg_en & ~wb_stack),
       wb_stack,
       wb_reg_size,
       wb_reg_data,
