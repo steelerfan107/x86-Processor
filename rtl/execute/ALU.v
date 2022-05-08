@@ -156,7 +156,7 @@ wire [31:0] jmp_out;
 wire [31:0] jmp_cs;
 wire zf_en, jmp_load_address, jmp_load_cs;
 and2$ and_zfen(.out(zf_en), .in0(flag_0_map[0]), .in1(flag_0_map[1]));
-JMP jmp(.EIP(eip), .CS(cs), .op0(a[31:0]), .opcode(opcode), .opsize(opsize), .ZF_en(zf_en), .CF_en(flag_1_map[0]), .eflags_in(eflags_in), .branch_taken(branch_taken), .br_misprediction(br_misprediction), .jump_load_address(jump_load_address), .jump_address(jump_address), .jump_load_cs(jmp_load_cs), .jump_cs(jmp_cs));
+JMP jmp(.EIP(eip), .CS(cs), .op0(a[31:0]), .opcode(opcode), .opsize(opsize), .ZF_en(zf_en), .CF_en(flag_1_map[0]), .eflags_in(eflags_in), .branch_taken(branch_taken), .br_misprediction(br_misprediction), .jump_load_address(jump_load_address), .jump_address(jump_address), .jump_load_cs(jmp_load_cs), .jump_cs(jmp_cs), .alu_op(alu_op));
 
 /*NOT -alu_op 7
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -280,13 +280,30 @@ wire [63:0] xchg_out;
 XCHG xchg(.dest(a[31:0]), .src(b[31:0]), .out(xchg_out));
 
 //-------------------------------------ALU OUTPUT-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-mux #(.WIDTH(64), .INPUTS(15)) alu_out_mux(.in({xchg_out, sar_out, sal_out, pcompare_out, paddd_out, paddw_out, or_out, not_out, jmp_out, a, pass_mov_out, bsf_out, and_out, add_out, pass_mov_out}), .out(alu_out), .select(alu_op));
-mux #(.WIDTH(6), .INPUTS(15)) set_eflags_mux(.in({6'b000000, sar_set_eflags, sal_set_eflags, 6'b000000, 6'b000000, 6'b000000, or_set_eflags, not_set_eflags, 6'b000000, daa_set_eflags, pass_mov_set_eflags, bsf_set_eflags, and_set_eflags, add_set_eflags, pass_mov_set_eflags}), .out(set_eflags), .select(alu_op));
-mux #(.WIDTH(1), .INPUTS(15)) mux_jump_load_address_out(.in({8'h00, jmp_load_address, 6'h00}), .out(jump_load_address), .select(alu_op));
-mux #(.WIDTH(1), .INPUTS(15)) mux_ump_load_cs_out(.in({8'h00, jmp_load_cs, 6'h00}), .out(jump_load_cs), .select(alu_op));
-mux #(.WIDTH(32), .INPUTS(15)) mux_cs_out(.in({32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, jmp_cs, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000}), .out(jump_load_cs), .select(alu_op));
+mux #(.WIDTH(64), .INPUTS(16)) alu_out_mux(.in({64'd0,
+                                                xchg_out, 
+                                                {32'd0,sar_out}, 
+                                                {32'd0,sal_out}, 
+                                                pcompare_out, 
+                                                paddd_out, 
+                                                paddw_out, 
+                                                {32'd0,or_out}, 
+                                                {32'd0,not_out}, 
+                                                {32'd0,jmp_out}, 
+                                                {56'd0,daa_al_out}, 
+                                                b, 
+                                                {32'd0,bsf_out}, 
+                                                {32'd0,and_out}, 
+                                                {32'd0,add_out}, 
+                                                a}),
+              .out(alu_out), .select(alu_op));
+   
+mux #(.WIDTH(6), .INPUTS(16)) set_eflags_mux(.in({6'd0,6'b000000, sar_set_eflags, sal_set_eflags, 6'b000000, 6'b000000, 6'b000000, or_set_eflags, not_set_eflags, 6'b000000, daa_set_eflags, pass_mov_set_eflags, bsf_set_eflags, and_set_eflags, add_set_eflags, pass_mov_set_eflags}), .out(set_eflags), .select(alu_op));
+mux #(.WIDTH(1), .INPUTS(16)) mux_jump_load_address_out(.in({9'h00, jmp_load_address, 6'h00}), .out(jump_load_address), .select(alu_op));
+mux #(.WIDTH(1), .INPUTS(16)) mux_ump_load_cs_out(.in({9'h00, jmp_load_cs, 6'h00}), .out(jump_load_cs), .select(alu_op));
+mux #(.WIDTH(32), .INPUTS(16)) mux_cs_out(.in({32'h00000000,32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, jmp_cs, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000}), .out(jump_load_cs), .select(alu_op));
 //set_eflags, eflags_out
-mux #(.WIDTH(6), .INPUTS(15)) eflags_out_mux(.in({6'bz, sar_eflags_out, sal_eflags_out, 6'bz, 6'bz, 6'bz, or_eflags_out, 6'bz, 6'bz, daa_eflags_out, pass_mov_eflags_out, bsf_eflags_out, and_eflags_out, add_eflags_out, pass_mov_eflags_out}), .out(eflags_out), .select(alu_op));
+mux #(.WIDTH(6), .INPUTS(16)) eflags_out_mux(.in({12'bz, sar_eflags_out, sal_eflags_out, 6'bz, 6'bz, 6'bz, or_eflags_out, 6'bz, 6'bz, daa_eflags_out, pass_mov_eflags_out, bsf_eflags_out, and_eflags_out, add_eflags_out, pass_mov_eflags_out}), .out(eflags_out), .select(alu_op));
 pfgen alu_pf_out(.in(a[7:0]), .pf(eflags_out[0]));
 
 endmodule

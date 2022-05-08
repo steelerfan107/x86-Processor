@@ -12,7 +12,8 @@ module JMP
     jump_load_address,
     jump_address,
     jump_load_cs,
-    jump_cs);
+    jump_cs,
+    alu_op);
   input [31:0]EIP;
   input [31:0]CS;
   input [31:0]op0;
@@ -27,6 +28,7 @@ module JMP
   output [31:0]jump_address;
   output jump_load_cs;
   output [31:0]jump_cs;
+  input [2:0] alu_op;
 
   wire jnbe;
   wire zfen_and_cfen;
@@ -37,7 +39,8 @@ module JMP
   wire zf_in_not;
   wire CF_en_not;
   wire [31:0]addr_jump_near;
-  wire opcodeFF;
+  wire unQualopcodeFF;
+  wire opcodeFF;   
   wire opcodeEA;
   wire opcodeEB_E9;
   wire opcode77_75_0F;
@@ -73,7 +76,10 @@ module JMP
   ucomp8 comp_opcode_E9(.a(opcode[15:8]), .b(8'hE9), .eq(opcodeE9));
   ucomp8 comp_opcode_EA(.a(opcode[15:8]), .b(8'hEA), .eq(opcodeEA));
   ucomp8 comp_opcode_EB(.a(opcode[15:8]), .b(8'hEB), .eq(opcodeEB));
-  ucomp8 comp_opcode_FF(.a(opcode[15:8]), .b(8'hFF), .eq(opcodeFF));
+  ucomp8 comp_opcode_FF(.a(opcode[15:8]), .b(8'hFF), .eq(unQualopcodeFF));
+  ucomp8 comp_alu_op_six(.a({5'd0,alu_op}), .b(8'h06),  .eq(aluOpIsSix));
+
+  and2$ (opcodeFF, aluOpIsSix, unQualopcodeFF);
   
   and2$ jne_i(.in0(zfen_and_notcfen), .in1(zf_in_not), .out(jne));
   and2$ jnbe_i(.in0(zfen_and_cfen), .in1(notzf_or_notcf), .out(jnbe));

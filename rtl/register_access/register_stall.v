@@ -1,4 +1,3 @@
-
 //////////////////////////////////////
 //
 //  Register Access Stall
@@ -15,6 +14,8 @@ module register_access_stall (
 
     clk,
     reset,
+
+    stack_op,			      
 
     register_size,
 
@@ -40,6 +41,8 @@ module register_access_stall (
 
     input clk;
     input reset;
+
+    input  stack_op;
 
     input [1:0] register_size;
 
@@ -130,6 +133,8 @@ module register_access_stall (
         reset,
 
         is_stall,
+
+	stack_op,			 
 
         wb_reg,
         wb_enable,
@@ -312,6 +317,8 @@ module register_stall_table (
 
     is_stall,
 
+    stack_op,
+
     wb_reg,
     wb_is_valid,
 
@@ -339,6 +346,8 @@ module register_stall_table (
 
     output is_stall;
 
+    input  stack_op;
+
     input [2:0] wb_reg;
     input wb_is_valid;
 
@@ -359,8 +368,14 @@ module register_stall_table (
 
 
     input next_stage_ready;
+   
+    wire  is_stall_table, is_stall_stack, non_zero_r6;
 
-
+    or4$ (non_zero_r6 , r6_out[3],r6_out[2],r6_out[1],r6_out[0] );
+    and2$ (is_stall_stack, non_zero_r6, stack_op);
+   
+    or2$ (is_stall, is_stall_table, is_stall_stack);
+   
     // 8 registers to hold counter values
     // Each with 4 bits (chosen arbitrarily lol)
 
@@ -449,7 +464,7 @@ module register_stall_table (
     // check if there is a stall condition
     wire is_stall;
     register_stall_is_reg_in_table table_checker (
-        .reg_in_table(is_stall),
+        .reg_in_table(is_stall_table),
 
         .r0(r0_out),
         .r1(r1_out),

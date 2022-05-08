@@ -1,10 +1,12 @@
 module opcode_rom_control (
+  modrm,
   sizeop,
   opcode,
   rom_control,
   rom_in_control			   	
 );
 
+   input [2:0]     modrm;
    input           sizeop;
    input [15:0]    opcode;
    output [3:0]    rom_control;
@@ -28,6 +30,9 @@ module opcode_rom_control (
      opcode[2],
      opcode[1],
      opcode[0],
+     modrm[2],
+     modrm[1],
+     modrm[0],
      rom_control[3],
      rom_control[2],
      rom_control[1],

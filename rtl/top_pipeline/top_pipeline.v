@@ -49,7 +49,15 @@ module top_pipeline (
    parameter IDATAW = 128;
    parameter ISIZEW = 8;
    parameter IADDRW = 32;
-   
+ 
+    // Data Memory Interface Parameters
+    parameter DDATAW = 64;
+    parameter DSIZEW = 4;
+    parameter DADDRW = 32;
+
+    // Bus Parameters   
+    parameter BUSDATAW = 32;
+  
    input                   clk;
    input                   reset;
 
@@ -77,23 +85,23 @@ module top_pipeline (
 
    output                  rmem_valid;
    input   	           rmem_ready;
-   output    [IADDRW-1:0]  rmem_address;
+   output    [DADDRW-1:0]  rmem_address;
    output    	           rmem_wr_en;
-   output   [IDATAW-1:0]   rmem_wr_data;
-   output   [ISIZEW-1:0]   rmem_wr_size;
+   output   [DDATAW-1:0]   rmem_wr_data;
+   output   [DSIZEW-1:0]   rmem_wr_size;
    input                   rmem_dp_valid;
    output                  rmem_dp_ready;
-   input    [64-1:0]       rmem_dp_read_data;
+   input    [DDATAW-1:0]   rmem_dp_read_data;
 
    output                  wmem_valid;
    input   	           wmem_ready;
-   output    [IADDRW-1:0]  wmem_address;
+   output    [DADDRW-1:0]  wmem_address;
    output    	           wmem_wr_en;
-   output    [32-1:0]	   wmem_wr_data;
-   output    [ISIZEW-1:0]  wmem_wr_size;
+   output    [DDATAW-1:0]  wmem_wr_data;
+   output    [DSIZEW-1:0]  wmem_wr_size;
    input                   wmem_dp_valid;
    output                  wmem_dp_ready;
-   input    [64-1:0] 	   wmem_dp_read_data;   
+   input    [DDATAW-1:0]   wmem_dp_read_data;   
 
    // Interrupt Interface
    wire                    pending_int;
@@ -197,6 +205,7 @@ module top_pipeline (
    wire   [2:0]            r_flag_0;
    wire   [2:0]            r_flag_1;
    wire   [1:0]            r_stack_op;
+   wire   [31:0] 	   r_stack_address;
    wire   [2:0]            r_seg_override;
    wire                    r_seg_override_valid;
    wire   [31:0]           r_eax;
@@ -258,6 +267,7 @@ module top_pipeline (
    wire [2:0]              a_flag_0;
    wire [2:0]              a_flag_1;
    wire [1:0]              a_stack_op;
+   wire [31:0] 		   a_stack_address;
    wire [31:0]             a_pc;
    wire                    a_branch_taken;
    wire                    a_to_sys_controller;
@@ -277,6 +287,7 @@ module top_pipeline (
    wire  [31:0]            e_stack_ptr;      // stack pointer address
    wire   [47:0]           e_imm;            // immediate
    wire   [3:0]            e_alu_op;          // alu operation defined in #decode channel
+   wire [1:0] 		   e_stack_op;
    wire  [2:0]             e_flag_0;
    wire   [2:0]            e_flag_1;
    wire   [31:0]           e_pc;
@@ -300,6 +311,7 @@ module top_pipeline (
    wire                    wb_jump_load_cs;
    wire  [31:0]            wb_cs_out;
    wire                    wb_br_misprediction;
+   wire                    wb_stack;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -442,6 +454,7 @@ module top_pipeline (
       r_flag_0,
       r_flag_1,
       r_stack_op,
+      r_stack_address,
       r_seg_override,
       r_seg_override_valid,
       r_eax,
@@ -471,6 +484,7 @@ module top_pipeline (
       r_opcode,					    
       wb_reg_number,
       wb_reg_en,
+      wb_stack,
       wb_reg_size,
       wb_reg_data,
       wb_seg_number,
@@ -502,6 +516,7 @@ module top_pipeline (
       r_flag_0,
       r_flag_1,
       r_stack_op,
+      r_stack_address,
       r_seg_override,
       r_seg_override_valid,
       r_eax,
@@ -545,6 +560,7 @@ module top_pipeline (
       a_flag_0,
       a_flag_1,
       a_stack_op,
+      a_stack_address,
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
@@ -581,6 +597,7 @@ module top_pipeline (
       a_flag_0,
       a_flag_1,
       a_stack_op,
+      a_stack_address,
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
@@ -598,6 +615,7 @@ module top_pipeline (
       e_op_a_address,
       e_op_a_is_address,
       e_stack_ptr,
+      e_stack_op,
       e_imm,
       e_alu_op,
       e_flag_0,
@@ -605,7 +623,17 @@ module top_pipeline (
       e_pc,
       e_branch_taken,
       e_to_sys_controller,
-      e_opcode	
+      e_opcode,
+
+      rmem_valid,
+      rmem_ready,
+      rmem_address,
+      rmem_wr_en,
+      rmem_wr_data,
+      rmem_wr_size,
+      rmem_dp_valid,
+      rmem_dp_ready,
+      rmem_dp_read_data	
   );
    
   execute_top uut_execute(
@@ -621,8 +649,9 @@ module top_pipeline (
     r_eax,
     r_cs,
     e_stack_ptr,
+    e_stack_op,
     e_alu_op,
-    e_opcode, 
+    e_opcode,
     e_size,
     e_flag_0,
     e_flag_1,
@@ -638,6 +667,7 @@ module top_pipeline (
     wb_result,
     wb_opsize,
     wb_mem_or_reg,
+    wb_stack,
     wb_valid,
     wb_branch_taken,
     wb_to_sys_controller,
