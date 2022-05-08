@@ -75,6 +75,35 @@ module TOP;
 
         reset = 0;
 
+        a_valid = 1;
+        op0_address_is_valid = 1;
+        
+        #10
+
+        rd_req_ready = 0;
+
+        #20
+
+        rd_req_ready = 1;
+
+        #10
+
+        rd_req_ready = 0;
+
+        #10
+
+        rd_dp_valid = 1;
+
+        #10
+
+        rd_dp_valid = 0;
+
+
+
+        
+
+        
+
 
         $display("==========\n End Test \n==========");
     end
