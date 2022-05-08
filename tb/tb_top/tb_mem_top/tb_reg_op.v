@@ -45,34 +45,34 @@ module TOP;
 
    // Inturrupt Memory Interface
    wire                  emem_valid;
-   reg   	         emem_ready;
+   wire   	         emem_ready;
    wire    [IADDRW-1:0]  emem_address;
    wire    	         emem_wr_en;
    wire    [32-1:0]	 emem_wr_data;
    wire    [ISIZEW-1:0]  emem_wr_size;
-   reg                   emem_dp_valid;
+   wire                  emem_dp_valid;
    wire                  emem_dp_ready;
-   reg    [32-1:0] 	 emem_dp_read_data; 
+   wire    [32-1:0] 	 emem_dp_read_data; 
 
    wire                  rmem_valid;
-   reg   	         rmem_ready;
+   wire   	         rmem_ready;
    wire    [IADDRW-1:0]  rmem_address;
    wire    	         rmem_wr_en;
    wire   [IDATAW-1:0]   rmem_wr_data;
    wire   [ISIZEW-1:0]   rmem_wr_size;
-   reg                   rmem_dp_valid;
+   wire                  rmem_dp_valid;
    wire                  rmem_dp_ready;
-   reg    [64-1:0]       rmem_dp_read_data;
+   wire    [64-1:0]      rmem_dp_read_data;
 
    wire                  wmem_valid;
-   reg   	         wmem_ready;
+   wire   	         wmem_ready;
    wire    [IADDRW-1:0]  wmem_address;
    wire    	         wmem_wr_en;
    wire    [32-1:0]	 wmem_wr_data;
    wire    [ISIZEW-1:0]  wmem_wr_size;
-   reg                   wmem_dp_valid;
+   wire                  wmem_dp_valid;
    wire                  wmem_dp_ready;
-   reg    [64-1:0] 	 wmem_dp_read_data;   
+   wire    [64-1:0] 	 wmem_dp_read_data;   
 
    reg [43:0] contents [0:7];
 
@@ -171,7 +171,7 @@ module TOP;
       wmem_wr_size,
       wmem_dp_valid,
       wmem_dp_ready,
-      wmem_dp_read_data  	
+      wmem_dp_read_data,  	
 
       // System Controller Read Interface
       emem_valid,
@@ -252,13 +252,6 @@ module TOP;
         clk = 0;
         reset = 1;
         interrupt = 'h0;   
-  
-        rmem_ready = 'h0;
-        rmem_dp_valid = 'h0;
-        rmem_dp_read_data = 'h0;
-        wmem_ready = 'h0;
-        wmem_dp_valid = 'h0;
-        wmem_dp_read_data = 'h0;
      
         $strobe("============ \n Begin Test \n============");       	  
         #55
@@ -284,11 +277,11 @@ module TOP;
        end
   end   
 
-  always @ (*) begin
-       emem_dp_valid     =  ememory_valid;
-       emem_dp_read_data =  32'h040;
-       emem_ready        = ~ememory_valid;     
-  end
+  //always @ (*) begin
+  //     emem_dp_valid     =  ememory_valid;
+  //     emem_dp_read_data =  32'h040;
+  //     emem_ready        = ~ememory_valid;     
+  //end
    
   always #100  clk          = ~clk;
 
