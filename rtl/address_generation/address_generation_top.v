@@ -550,11 +550,13 @@ module op0_generator (
     );
 
     // determine if op0 is an address or normie value
-    wire op0_mux_is_address;
-    op0_is_address op0_is_address0 (
-        r_op0[2], r_op0[1], r_op0[0],
-        op0_mux_is_address
-    );
+    // only read from memory if mod rm is an address
+    // if op0 is memory, is_address should be zero since mem_read shouldn't do anything
+    wire op0_mux_is_address = 1'b0;
+    // op0_is_address op0_is_address0 (
+    //     r_op0[2], r_op0[1], r_op0[0],
+    //     op0_mux_is_address
+    // );
 
     // see if mod_rm is address
     or2$ is_address_combine (a_op0_is_address, op0_mux_is_address, op0_mod_rm_is_address);
