@@ -49,7 +49,15 @@ module top_pipeline (
    parameter IDATAW = 128;
    parameter ISIZEW = 8;
    parameter IADDRW = 32;
-   
+ 
+    // Data Memory Interface Parameters
+    parameter DDATAW = 64;
+    parameter DSIZEW = 4;
+    parameter DADDRW = 32;
+
+    // Bus Parameters   
+    parameter BUSDATAW = 32;
+  
    input                   clk;
    input                   reset;
 
@@ -77,23 +85,23 @@ module top_pipeline (
 
    output                  rmem_valid;
    input   	           rmem_ready;
-   output    [IADDRW-1:0]  rmem_address;
+   output    [DADDRW-1:0]  rmem_address;
    output    	           rmem_wr_en;
-   output   [IDATAW-1:0]   rmem_wr_data;
-   output   [ISIZEW-1:0]   rmem_wr_size;
+   output   [DDATAW-1:0]   rmem_wr_data;
+   output   [DSIZEW-1:0]   rmem_wr_size;
    input                   rmem_dp_valid;
    output                  rmem_dp_ready;
-   input    [64-1:0]       rmem_dp_read_data;
+   input    [DDATAW-1:0]   rmem_dp_read_data;
 
    output                  wmem_valid;
    input   	           wmem_ready;
-   output    [IADDRW-1:0]  wmem_address;
+   output    [DADDRW-1:0]  wmem_address;
    output    	           wmem_wr_en;
-   output    [32-1:0]	   wmem_wr_data;
-   output    [ISIZEW-1:0]  wmem_wr_size;
+   output    [DDATAW-1:0]  wmem_wr_data;
+   output    [DSIZEW-1:0]  wmem_wr_size;
    input                   wmem_dp_valid;
    output                  wmem_dp_ready;
-   input    [64-1:0] 	   wmem_dp_read_data;   
+   input    [DDATAW-1:0]   wmem_dp_read_data;   
 
    // Interrupt Interface
    wire                    pending_int;
@@ -161,13 +169,16 @@ module top_pipeline (
    wire 		   d_seg_override_valid;
    wire                    d_movs;
    wire [IADDRW-1:0]       d_pc;
-   wire                    d_branch_taken;   
+   wire                    d_branch_taken;  
+   wire [15:0] 		   d_opcode; 
 	
    wire                    handle_int_done;
    wire                    write_eip; // Connect
    wire [31:0]             eip; // Connect
    wire [31:0]	           eflags_reg; // Connect
-   
+
+   wire                    ret_near;
+   wire                    ret_far;
    wire                    iretd;
    wire                    iretd_halt;
    wire                    iretd_pop_valid;
@@ -194,6 +205,7 @@ module top_pipeline (
    wire   [2:0]            r_flag_0;
    wire   [2:0]            r_flag_1;
    wire   [1:0]            r_stack_op;
+   wire   [31:0] 	   r_stack_address;
    wire   [2:0]            r_seg_override;
    wire                    r_seg_override_valid;
    wire   [31:0]           r_eax;
@@ -220,6 +232,7 @@ module top_pipeline (
    wire   [63:0]           r_mm7;
    wire   [31:0]           r_pc;
    wire                    r_branch_taken;
+   wire   [15:0]           r_opcode;
 
    wire   [2:0]            wb_reg_number;
    wire                    wb_reg_en;
@@ -254,9 +267,11 @@ module top_pipeline (
    wire [2:0]              a_flag_0;
    wire [2:0]              a_flag_1;
    wire [1:0]              a_stack_op;
+   wire [31:0] 		   a_stack_address;
    wire [31:0]             a_pc;
    wire                    a_branch_taken;
-   wire                    a_to_sys_controller; 
+   wire                    a_to_sys_controller;
+   wire [15:0] 		   a_opcode;
 
    // Pipestage interface
    wire                    e_valid;
@@ -272,14 +287,16 @@ module top_pipeline (
    wire  [31:0]            e_stack_ptr;      // stack pointer address
    wire   [47:0]           e_imm;            // immediate
    wire   [3:0]            e_alu_op;          // alu operation defined in #decode channel
+   wire [1:0] 		   e_stack_op;
    wire  [2:0]             e_flag_0;
    wire   [2:0]            e_flag_1;
    wire   [31:0]           e_pc;
    wire                    e_branch_taken;
-   wire                    e_to_sys_controller; 
+   wire                    e_to_sys_controller;
+   wire [15:0] 		   e_opcode;
    
-   // Writeback Interface
-   wire                    wb_ready = 1'b1; // TODO
+   // Writeback Interfacre
+   wire                    wb_ready = 1'b1;
    wire  [31:0]            wb_dest_address;
    wire  [31:0]            wb_dest_reg;
    wire  [63:0]            wb_result;
@@ -287,11 +304,20 @@ module top_pipeline (
    wire                    wb_mem_or_reg;
    wire                    wb_valid;
    wire                    wb_branch_taken;
-   wire                    wb_sys_controller_valid;
+   wire                    wb_to_sys_controller;
+   wire  [31:0]            wb_pc;
+   wire                    wb_jump_load_address;
+   wire  [31:0]            wb_jump_address;   
+   wire                    wb_jump_load_cs;
+   wire  [31:0]            wb_cs_out;
+   wire                    wb_br_misprediction;
+   wire                    wb_stack;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
-
+   
+   wire     [15:0]         r_cs_bypass;
+   
    wire 	           busy_ahead_of_decode;  
    wire 	           wb_accept;
 
@@ -301,7 +327,7 @@ module top_pipeline (
       fetch_flush,
       load_address,
       load,
-      r_cs,		  
+      r_cs_bypass,		  
       imem_valid,
       imem_ready,
       imem_address,
@@ -346,6 +372,8 @@ module top_pipeline (
       eflags_reg,				  
       ras_address,
       ras_push,
+      ret_near,
+      ret_far,
       iretd,
       iretd_halt,		  
       f_valid,
@@ -376,7 +404,8 @@ module top_pipeline (
       d_seg_override_valid,
       d_movs,
       d_pc,
-      d_branch_taken  		  		  
+      d_branch_taken,
+      d_opcode		  		  
    );
 
    and2$ wb_and ( wb_accept, wb_valid, wb_ready );
@@ -407,6 +436,7 @@ module top_pipeline (
       d_movs,
       d_pc,
       d_branch_taken,
+      d_opcode,					    
       r_valid,
       r_ready,
       r_size,
@@ -424,6 +454,7 @@ module top_pipeline (
       r_flag_0,
       r_flag_1,
       r_stack_op,
+      r_stack_address,
       r_seg_override,
       r_seg_override_valid,
       r_eax,
@@ -450,8 +481,10 @@ module top_pipeline (
       r_mm7,
       r_pc,
       r_branch_taken,
+      r_opcode,					    
       wb_reg_number,
       wb_reg_en,
+      wb_stack,
       wb_reg_size,
       wb_reg_data,
       wb_seg_number,
@@ -483,6 +516,7 @@ module top_pipeline (
       r_flag_0,
       r_flag_1,
       r_stack_op,
+      r_stack_address,
       r_seg_override,
       r_seg_override_valid,
       r_eax,
@@ -509,6 +543,7 @@ module top_pipeline (
       r_mm7,
       r_pc,
       r_branch_taken,
+      r_opcode,					 
       a_valid,
       a_ready,
       a_size,
@@ -525,9 +560,11 @@ module top_pipeline (
       a_flag_0,
       a_flag_1,
       a_stack_op,
+      a_stack_address,
       a_pc,
       a_branch_taken,
-      a_to_sys_controller
+      a_to_sys_controller,
+      a_opcode
   );  
 
   memory_read_top uut_memory_read (
@@ -536,7 +573,7 @@ module top_pipeline (
       reset,
 
       // Control Interface
-      flush,
+      addr_gen_flush,
 
       // Write Back Interface (To Pop Addr Dependency)
       wb_valid,
@@ -560,10 +597,12 @@ module top_pipeline (
       a_flag_0,
       a_flag_1,
       a_stack_op,
+      a_stack_address,
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
-
+      a_opcode,
+				   
       // Pipestage interface
       e_valid,
       e_ready,
@@ -576,47 +615,75 @@ module top_pipeline (
       e_op_a_address,
       e_op_a_is_address,
       e_stack_ptr,
+      e_stack_op,
       e_imm,
       e_alu_op,
       e_flag_0,
       e_flag_1,
       e_pc,
       e_branch_taken,
-      e_to_sys_controller	
+      e_to_sys_controller,
+      e_opcode,
+
+      rmem_valid,
+      rmem_ready,
+      rmem_address,
+      rmem_wr_en,
+      rmem_wr_data,
+      rmem_wr_size,
+      rmem_dp_valid,
+      rmem_dp_ready,
+      rmem_dp_read_data	
   );
    
   execute_top uut_execute(
-      clk,
-      reset,
-      exe_flush,
-      e_valid,
-      e_ready,
-      1'b0,		       
-      e_op0,
-      e_op1,
-      32'h0,
-      e_alu_op,
-      e_size,
-      1'b0,
-      e_branch_taken,
-      e_to_sys_controller,
-      e_pc,			       
-      wb_ready,
-      wb_dest_address,
-      wb_dest_reg,
-      wb_result,
-      wb_opsize,
-      wb_mem_or_reg,
-      wb_valid,					 			       
-      wb_branch_taken,
-      wb_sys_controller_valid,
-      wb_pc		       
+    clk,
+    reset,
+    exe_flush,
+    e_valid,
+    e_ready,
+    e_op_a_reg, 
+    1'b0,
+    e_op_a,
+    e_op_b,
+    r_eax,
+    r_cs,
+    e_stack_ptr,
+    e_stack_op,
+    e_alu_op,
+    e_opcode,
+    e_size,
+    e_flag_0,
+    e_flag_1,
+    e_set_d_flag,
+    e_clear_d_flag,
+    1'b0,
+    e_branch_taken,
+    e_to_sys_controller,
+    e_pc,
+    wb_ready,
+    wb_dest_address,
+    wb_dest_reg,
+    wb_result,
+    wb_opsize,
+    wb_mem_or_reg,
+    wb_stack,
+    wb_valid,
+    wb_branch_taken,
+    wb_to_sys_controller,
+    wb_pc,
+    wb_jump_load_address,
+    wb_jump_address,
+    wb_jump_load_cs,
+    wb_cs_out,
+    wb_br_misprediction		       
   );
 
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     interrupt[3:0],		     
+     interrupt[3:0],
+     r_cs,		     
      emem_valid,
      emem_ready,
      emem_address,
@@ -639,22 +706,31 @@ module top_pipeline (
      handle_int_done,
      reg_load_cs,
      reg_cs,
+     ret_near,
+     ret_far,			     
      iretd,
      iretd_halt,
-     (wb_sys_controller_valid & wb_valid), //iretd_pop_valid,
+     (wb_to_sys_controller & wb_valid), //iretd_pop_valid,
      wb_result, //iretd_pop_data,
      reg_load_eflags,
      reg_eflags,
      reg_load_eip,
      reg_eip,
      pending_int,
-     hold_int	  
+     hold_int,
+     wb_jump_load_address,
+     wb_jump_address,   
+     wb_jump_load_cs[15:0],
+     wb_cs_out  
   );   
 
   assign busy_ahead_of_decode = wb_valid | a_valid | r_valid;
    
   or2$ (wb_reg_en, wb_valid, dec_wb_valid);
-  
+
+  //mux  #(.WIDTH(16),.INPUTS(2)) ( {wb_jump_load_cs[15:0], r_cs}        , r_cs_bypass  , wb_jump_load_cs);
+  assign r_cs_bypass = r_cs;
+ 
   mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_reg, wb_dest_reg[2:0]} , wb_reg_number, dec_wb_valid);
   mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, wb_opsize}       , wb_reg_size  , dec_wb_valid);
   mux  #(.WIDTH(32),.INPUTS(2)) ( {dec_wb_data, wb_result[31:0]} , wb_reg_data  , dec_wb_valid);   

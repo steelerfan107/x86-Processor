@@ -34,9 +34,11 @@ module memory_read_top (
     a_flag_0,
     a_flag_1,
     a_stack_op,
+    a_stack_address,
     a_pc,
     a_branch_taken,
     a_to_sys_controller,
+    a_opcode,			
 
     // Pipestage interface
     e_valid,
@@ -50,16 +52,33 @@ module memory_read_top (
     e_op_a_address,
     e_op_a_is_address,
     e_stack_ptr,
+    e_stack_op,
     e_imm,
     e_alu_op,
     e_flag_0,
     e_flag_1,
     e_pc,
     e_branch_taken,
-    e_to_sys_controller	
+    e_to_sys_controller,
+    e_opcode,
+
+    rmem_valid,
+    rmem_ready,
+    rmem_address,
+    rmem_wr_en,
+    rmem_wr_data,
+    rmem_wr_size,
+    rmem_dp_valid,
+    rmem_dp_ready,
+    rmem_dp_read_data				
 
 );
 
+    // Data Memory Interface Parameters
+    parameter DDATAW = 64;
+    parameter DSIZEW = 4;
+    parameter DADDRW = 32;
+   
     // Clock Interface
     input clk;
     input reset;
@@ -89,9 +108,11 @@ module memory_read_top (
     input [2:0] a_flag_0;
     input [2:0] a_flag_1;
     input [1:0] a_stack_op;
+    input [31:0] a_stack_address;   
     input [31:0] a_pc;
     input a_branch_taken;
     input a_to_sys_controller;
+    input [15:0] a_opcode;
 
     // Pipestage interface
     output e_valid;
@@ -105,19 +126,38 @@ module memory_read_top (
     output [31:0] e_op_a_address;    // address for operand a
     output e_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
     output [31:0] e_stack_ptr;      // stack pointer address
+    output [1:0]   e_stack_op;
     output [47:0] e_imm;            // immediate
     output [3:0] e_alu_op;          // alu operation defined in #decode channel
     output [2:0] e_flag_0;
     output [2:0] e_flag_1;
     output [31:0] e_pc;
     output e_branch_taken;
-    output e_to_sys_controller; 
+    output e_to_sys_controller;
+    output [15:0] e_opcode; 
 
+    output                  rmem_valid;
+    input   	            rmem_ready;
+    output    [DADDRW-1:0]  rmem_address;
+    output    	            rmem_wr_en;
+    output   [DDATAW-1:0]   rmem_wr_data;
+    output   [DSIZEW-1:0]   rmem_wr_size;
+    input                   rmem_dp_valid;
+    output                  rmem_dp_ready;
+    input    [DDATAW-1:0]   rmem_dp_read_data;
+
+    assign                  rmem_valid = 'h0;
+    assign                  rmem_address = 'h0;
+    assign    	            rmem_wr_en = 'h0;
+    assign                  rmem_wr_data = 'h0;
+    assign                  rmem_wr_size = 'h0;
+    assign                  rmem_dp_ready = 'h0;
+   
     // --------- //
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16+2;
 
     // Pipestage interface
     wire p_valid;
@@ -131,6 +171,7 @@ module memory_read_top (
     wire [31:0] p_op_a_address;    // address for operand a
     wire p_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
     wire [31:0] p_stack_ptr;      // stack pointer address
+    wire [1:0] 	p_stack_op;
     wire [47:0] p_imm;            // immediate
     wire [3:0] p_alu_op;          // alu operation defined in #decode channel
     wire [2:0] p_flag_0;
@@ -151,13 +192,15 @@ module memory_read_top (
        e_op_a_address,
        e_op_a_is_address,
        e_stack_ptr,
+       e_stack_op,
        e_imm,
        e_alu_op,
        e_flag_0,
        e_flag_1,
        e_pc,
        e_branch_taken,
-       e_to_sys_controller	
+       e_to_sys_controller,
+       e_opcode	
     } = pipe_out_data;
 
     assign pipe_in_data = {
@@ -170,15 +213,18 @@ module memory_read_top (
        p_op_a_address,
        p_op_a_is_address,
        p_stack_ptr,
+       p_stack_op,
        p_imm,
        p_alu_op,
        p_flag_0,
        p_flag_1,
        p_pc,
        p_branch_taken,
-       p_to_sys_controller      
+       p_to_sys_controller,
+       a_opcode     
     };
-   
+
+    // If push force in stack address as destination
     assign p_valid = a_valid;
     assign a_ready = p_ready;
     assign p_size = a_size;            
@@ -186,10 +232,17 @@ module memory_read_top (
     assign p_clear_d_flag = a_clear_d_flag;
     assign p_op_a = a_op0;           
     assign p_op_b = a_op1;           
-    assign p_op_a_reg = a_op0_reg;        
-    assign p_op_a_address = 'h0;    
-    assign p_op_a_is_address = a_op0_is_address;      
-    assign p_stack_ptr = 'h0;  
+    assign p_op_a_reg = a_op0_reg;
+    assign p_stack_op = a_stack_op;
+
+    // If push force in stack address as destination   
+    //assign p_op_a_address = (a_stack_op[0]) ? a_stack_address : 'h0;   
+    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , 32'b0} ,  p_op_a_address, a_stack_op[0]);
+   
+    //assign p_op_a_is_address = a_op0_is_address | (a_stack_op[0]);  
+    or2$ ( p_op_a_is_address, a_op0_is_address, a_stack_op[0]);
+     
+    assign p_stack_ptr = a_stack_address;  
     assign p_imm = a_imm;        
     assign p_alu_op = a_alu_op;          
     assign p_flag_0 = a_flag_0;
@@ -202,7 +255,7 @@ module memory_read_top (
     wire pipestage_reset;
     or2$ or_pipestage (pipestage_reset, reset, flush);
 
-    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pip_in_data, e_valid, e_ready, pipe_out_data);
+    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pipe_in_data, e_valid, e_ready, pipe_out_data);
    
     wire    pop_address_dependency;
     wire    push_address_dependency;   

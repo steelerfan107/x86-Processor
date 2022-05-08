@@ -30,6 +30,7 @@ module address_generation_top (
     r_flag_0,
     r_flag_1,
     r_stack_op,
+    r_stack_address,			       
     r_seg_override,
     r_seg_override_valid,
     r_eax,
@@ -56,7 +57,8 @@ module address_generation_top (
     r_mm7,
     r_pc,
     r_branch_taken,
-
+    r_opcode,
+			       
     // Memory Access Interface
     a_valid,
     a_ready,
@@ -74,10 +76,11 @@ module address_generation_top (
     a_flag_0,
     a_flag_1,
     a_stack_op,
+    a_stack_address,
     a_pc,
     a_branch_taken,
-    a_to_sys_controller			       
-
+    a_to_sys_controller,			       
+    a_opcode
 );
 
     // Clock Interface
@@ -105,6 +108,7 @@ module address_generation_top (
     input [2:0] r_flag_0;
     input [2:0] r_flag_1;
     input [1:0] r_stack_op;
+    input [31:0] r_stack_address;   
     input [2:0] r_seg_override;
     input r_seg_override_valid;
     input [31:0] r_eax;
@@ -131,7 +135,8 @@ module address_generation_top (
     input [63:0] r_mm7;
     input [31:0] r_pc;
     input r_branch_taken;
-
+    input [15:0] r_opcode;
+   
     // Memory Read Interface Interface
     output a_valid;
     input a_ready;
@@ -149,15 +154,17 @@ module address_generation_top (
     output [2:0] a_flag_0;
     output [2:0] a_flag_1;
     output [1:0] a_stack_op;
+    output [31:0] a_stack_address;   
     output [31:0] a_pc;
     output a_branch_taken;
     output a_to_sys_controller;
+    output [15:0] a_opcode;
    
     // -------   //
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -175,6 +182,7 @@ module address_generation_top (
     wire  [2:0] p_flag_0;
     wire  [2:0] p_flag_1;
     wire  [1:0] p_stack_op;
+    wire  [31:0] p_stack_address;   
     wire  [31:0] p_pc;
     wire  p_branch_taken;
    
@@ -193,8 +201,10 @@ module address_generation_top (
       a_flag_0,
       a_flag_1,
       a_stack_op,
+      a_stack_address,
       a_pc,
-      a_branch_taken	    
+      a_branch_taken,
+      a_opcode	    
     } = pipe_out_data;
 
     assign pipe_in_data = {
@@ -212,8 +222,10 @@ module address_generation_top (
       r_flag_0,
       r_flag_1,
       r_stack_op,
+      r_stack_address,
       r_pc,
-      r_branch_taken		    
+      r_branch_taken,
+      r_opcode		    
     };   
  
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);

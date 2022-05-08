@@ -111,7 +111,7 @@ module decode_stage_0 (
    byte_shifter_8B             addressing_shift ({8'b0,f_instruction[119:72],8'b0}, addressing_aligned , po_bytes);
 
    // Opcode Processing
-   opcode_rom_control     orc              (size_prefix, opcode_aligned[63:48], s0_rom_control, s0_rom_in_control);   
+   opcode_rom_control     orc              (s0_addressing[5:3],size_prefix, opcode_aligned[63:48], s0_rom_control, s0_rom_in_control);   
    opcode_imm_size_detect osd              (opcode_aligned[63:48], s0_opcode, s0_opcode_bytes, s0_immediete_bytes, size_prefix, have_modrm);
    byte_shifter_8B        opcode_shifter   ({f_instruction[127:88],24'b0}, opcode_aligned, s0_prefix_bytes);
 

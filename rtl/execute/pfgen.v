@@ -157,14 +157,14 @@ wire in2_strong;
 wire in1_strong;
 wire in0_strong;
 
-bufferH256$ in7_buff(.out(in[7]), .in(in7_strong));
-bufferH256$ in6_buff(.out(in[6]), .in(in6_strong));
-bufferH256$ in5_buff(.out(in[5]), .in(in5_strong));
-bufferH256$ in4_buff(.out(in[4]), .in(in4_strong));
-bufferH256$ in3_buff(.out(in[3]), .in(in3_strong));
-bufferH256$ in2_buff(.out(in[2]), .in(in2_strong));
-bufferH256$ in1_buff(.out(in[1]), .in(in1_strong));
-bufferH256$ in0_buff(.out(in[0]), .in(in0_strong));
+bufferH256$ in7_buff(.in(in[7]), .out(in7_strong));
+bufferH256$ in6_buff(.in(in[6]), .out(in6_strong));
+bufferH256$ in5_buff(.in(in[5]), .out(in5_strong));
+bufferH256$ in4_buff(.in(in[4]), .out(in4_strong));
+bufferH256$ in3_buff(.in(in[3]), .out(in3_strong));
+bufferH256$ in2_buff(.in(in[2]), .out(in2_strong));
+bufferH256$ in1_buff(.in(in[1]), .out(in1_strong));
+bufferH256$ in0_buff(.in(in[0]), .out(in0_strong));
 
 inv1$ in7_inv (.out(in7_not_weak), .in(in7_strong));
 inv1$ in6_inv (.out(in6_not_weak), .in(in6_strong));

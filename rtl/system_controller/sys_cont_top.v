@@ -1,7 +1,8 @@
 module sys_cont_top (
      clk,
      reset,
-     int_vec,		     
+     int_vec,	
+     cs_register,	     
      mem_valid,
      mem_ready,
      mem_address,
@@ -24,6 +25,8 @@ module sys_cont_top (
      decode_end_int,
      reg_load_cs,
      reg_cs,
+     ret_near,
+     ret_far,
      iretd,
      iretd_halt,
      iretd_pop_valid,
@@ -33,12 +36,17 @@ module sys_cont_top (
      reg_load_eip,
      reg_eip,
      pending_int,
-     hold_int			     
+     hold_int,
+     jump_load,
+     jump_load_address,
+     jump_load_cs,
+     jump_cs			     
 );
 
            input      clk;
            input      reset;
            input      [3:0] int_vec;
+           input      [15:0] cs_register;
            output     mem_valid;
 	   input      mem_ready;  
 	   output     [31:0] mem_address; 
@@ -61,6 +69,8 @@ module sys_cont_top (
 	   input      decode_end_int;  
 	   output     reg_load_cs;  
 	   output     [15:0] reg_cs;
+           input      ret_near;
+           input      ret_far;
            input      iretd;
            output     iretd_halt;
            input      iretd_pop_valid;
@@ -71,6 +81,17 @@ module sys_cont_top (
 	   output     [31:0] reg_eip;
            output     pending_int;
            input      hold_int;
+           input      jump_load;
+           input      [31:0] jump_load_address;
+           input      jump_load_cs;
+           input      [15:0] jump_cs;
+   
+           wire       r_jump_load;
+           wire       [31:0] r_jump_load_address;
+           wire       r_jump_load_cs;
+           wire       [15:0] r_jump_cs;
+   
+           wire [2:0] 	      start_state;
 
            wire       not_hold_int;   
   	   wire       reg_load_eflags_int;  
@@ -90,7 +111,16 @@ module sys_cont_top (
 	   wire       reg_load_cs_iretd;  
 	   wire       [15:0] reg_cs_iretd;
 	   wire       fetch_load_iretd;  
-	   wire       [31:0] fetch_load_address_iretd; 
+	   wire       [31:0] fetch_load_address_iretd;
+
+  	   wire       reg_load_eflags_jmp;  
+	   wire       [31:0] reg_eflags_jmp;
+  	   wire       reg_load_eip_jmp;  
+	   wire       [31:0] reg_eip_jmp;   
+	   wire       reg_load_cs_jmp;  
+	   wire       [15:0] reg_cs_jmp;
+	   wire       fetch_load_jmp;  
+	   wire       [31:0] fetch_load_address_jmp;    
    
            wire       flush_fetch_int;
            wire       flush_decode_0_int;
@@ -106,7 +136,15 @@ module sys_cont_top (
            wire       flush_register_iretd;
            wire       flush_address_iretd;
            wire       flush_execute_iretd;
-           wire       flush_writeback_iretd;  
+           wire       flush_writeback_iretd;
+
+           wire       flush_fetch_jmp;
+           wire       flush_decode_0_jmp;
+           wire       flush_decode_1_jmp;
+           wire       flush_register_jmp;
+           wire       flush_address_jmp;
+           wire       flush_execute_jmp;
+           wire       flush_writeback_jmp;    
    
            wire [1:0] int_serviced;
            wire [3:0] int_serviced_oh;
@@ -131,26 +169,68 @@ module sys_cont_top (
            // Control Accumulation
            //
 
-           or2$ off (flush_fetch,flush_fetch_int,flush_fetch_iretd);
-           or2$ fd0 (flush_decode_0,flush_decode_0_int,flush_decode_0_iretd); 
-           or2$ fd1 (flush_decode_1,flush_decode_1_int,flush_decode_1_iretd); 
-           or2$ fr  (flush_register,flush_register_int,flush_register_iretd); 
-           or2$ fa  (flush_address,flush_address_int,flush_address_iretd);
-           or2$ fe  (flush_execute,flush_execute_int,flush_execute_iretd);
-           or2$ fw  (flush_writeback,flush_writeback_int,flush_writeback_iretd);
+           or3$ off (flush_fetch,flush_fetch_int,flush_fetch_iretd,flush_fetch_jmp);
+           or3$ fd0 (flush_decode_0,flush_decode_0_int,flush_decode_0_iretd,flush_decode_0_jmp); 
+           or3$ fd1 (flush_decode_1,flush_decode_1_int,flush_decode_1_iretd,flush_decode_1_jmp); 
+           or3$ fr  (flush_register,flush_register_int,flush_register_iretd,flush_register_jmp); 
+           or3$ fa  (flush_address,flush_address_int,flush_address_iretd,flush_address_jmp);
+           or3$ fe  (flush_execute,flush_execute_int,flush_execute_iretd,flush_execute_jmp);
+           or3$ fw  (flush_writeback,flush_writeback_int,flush_writeback_iretd,flush_writeback_jmp);
 
-           or2$ rleflags  (reg_load_eflags,reg_load_eflags_int,reg_load_eflags_iretd);
-           or2$ rlcs      (reg_load_cs,reg_load_cs_int,reg_load_cs_iretd);
-           or2$ rleip     (reg_load_eip,reg_load_eip_int,reg_load_eip_iretd);
-           or2$ fla       (fetch_load,fetch_load_int,fetch_load_iretd);
+           or3$ rleflags  (reg_load_eflags,reg_load_eflags_int,reg_load_eflags_iretd,reg_load_eflags_jmp);
+           or3$ rlcs      (reg_load_cs,reg_load_cs_int,reg_load_cs_iretd,reg_load_cs_jmp);
+           or3$ rleip     (reg_load_eip,reg_load_eip_int,reg_load_eip_iretd,reg_load_eip_jmp);
+           or3$ fla       (fetch_load,fetch_load_int,fetch_load_iretd,fetch_load_jmp);
          
-           logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lbeflags ({reg_eflags_int,reg_eflags_iretd},reg_eflags);
-           logic_tree_bus #(.WIDTH(16), .INPUTS(2), .OPERATION(1)) lbcs ({reg_cs_int,reg_cs_iretd},reg_cs);
-           logic_tree_bus #(.WIDTH(32), .INPUTS(2), .OPERATION(1)) lbeip ({reg_eip_int,reg_eip_iretd},reg_eip);
+           logic_tree_bus #(.WIDTH(32), .INPUTS(3), .OPERATION(1)) lbeflags ({reg_eflags_int,
+                                                                              reg_eflags_iretd,
+                                                                              reg_eflags_jmp},reg_eflags);
+   
+           logic_tree_bus #(.WIDTH(16), .INPUTS(3), .OPERATION(1)) lbcs ({reg_cs_int,
+                                                                          reg_cs_iretd,
+                                                                          reg_cs_jmp},reg_cs);
+   
+           logic_tree_bus #(.WIDTH(32), .INPUTS(3), .OPERATION(1)) lbeip ({reg_eip_int,
+                                                                           reg_eip_iretd,
+                                                                           reg_eip_jmp},reg_eip);
            
-           ao_mux #(.WIDTH(32),.NINPUTS(2)) ({fetch_load_address_int,fetch_load_address_iretd}
+           ao_mux #(.WIDTH(32),.NINPUTS(3)) ({fetch_load_address_int,fetch_load_address_iretd,fetch_load_address_jmp}
                                             , fetch_load_address
-                                            ,{or_int_vec, not_zero_state});   
+                                            ,{or_int_vec, not_zero_state,r_jump_load});   
+
+           ////////////////////////////////
+           // 
+           // JUMP Handling
+           //
+           //
+
+           wire [49:0] 		     nc50;
+   
+           register #(.WIDTH(50)) jmp_reg (
+               clk,
+               reset,
+               {jump_load  , jump_load_address  , jump_cs  , jump_load_cs},
+               {r_jump_load, r_jump_load_address, r_jump_cs, r_jump_load_cs},
+               nc50,
+               1'b1				    
+           );
+		  
+           assign flush_fetch_jmp = r_jump_load;
+           assign flush_decode_0_jmp = r_jump_load;
+           assign flush_decode_1_jmp = r_jump_load;
+           assign flush_register_jmp = r_jump_load;
+           assign flush_address_jmp = r_jump_load;
+           assign flush_execute_jmp = r_jump_load;
+           assign flush_writeback_jmp = 'h0; 
+
+  	   assign reg_load_eflags_jmp  = 'h0;  
+	   assign reg_eflags_jmp  = 'h0;
+  	   assign reg_load_eip_jmp  = 'h0;  
+	   assign reg_eip_jmp  = 'h0;   
+	   assign reg_load_cs_jmp = jump_load_cs;  
+	   assign reg_cs_jmp = jump_cs;
+	   assign fetch_load_jmp = r_jump_load;  
+	   assign fetch_load_address_jmp = r_jump_load_address;   
    
            ////////////////////////////////
            // 
@@ -247,7 +327,7 @@ module sys_cont_top (
            );
       
            //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
-           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_one);
+           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_three);
            assign       reg_eip_iretd = iretd_pop_data;
 	     
            //assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
@@ -255,16 +335,24 @@ module sys_cont_top (
            assign       reg_cs_iretd = iretd_pop_data[15:0];
 
            //assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
+           wire           not_ret_near;
+           wire [15:0]    used_cs;
+           inv1$ (not_ret_near,  ret_near);      
+	     
+           ao_mux #(.WIDTH(16),.NINPUTS(2)) (  { cs_register , temp_cs }
+                                            , used_cs
+                                            ,  {  ret_near , not_ret_near});
+   
            and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
-           slow_addr #(.WIDTH(32)) ({16'b0,temp_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
+           slow_addr #(.WIDTH(32)) ({16'b0,used_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
            //assign       fetch_load_address_iretd = iretd_pop_data;  
 
            //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
-           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_three);
+           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_one);
            assign       reg_eflags_iretd = iretd_pop_data;   
    
            assign       last_state = fetch_load_iretd;
-       
+   
            assign       flush_fetch_iretd = iretd_halt;
            assign       flush_decode_0_iretd = 'h0;
            assign       flush_decode_1_iretd = 'h0;
@@ -299,8 +387,11 @@ module sys_cont_top (
            and3$ s2a (select2, select0n, select1n, iretd_pop_valid);
            and3$ s3a (select3, select0n, select1n, select2n);
 
+           ao_mux #(.WIDTH(3),.NINPUTS(3)) (  {  3'd1, 3'd2, 3'd3 }
+                                            , start_state
+                                            , {  iretd, ret_far, ret_near });
    
-           ao_mux #(.WIDTH(3),.NINPUTS(4)) (  { curr_state_iretd, curr_state_iretd_p1, 3'd0, {2'b0,iretd} }
+           ao_mux #(.WIDTH(3),.NINPUTS(4)) (  { curr_state_iretd, curr_state_iretd_p1, 3'd0, start_state }
                                             , next_state_iretd
                                             , { select3, select2, select1, select0 });
 				 

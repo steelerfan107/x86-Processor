@@ -7,8 +7,8 @@ output [63:0] out;
 wire [31:0] in0, in1;
 
 //dest is the contents of dest (r/m) to be written into src (a register)
-assign out[63:32] = in0;
+assign out[63:32] = dest;
 //src is the contents of src (register) to be written into dest (r/m)
-assign out[31:0] = in1;
+assign out[31:0] = src;
 
 endmodule
