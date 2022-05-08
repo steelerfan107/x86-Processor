@@ -9,6 +9,9 @@ module TOP;
     reg [15:0] write_data;
     reg write_enable;
 
+    reg [15:0] write_cs;
+    reg write_cs_enable;
+
     wire [15:0] cs_out;
     wire [15:0] ds_out;
     wire [15:0] es_out;
@@ -23,6 +26,9 @@ module TOP;
         write_select,
         write_data,
         write_enable,
+
+        write_cs,
+        write_cs_enable,
 
         cs_out,
         ds_out,
@@ -48,6 +54,9 @@ module TOP;
         write_select = 0;
         write_data = 0;
         write_enable = 0;
+
+        write_cs = 0;
+        write_cs_enable = 0;
 
         #12.5
 

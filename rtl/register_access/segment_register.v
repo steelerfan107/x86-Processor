@@ -13,6 +13,9 @@ module segment_register_file (
     write_data,
     write_enable,
 
+    write_cs,
+    write_cs_enable,
+
     cs_out,
     ds_out,
     es_out,
@@ -27,6 +30,9 @@ module segment_register_file (
     input [2:0] write_select;
     input [15:0] write_data;
     input write_enable;
+
+    input [15:0] write_cs;
+    input write_cs_enable;
 
     output [15:0] cs_out;
     output [15:0] ds_out;
@@ -65,10 +71,30 @@ module segment_register_file (
         end
     endgenerate
 
+    // cs can be forciblly written
+    // if cs_en is 1, set its input to cs_in and set its write to 1
+    // if cs_en is 0, set its input to write_data and its write to write_register[1]
+
+    wire [15:0] cs_write_data;
+
+    mux #(.WIDTH(16), .INPUTS(2)) cs_in_mux (
+        {write_cs, write_data},
+        cs_write_data,
+        write_cs_enable
+    );
+
+    wire cs_we;
+
+    mux #(.WIDTH(1), .INPUTS(2)) cs_we_mux (
+        {1'b1, write_register[1]},
+        cs_we,
+        write_cs_enable
+    );
+
     // 6 registers
     register #(.WIDTH(16)) 
     es (clk, reset, write_data, es_out, ,write_register[0]),
-    cs (clk, reset, write_data, cs_out, ,write_register[1]),
+    cs (clk, reset, cs_write_data, cs_out, ,cs_we),
     ss (clk, reset, write_data, ss_out, ,write_register[2]),
     ds (clk, reset, write_data, ds_out, ,write_register[3]),
     fs (clk, reset, write_data, fs_out, ,write_register[4]),
