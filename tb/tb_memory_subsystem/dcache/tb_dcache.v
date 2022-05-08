@@ -208,7 +208,7 @@ module TOP;
         #20
         #20
         rd_req_valid = 1;
-        rd_req_address = 32'h00000018;
+        rd_req_address = 32'h00000019;
 
         #20
 

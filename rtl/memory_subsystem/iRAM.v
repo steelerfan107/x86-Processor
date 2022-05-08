@@ -7,7 +7,7 @@
 module idataRAM(
     clk,
     reset,
-    index,
+    index_in,
     wr_en_inn,
     wr_data,
     out_data
@@ -16,8 +16,21 @@ module idataRAM(
     input clk;
     input reset;
 
-    input [4:0] index;
+    input [4:0] index_in;
+    wire [4:0] index;
     input wr_en_inn;
+
+    
+    // buffers to prevent timing violations
+    genvar i;
+    wire [4:0] tmp [0:8];
+    assign tmp[0] = index_in;
+    generate
+        for(i=1; i<9; i=i+1) begin
+            buffer8$ buffer(tmp[i], tmp[i-1]);
+        end
+    endgenerate
+    assign index = tmp[8];
 
     wire wr_en_in;
     //and2$ andd(wr_en_in, wr_en_inn, clk);
@@ -119,7 +132,7 @@ endmodule
 module itagRAM(
     clk,
     reset,
-    index,
+    index_in,
     wr_en_inn,
     wr_data,
     out_data
@@ -127,11 +140,24 @@ module itagRAM(
     input clk;
     input reset;
 
-    input [4:0] index;
+    input [4:0] index_in;
+    wire [4:0] index;
     input wr_en_inn;
     wire wr_en_in;
     //and2$ andd(wr_en_in, wr_en_inn, clk);
     assign wr_en_in = wr_en_inn;
+
+    // buffers to prevent timing violations
+    genvar i;
+    wire [4:0] tmp [0:8];
+    assign tmp[0] = index_in;
+    generate
+        for(i=1; i<9; i=i+1) begin
+            buffer8$ buffer(tmp[i], tmp[i-1]);
+        end
+    endgenerate
+    assign index = tmp[8];
+
 
     input [22:0] wr_data;
 

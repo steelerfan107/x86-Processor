@@ -7,7 +7,7 @@
 module ddataRAM(
     clk,
     reset,
-    index,
+    index_in,
     wr_en_inn,
     wr_data,
     out_data
@@ -16,8 +16,21 @@ module ddataRAM(
     input clk;
     input reset;
 
-    input [5:0] index;
+    input [5:0] index_in;
+    wire [5:0] index;
     input wr_en_inn;
+
+    
+    // buffers to prevent timing violations
+    genvar i;
+    wire [5:0] tmp [0:8];
+    assign tmp[0] = index_in;
+    generate
+        for(i=1; i<9; i=i+1) begin
+            buffer8$ buffer(tmp[i], tmp[i-1]);
+        end
+    endgenerate
+    assign index = tmp[8];
 
     wire wr_en_in;
     //and2$ andd(wr_en_in, wr_en_inn, clk);
@@ -78,7 +91,7 @@ endmodule
 module dtagRAM(
     clk,
     reset,
-    index,
+    index_in,
     wr_en_inn,
     wr_data,
     out_data
@@ -86,10 +99,26 @@ module dtagRAM(
     input clk;
     input reset;
 
-    input [5:0] index;
+    input [5:0] index_in;
+    wire [5:0] index;
     input wr_en_inn;
     wire wr_en_in;
-    //and2$ andd(wr_en_in, wr_en_inn, clk);
+
+
+    
+    // buffers to prevent timing violations
+    genvar i;
+    wire [5:0] tmp [0:8];
+    assign tmp[0] = index_in;
+    generate
+        for(i=1; i<9; i=i+1) begin
+            buffer8$ buffer(tmp[i], tmp[i-1]);
+        end
+    endgenerate
+    assign index = tmp[8];
+
+    
+    
     assign wr_en_in = wr_en_inn;
 
     input [22:0] wr_data;
@@ -104,7 +133,6 @@ module dtagRAM(
     wire [7:0] chip_select; 
 
     wire [7:0] wr_en;
-    genvar i;
     generate
         for (i=0; i<8; i=i+1) begin
             wire n_wr_en;
