@@ -57,6 +57,8 @@ module dcache_interface (
     output rd_dp_ready;
     input [63:0] rd_dp_read_data;
 
+    // read in rom
+    initial $readmemb("dcache_interface_rom.bit", rom);
 
     // two possible situations:
         // op0 is valid
