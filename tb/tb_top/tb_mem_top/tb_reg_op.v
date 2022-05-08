@@ -152,38 +152,37 @@ module TOP;
       imem_dp_read_data,
 
       // Data Memory Read Interface
-      dmem_r_valid,
-      dmem_r_ready,
-      dmem_r_address,
-      dmem_r_wr_en,    // unused
-      dmem_r_wr_data,  // unused
-      dmem_r_wr_size,  // unused
-      dmem_r_dp_valid,
-      dmem_r_dp_ready,
-      dmem_r_dp_read_data,
+      rmem_valid,
+      rmem_ready,
+      rmem_address,
+      rmem_wr_en,
+      rmem_wr_data,
+      rmem_wr_size,
+      rmem_dp_valid,
+      rmem_dp_ready,
+      rmem_dp_read_data,
 
       // Data Memory Write Interface
-      dmem_w_valid,
-      dmem_w_ready,
-      dmem_w_address,
-      dmem_w_wr_en,    
-      dmem_w_wr_data,  
-      dmem_w_wr_size,  
-      dmem_w_dp_valid,      // unused
-      dmem_w_dp_ready,      // unused
-      dmem_w_dp_read_data,   // unused
+      wmem_valid,
+      wmem_ready,
+      wmem_address,
+      wmem_wr_en,
+      wmem_wr_data,
+      wmem_wr_size,
+      wmem_dp_valid,
+      wmem_dp_ready,
+      wmem_dp_read_data  	
 
       // System Controller Read Interface
-      sys_r_valid,
-      sys_r_ready,
-      sys_r_address,
-      sys_r_dp_valid,
-      sys_r_dp_ready,
-      sys_r_dp_read_data,
+      emem_valid,
+      emem_ready,
+      emem_address,
+      emem_dp_valid,
+      emem_dp_ready,
+      emem_dp_read_data,
 
       contents_concat
    );
-   
    
    top_pipeline uut_pipeline(
       clk,

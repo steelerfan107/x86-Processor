@@ -1,6 +1,6 @@
 module icache_combinational_logic(
 state2, state1,  state0,  write_num,   write_num0,  read_valid,  dp_ready,    TLB_hit, cache_hit,   mem_ready,   bus_grant,   bus_busy,
-req_addr_en, busy_out,    write,   write_num_src,   mem_req, read_ready,  dp_valid,    grant_pass,  pa_src,  pa_wr_en,    new_state2, new_state1,  new_state0
+page_fault, req_addr_en, busy_out,    write,   write_num_src,   mem_req, read_ready,  dp_valid,    grant_pass,  pa_src,  pa_wr_en,    new_state2, new_state1,  new_state0
 );
 
 input state2;
@@ -16,6 +16,7 @@ input mem_ready ;
 input bus_grant;
 input bus_busy;
 
+output page_fault;
 output req_addr_en;
 output busy_out;
 output write;
@@ -162,5 +163,5 @@ assign pa_wr_en = or4;
 assign new_state2 = and26;
 assign new_state1 = or5;
 assign new_state0 = or6;
-
+assign page_fault = state2;
 endmodule
