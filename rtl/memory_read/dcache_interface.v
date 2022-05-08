@@ -14,6 +14,9 @@ module dcache_interface (
 
     a_valid,
 
+    a_ready,
+    e_valid,
+
     op0_address,
     op0_addr_is_valid,
     op1_address,
@@ -35,6 +38,9 @@ module dcache_interface (
     output [63:0] data_out;
 
     input a_valid;
+
+    output a_ready;
+    output e_valid;
 
     input [31:0] op0_address;
     input op0_address_is_valid;
@@ -73,6 +79,8 @@ module dcache_interface (
     wire [2:0] j = rom_out[5:3];
     assign rd_req_valid = rom_out[2];
     assign rd_dp_ready = rom_out[1];
+    assign a_ready = rom_out[8];
+    assign e_valid = rom_out[9];
     wire ld_mdr = rom_out[0];
 
     rom32b32w$ rom ({3'b0, next_state}, 1'b1, rom_out);
@@ -143,6 +151,9 @@ endmodule
 
 // determines next state for rom
 module dcache_interface_microsequencer (
+    clk,
+    reset
+
     next_state,
 
     j,
@@ -151,6 +162,8 @@ module dcache_interface_microsequencer (
     start,
     rd_dp_valid
 );
+    input clk;
+    input reset;
 
     output [2:0] next_state;
 
@@ -165,17 +178,32 @@ module dcache_interface_microsequencer (
     inv0 (cond_not[0], cond[0]),
     inv1 (cond_not[1], cond[1]);
 
+    wire [2:0] next_state_reg_in;
+    
+
     wire j0_cond;
     and3$ j0_and (j0_cond, cond[1], cond[0], rd_dp_valid);
-    or2$ j0_or (next_state[0], j[0], j0_cond);
+    or2$ j0_or (next_state_reg_in[0], j[0], j0_cond);
 
     wire j1_cond;
     and3$ j1_and (j1_cond, cond_not[1], cond[0], start);
-    or2$ j1_or (next_state[1], j[1], j1_cond);
+    or2$ j1_or (next_state_reg_in[1], j[1], j1_cond);
 
     wire j2_cond;
     and3$ j2_and (j2_cond, cond[1], cond_not[0]);
-    or2$ j2_or (next_state[2], j[2], j2_cond);
+    or2$ j2_or (next_state_reg_in[2], j[2], j2_cond);
+
+    // from register_file
+    wire [31:0] next_state_out;
+    assign next_state = next_state_out[2:0];
+    register_32_reset next_state_reg (
+        next_state_out,     // d
+        {29'h0, next_state_reg_in},  // q
+        32'h0,              // reset value
+        1'b1,               // always enable
+        clk,                // clk
+        reset               // reset
+    );
 
 
 

@@ -196,7 +196,7 @@ module memory_read_top (
        a_opcode     
     };
    
-    assign p_valid = a_valid;
+    // assign p_valid = a_valid;
     assign a_ready = p_ready;
     assign p_size = a_size;            
     assign p_set_d_flag = a_set_d_flag;
@@ -234,11 +234,19 @@ module memory_read_top (
 
     wire [63:0] dcache_data_out;
 
+    wire dcache_ready;
+    wire dcache_valid;
+
     dcache_interface dcache_interface0 (
         clk,
         reset,
 
         dcache_data_out,
+
+        a_valid,   // valid in
+
+        dcache_ready,   // ready out
+        dcache_valid,   // valid out
 
         a_op0,
         a_op0_is_address,
@@ -321,6 +329,29 @@ module memory_read_top (
    or2$  (halt, halt0, halt1);
 
    // Use halt signal to hold tranaction until dependency is cleared
+
+   // ----- //
+   // Valid //
+   // ----- //
+
+   // valid when address generation is valid and memory read is complete
+   and2$ valid_and (p_valid, a_valid, dcache_valid);
+
+   // ----- //
+   // Stall //
+   // ----- //
+   
+   // stall (set ready to 0) if halt is 1, or dcache ready is 0, or e_ready is 0
+   // ready if halt is 0 and dcache ready is 1 and e_ready is 1
+   // a_ready = ~halt & dcache_ready & e_ready
+
+    wire halt_not;
+    inv1$ halt_inv (halt_not, halt);
+
+    and3$ a_ready_and (a_ready, halt_not, dcache_ready, e_ready);
+
+
+    
    
 
 endmodule
@@ -360,7 +391,7 @@ module memory_read_data_mask (
         },
         out,
         size
-    )
+    );
 
 
 endmodule
