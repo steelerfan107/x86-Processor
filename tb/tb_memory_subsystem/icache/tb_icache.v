@@ -136,7 +136,7 @@ module TOP;
         #20
         reset = 0;
         #20
-        req_address = 32'h0a000210;
+        req_address = 32'h00000210;
         req_valid = 1;
 
         #20
