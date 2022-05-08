@@ -21,6 +21,7 @@ module execute_top (
     e_eax,
     e_cs,
     e_stack_ptr,
+    e_stack_op,
     e_op,
     e_opcode,
     e_opsize,
@@ -40,6 +41,7 @@ module execute_top (
     wb_result,
     wb_opsize,
     wb_mem_or_reg,
+    wb_stack,
     wb_valid,
     wb_branch_taken,
     wb_to_sys_controller,
@@ -69,6 +71,7 @@ module execute_top (
     input [31:0] e_eax;
     input [15:0]  e_cs;
     input [31:0] e_stack_ptr;
+    input [1:0] e_stack_op;
     input [3:0] e_op;
     input [15:0] e_opcode;
     input [1:0] e_opsize;
@@ -88,6 +91,7 @@ module execute_top (
     output [63:0] wb_result;
     output [1:0] wb_opsize;
     output wb_mem_or_reg;
+    output wb_stack;
     output wb_valid;
     output wb_branch_taken;
     output wb_to_sys_controller;
@@ -112,7 +116,7 @@ module execute_top (
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1;
 
     wire [31:0]  p_dest_address = 'h0;;
     wire  [31:0] p_dest_reg = e_dest_reg;
@@ -123,28 +127,32 @@ module execute_top (
     wire         p_to_sys_controller = e_to_sys_controller;
     wire  [31:0] p_pc = e_pc;
 
+    or2$ (p_stack, e_stack_op[0], e_stack_op[1]);
+
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
 
     assign pipe_in_data = {
         p_dest_address,
         p_dest_reg,
-        p_result,
+        e_alu_out,
         p_opsize,
         p_mem_or_reg,
         e_branch_taken,
         e_to_sys_controller,
-        e_pc	    
+        e_pc,
+        p_stack	    
     };
 
     assign {
         wb_dest_address,
-        wb_dest_rege_dest_reg,
+        wb_dest_reg,
         wb_result,
         wb_opsize,
         wb_mem_or_reg,
         wb_branch_taken,
         wb_to_sys_controller,
-        wb_pc
+        wb_pc,
+	wb_stack
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);

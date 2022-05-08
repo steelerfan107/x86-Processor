@@ -59,6 +59,7 @@ module register_access_top (
     r_flag_0,
     r_flag_1,
     r_stack_op,
+    r_stack_address,
     r_seg_override,
     r_seg_override_valid,
     r_eax,
@@ -89,6 +90,7 @@ module register_access_top (
 
     wb_reg_number,
     wb_reg_en,
+    wb_stack,
     wb_reg_size,
     wb_reg_data,
 
@@ -155,6 +157,7 @@ module register_access_top (
     output [2:0] r_flag_0;
     output [2:0] r_flag_1;
     output [1:0] r_stack_op;
+    output [31:0] r_stack_address;   
     output [2:0] r_seg_override;
     output r_seg_override_valid;
     output [31:0] r_eax;
@@ -190,6 +193,7 @@ module register_access_top (
     // register file writeback
     input [2:0] wb_reg_number;
     input wb_reg_en;
+    input wb_stack;   
     input [2:0] wb_reg_size;
     input [31:0] wb_reg_data;
 
@@ -203,11 +207,13 @@ module register_access_top (
     input wb_mmx_en;
     input [63:0] wb_mmx_data;
 
+    wire 	stack_operation;
+   
     // ------                     //
     // Pipestage (Bypass for now) //
     // ------                     //
    
-    localparam PIPEWIDTH = 1+32+1+3+2+3+3+4+32+48+8+8+3+3+3+3+1+1+3+8*32+6*16+8*64+16;
+    localparam PIPEWIDTH = 1+32+1+3+2+3+3+4+32+48+8+8+3+3+3+3+1+1+3+8*32+6*16+8*64+16+32;
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -234,7 +240,8 @@ module register_access_top (
     wire [63:0] p_mm4;
     wire [63:0] p_mm5;
     wire [63:0] p_mm6;
-    wire [63:0] p_mm7;   
+    wire [63:0] p_mm7;
+    wire [31:0] p_stack_address;
 
     assign {
        r_size,
@@ -252,6 +259,7 @@ module register_access_top (
        r_flag_0,
        r_flag_1,
        r_stack_op,
+       r_stack_address,
        r_seg_override,
        r_seg_override_valid,
        r_pc,
@@ -297,6 +305,7 @@ module register_access_top (
        d_flag_0,
        d_flag_1,
        d_stack_op,
+       p_stack_address,
        d_seg_override,
        d_seg_override_valid,
        d_pc,
@@ -344,6 +353,8 @@ module register_access_top (
         clk,
         reset,
 
+	stack_operation,					  
+
         d_size,
 
         d_op0,
@@ -365,8 +376,80 @@ module register_access_top (
         r_ready     // TODO: Not sure how to connect it to the next stage interface
     );
 
+    // --------------- //
+    // Stack Logic     //
+    // --------------- //
 
+    // This contains the working esi. The true esi is only commited at the writeback stage in case of flush
+    wire [31:0] local_esi, local_esi_in, n_local_esi;
+    wire 	stack_pop = d_stack_op[1];
+    wire 	stack_push = d_stack_op[0];
 
+    or2$ (stack_operation, stack_pop, stack_push);
+   
+    wire 	n_wb_stack;
+    inv1$ (n_wb_stack, wb_stack);
+ 
+    wire 	reg_eq_esi;   
+
+    wire 	local_commit;
+    wire 	wb_commit;
+    wire 	temp_esi_commit;
+
+    wire 	n_wb_commit_delay,wb_commit_delay; 
+   
+    wire [31:0] new_local_esi_pop,  new_local_esi_push;
+    wire [31:0] new_local_esi_pop_p2;
+    wire [31:0] new_local_esi_pop_p4;
+    wire [31:0] new_local_esi_push_m1;   
+    wire [31:0] new_local_esi_push_m2;
+    wire [31:0] new_local_esi_push_m4; 
+
+    compare #(.WIDTH(3)) esi_write (3'd7, wb_reg_number,reg_eq_esi);
+   
+    and3$ (local_commit    , d_valid, d_ready, stack_operation);
+    and4$ (wb_commit       , wb_valid, wb_ready, n_wb_stack, reg_eq_esi);
+
+    // After any non stack access to the ESI register load the tmp with what was written
+    // Stack operations cant start anyways until all ESI writes are out of the pipeline ahead of it.
+    register #(.WIDTH(32)) local_commit_delay (
+               clk,
+               reset,
+               wb_commit,
+               wb_commit_delay,
+               n_wb_commit_delay,
+               1'b1				    
+    );
+   
+    or2$  (temp_esi_commit , wb_commit_delay, local_commit);
+   
+    slow_addr #(.WIDTH(32)) add4 (local_esi, 32'd4, ew_local_esi_pop_p4, nc0);
+    slow_addr #(.WIDTH(32)) add2 (local_esi, 32'd2, new_local_esi_pop_p2, nc0);
+
+    slow_addr #(.WIDTH(32)) m4 (local_esi, 32'd11111100, new_local_esi_push_m4, nc0);
+    slow_addr #(.WIDTH(32)) m2 (local_esi, 32'b11111110, new_local_esi_push_m2, nc0);   
+    slow_addr #(.WIDTH(32)) m1 (local_esi, 32'b11111111, new_local_esi_push_m1, nc0);   
+
+    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({new_local_esi_pop_p4 , new_local_esi_pop_p2} , new_local_esi_pop , d_size[0]);	
+    mux #(.INPUTS(4),.WIDTH(32)) push_sel ({new_local_esi_push_m4, 
+                                            new_local_esi_push_m2,
+                                            new_local_esi_push_m1,
+                                            new_local_esi_push_m1}, new_local_esi_push, d_size);
+    
+    mux #(.INPUTS(2),.WIDTH(32)) in_sel ({r_esi, r_esi, 
+                                          new_local_esi_pop, new_local_esi_push}, local_esi_in, {wb_commit_delay,stack_pop});	
+     
+    slow_addr #(.WIDTH(32)) sub1 (r_ss, local_esi, p_stack_address, nc0);
+
+    register #(.WIDTH(32)) local_esi_reg (
+               clk,
+               reset,
+               local_esi_in,
+               local_esi,
+               n_local_esi,
+               temp_esi_commit				    
+    );
+   
     // --------------- //
     // Set Reg Numbers //
     // --------------- //

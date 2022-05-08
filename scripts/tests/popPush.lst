@@ -1,0 +1,22 @@
+// pushPop Sanity Test
+// Eric T.
+
+0x0: B8 00 00 11 11 // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
+0x5: B9 00 00 00 09 // Move 0x0000_0009 to ECX (Move imm to r32) - Row 61
+0xa: BA 00 00 00 40 // Move 0x0000_0400 to EDX (Move imm to r32) - Row 61
+0xf: BB 00 00 00 88 // Move 0x0000_0088 to EBX (Move imm to r32) - Row 61
+0x14: 89 D6 // Move EDX to ESI (Move R/M32 to r32) - Row 69
+0x16: 66 68 10 10 // Push imm16 - 113
+0x1a: 68 02 02 02 02 // Push imm32 114
+0x1f: FF F0 // Push modrm 109
+0x21: FF F1 // Push modrm 109
+0x23: FF F2 // Push modrm 109
+0x25: FF F3 // Push modrm 109
+0x27: 58 // Pop modrm 102
+0x28: 59 // Pop modrm 102
+0x29: 5a // Pop modrm 102
+0x2a: 5b // Pop modrm 102
+0x2b: 5c // Pop modrm 102
+0x2c: 5d // Pop modrm 102
+0x2d: 66 5e // Pop modrm 101
+0x2f: F4 00 00 00 00 00 // Halt
