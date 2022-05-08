@@ -117,6 +117,17 @@ module memory_read_top (
     output e_to_sys_controller;
     output [15:0] e_opcode; 
 
+    // ------------ //
+    // DCache Ports //
+    // ------------ //
+
+    output rd_req_valid;
+    input rd_req_ready;
+    output [31:0] rd_req_address;
+    input rd_dp_valid;
+    output rd_dp_ready;
+    input [63:0] rd_dp_read_data;
+
     // --------- //
     // Pipestage //
     // --------- //
@@ -190,10 +201,11 @@ module memory_read_top (
     assign p_size = a_size;            
     assign p_set_d_flag = a_set_d_flag;
     assign p_clear_d_flag = a_clear_d_flag;
-    assign p_op_a = a_op0;           
-    assign p_op_b = a_op1;           
+    // assign p_op_a = a_op0;           
+    // assign p_op_b = a_op1;           
     assign p_op_a_reg = a_op0_reg;        
-    assign p_op_a_address = 'h0;    
+    // assign p_op_a_address = 'h0;
+    assign p_op_a_address = a_op0;  // an address for op0 will be contained in this reg - brandon
     assign p_op_a_is_address = a_op0_is_address;      
     assign p_stack_ptr = 'h0;  
     assign p_imm = a_imm;        
@@ -215,6 +227,65 @@ module memory_read_top (
     wire    addr0_match;
     wire    addr1_match;
     wire    halt, halt0, halt1;
+
+    // ---------------- //
+    // DCache Interface //
+    // ---------------- //
+
+    wire [63:0] dcache_data_out;
+
+    dcache_interface dcache_interface0 (
+        clk,
+        reset,
+
+        dcache_data_out,
+
+        a_op0,
+        a_op0_is_address,
+        a_op1,
+        a_op1_is_address,
+
+        a_size,
+
+        rd_req_valid,
+        rd_req_ready,
+        rd_req_address,
+        rd_dp_valid,
+        rd_dp_ready,
+        rd_dp_read_data
+    );
+
+    wire [63:0] dcache_out_resized;
+    // Mask out any data that is not needed since dcache outputs 64 bits
+    memory_read_data_mask memory_read_data_mask0 (
+        dcache_out_resized,
+
+        dcache_data_out,
+        a_size
+    );
+
+    // mux value to op a and op b
+    mux #(.WIDTH(64), .INPUTS(2)) op_a_mux (
+        {
+            dcache_out_resized,
+            a_op0
+        },
+        p_op_a,
+        a_op0_is_address
+    );
+
+    mux #(.WIDTH(64), .INPUTS(2)) op_b_mux (
+        {
+            dcache_out_resized,
+            a_op1
+        },
+        p_op_b,
+        a_op1_is_address
+    );
+
+    // ------------------ //
+    // Addredd Dependency //
+    // ------------------ //
 
     and3$ ( pop_address_dependency , wb_valid, wb_ready, wb_to_memory);
     and3$ ( push_address_dependency, e_valid, e_ready, a_op0_is_address);   // changed from and2 to and3 - brandon
@@ -251,5 +322,45 @@ module memory_read_top (
 
    // Use halt signal to hold tranaction until dependency is cleared
    
+
+endmodule
+
+// Masks out undesired data since dcache returns 64 bits of data
+module memory_read_data_mask (
+    out,
+
+    data,
+    size
+);
+
+    output [63:0] out;
+
+    input [63:0] data;
+    input [2:0] size;
+
+    // size_map = 
+    // '0'  : "0",
+    // '8'  : "1",
+    // '16' : "2",
+    // '32' : "3",
+    // '48' : "4",
+    // '64' : "5"
+
+    mux #(.WIDTH(64), .INPUTS(8)) size_mux (
+        {
+            64'h0,  // 7
+            64'h0,  // 6
+            data,  // 64
+            {16'h0, data[47:0]},  // 48
+            {32'h0, data[31:0]},  // 32
+            {48'h0, data[15:0]},  // 16
+            {56'h0, data[7:0]},  // 8
+            64'h0  // 0
+
+        },
+        out,
+        size
+    )
+
 
 endmodule

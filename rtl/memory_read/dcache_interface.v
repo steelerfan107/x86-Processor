@@ -7,11 +7,34 @@
 
 
 module dcache_interface (
+    clk,
+    reset,
 
+    data_out,
+
+    a_valid,
+
+    op0_address,
+    op0_addr_is_valid,
+    op1_address,
+    op1_addr_is_valid,
+
+    size,
+
+    rd_req_valid,
+    rd_req_ready,
+    rd_req_address,
+    rd_dp_valid,
+    rd_dp_ready,
+    rd_dp_read_data
 
 );
-    output [63:0] op0_data;
-    output [63:0] op1_data;
+    input clk;
+    input reset;
+
+    output [63:0] data_out;
+
+    input a_valid;
 
     input [31:0] op0_address;
     input op0_address_is_valid;
@@ -29,10 +52,9 @@ module dcache_interface (
     input [63:0] rd_dp_read_data;
 
 
-    // Three possible situations:
+    // two possible situations:
         // op0 is valid
         // op1 is valid
-        // op0 and op1 is valid
 
     // if only one is valid read from memory directly
     // if both are active, read op0 then op1
@@ -41,15 +63,119 @@ module dcache_interface (
         // 00: Do nothing
         // 01: rd_req_address = op0_address and rd_req_valid = 1
         // 10: rd_req_address = op1_address and rd_req_valid = 1
-        // 11: first read op0_address then read op1_address
 
-    // actually, this doesn't actually happen. only need to read one memory location at a time
-    // reading both:
-        // set address to op0 address
-        // wait for rd_dp_valid to be 1
-        // set this value to a register and set address to op1 address
-        // wait for rd_dp_valid to be 1
-        // set this value to another register and finish
+    wire start;
+    wire [2:0] next_state;
+
+    wire [31:0] rom_out;
+
+    wire [1:0] cond = rom_out[7:6];
+    wire [2:0] j = rom_out[5:3];
+    assign rd_req_valid = rom_out[2];
+    assign rd_dp_ready = rom_out[1];
+    wire ld_mdr = rom_out[0];
+
+    rom32b32w$ rom ({3'b0, next_state}, 1'b1, rom_out);
+
+    dcache_interface_microsequencer dcache_interface_microsequencer0 (
+        next_state,
+
+        j,
+        cond,
+        rd_req_ready,
+        start,
+        rd_dp_valid
+    );
+
+    ao_mux #(.WIDTH(32), .NINPUTS(2)) rd_req_mux (
+        {op1_address, op0_address},
+        rd_req_address,
+        {op1_address_is_valid, op0_address_is_valid}
+    );
+
+
+    register #(.WIDTH(64)) mdr (
+        clk,
+        reset,
+        rd_dp_read_data,
+        data_out,
+        ,
+        ld_mdr
+    );
+
+
+    dcache_interface_start_fsm dcache_interface_start_fsm0 (
+        start,
+
+        a_valid,
+        op0_address_is_valid,
+        op1_address_is_valid
+    );
+
+
+
+
+
+endmodule
+
+// determines of fsm should start running
+module dcache_interface_start_fsm (
+    out,
+
+    a_valid,
+    op0_valid,
+    op1_valid
+);
+    output out;
+
+    input a_valid;
+    input op0_valid;
+    input op1_valid;
+
+    wire op0_a_valid;
+    and2$ op0_and (op0_a_valid, a_valid, op0_valid);
+
+    wire op1_a_valid;
+    and2$ op1_and (op1_a_valid, a_valid, op1_valid);
+
+    or2$ out_or (out, op0_a_valid, op1_a_valid);
+endmodule
+
+// determines next state for rom
+module dcache_interface_microsequencer (
+    next_state,
+
+    j,
+    cond,
+    rd_req_ready,
+    start,
+    rd_dp_valid
+);
+
+    output [2:0] next_state;
+
+    input [2:0] j;
+    input [1:0] cond;
+    input rd_req_ready;
+    input start;
+    input rd_dp_valid;
+
+    wire [1:0] cond_not;
+    inv1$ 
+    inv0 (cond_not[0], cond[0]),
+    inv1 (cond_not[1], cond[1]);
+
+    wire j0_cond;
+    and3$ j0_and (j0_cond, cond[1], cond[0], rd_dp_valid);
+    or2$ j0_or (next_state[0], j[0], j0_cond);
+
+    wire j1_cond;
+    and3$ j1_and (j1_cond, cond_not[1], cond[0], start);
+    or2$ j1_or (next_state[1], j[1], j1_cond);
+
+    wire j2_cond;
+    and3$ j2_and (j2_cond, cond[1], cond_not[0]);
+    or2$ j2_or (next_state[2], j[2], j2_cond);
 
 
 
