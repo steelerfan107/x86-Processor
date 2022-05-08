@@ -18,11 +18,9 @@ module dcache_interface (
     e_valid,
 
     op0_address,
-    op0_addr_is_valid,
+    op0_address_is_valid,
     op1_address,
-    op1_addr_is_valid,
-
-    size,
+    op1_address_is_valid,
 
     rd_req_valid,
     rd_req_ready,
@@ -47,8 +45,6 @@ module dcache_interface (
     input [31:0] op1_address;
     input op1_address_is_valid;
 
-    input [2:0] size;
-
     // interface to dcache
     output rd_req_valid;
     input rd_req_ready;
@@ -58,7 +54,7 @@ module dcache_interface (
     input [63:0] rd_dp_read_data;
 
     // read in rom
-    initial $readmemb("dcache_interface_rom.bit", rom);
+    // initial $readmemb("dcache_interface_rom.bit", rom.mem);
 
     // two possible situations:
         // op0 is valid
@@ -85,9 +81,12 @@ module dcache_interface (
     assign e_valid = rom_out[9];
     wire ld_mdr = rom_out[0];
 
-    rom32b32w$ rom ({3'b0, next_state}, 1'b1, rom_out);
+    rom32b32w$ rom ({2'b0, next_state}, 1'b1, rom_out);
 
     dcache_interface_microsequencer dcache_interface_microsequencer0 (
+        clk,
+        reset,
+
         next_state,
 
         j,
@@ -154,7 +153,7 @@ endmodule
 // determines next state for rom
 module dcache_interface_microsequencer (
     clk,
-    reset
+    reset,
 
     next_state,
 
@@ -192,7 +191,7 @@ module dcache_interface_microsequencer (
     or2$ j1_or (next_state_reg_in[1], j[1], j1_cond);
 
     wire j2_cond;
-    and3$ j2_and (j2_cond, cond[1], cond_not[0]);
+    and3$ j2_and (j2_cond, cond[1], cond_not[0], rd_req_ready);
     or2$ j2_or (next_state_reg_in[2], j[2], j2_cond);
 
     // from register_file

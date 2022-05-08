@@ -253,8 +253,6 @@ module memory_read_top (
         a_op1,
         a_op1_is_address,
 
-        a_size,
-
         rd_req_valid,
         rd_req_ready,
         rd_req_address,
@@ -349,10 +347,6 @@ module memory_read_top (
     inv1$ halt_inv (halt_not, halt);
 
     and3$ a_ready_and (a_ready, halt_not, dcache_ready, e_ready);
-
-
-    
-   
 
 endmodule
 
