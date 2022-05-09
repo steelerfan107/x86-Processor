@@ -337,9 +337,10 @@ module register_access_top (
 
    //assign r_valid = d_valid;
    //assign d_ready = r_ready;
-    wire register_file_stall;     
-   and2$ (r_valid, d_valid, ~register_file_stall);
-   and2$ (d_ready, r_ready, ~register_file_stall);   
+   wire register_file_stall;  
+   wire seg_reg_is_stall;
+   and3$ (r_valid, d_valid, ~register_file_stall, ~seg_reg_is_stall);
+   and3$ (d_ready, r_ready, ~register_file_stall, ~seg_reg_is_stall);   
   
    //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
    
@@ -379,6 +380,23 @@ module register_access_top (
         wb_reg_en,
 
         in_accept     // TODO: Not sure how to connect it to the next stage interface
+    );
+
+    // Segment Register Stall
+    segment_register_stall segment_register_stall0 (
+        clk,
+        reset,
+
+        segment_register_stall,
+
+        wb_seg_number,
+        web_seg_en,
+
+        d_op0,
+        d_op0_reg,
+
+        d_op1,
+        d_op1_reg
     );
 
     
