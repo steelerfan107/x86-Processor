@@ -18,8 +18,23 @@ module segment_register_stall (
     op0_reg,
 
     op1,
-    op1_reg,
+    op1_reg
 );
+
+    input clk;
+    input reset;
+
+    output is_stall;
+
+    input [2:0] write_select;
+    input write_enable;
+
+    input [2:0] op0;
+    input [2:0] op0_reg;
+
+    input [2:0] op1;
+    input [2:0] op1_reg;
+
 
     // first determine if segment register is being used
     wire op0_is_segment, op1_is_segment;
@@ -63,15 +78,67 @@ module segment_register_stall (
     gs_accesses (gs_out, gs_in, 32'h0, gs_en, clk, reset);
 
     // see if the value of the regs is going to be changed
+    segment_stall_modify_table
+    es_mod (es_in, es_out, es_en, 3'd0, op0_reg, op0_is_segment, write_select, write_enable),
+    cs_mod (cs_in, cs_out, cs_en, 3'd1, op0_reg, op0_is_segment, write_select, write_enable),
+    ss_mod (ss_in, ss_out, ss_en, 3'd2, op0_reg, op0_is_segment, write_select, write_enable),
+    ds_mod (ds_in, ds_out, ds_en, 3'd3, op0_reg, op0_is_segment, write_select, write_enable),
+    fs_mod (fs_in, fs_out, fs_en, 3'd4, op0_reg, op0_is_segment, write_select, write_enable),
+    gs_mod (gs_in, gs_out, gs_en, 3'd5, op0_reg, op0_is_segment, write_select, write_enable);
 
+    // see if there should be a stall
+    // use mux to pic which table op1 needs
+    // use is_stall to see if there be stall
+    wire [31:0] table_select;
+    mux #(.WIDTH(32), .INPUTS(8)) table_mux (
+        {
+            32'h0,
+            32'h0,
+            gs_out,
+            fs_out,
+            ds_out,
+            ss_out,
+            cs_out,
+            es_out
+        },
+        table_select,
+        op1_reg
+    );
 
+    wire is_stall_if_op1_is_actually_used;
+    segment_stall_is_stall segment_stall_is_stall0 (is_stall_if_op1_is_actually_used, table_select);
 
+    // only stall if it do be a seg reg
+    and2$ out_and (is_stall, op1_is_segment, is_stall_if_op1_is_actually_used);
 
-
-    
 
 
 endmodule;
+
+module segment_stall_is_stall (
+    is_stall,
+
+    table_data
+);
+
+    output is_stall;
+
+    input [31:0] table_data;
+
+    // compare and see if it is zero
+    // if it is not zero, stall
+    wire cmp_result;
+    compare #(.WIDTH(32)) cmp_zero (
+        table_data,
+        32'h0,
+        cmp_result
+    );
+
+    inv1$ inv (is_stall, cmp_result);
+
+endmodule;
+
+
 
 module segment_stall_modify_table (
     reg_in,
@@ -84,9 +151,8 @@ module segment_stall_modify_table (
     op0_reg,
     op0_is_valid,
 
-    wb_reg
+    wb_reg,
     wb_is_valid
-
 );
 
     output [31:0] reg_in;
@@ -108,7 +174,7 @@ module segment_stall_modify_table (
     // stay the same if both are true
 
     // see if op0_reg == reg_number using xnor
-    wire [2:0] op0_xnor_out
+    wire [2:0] op0_xnor_out;
     xnor2$ 
     op0_xnor_0 (op0_xnor_out[0], op0_reg[0], reg_number[0]),
     op0_xnor_1 (op0_xnor_out[1], op0_reg[1], reg_number[1]),
@@ -119,7 +185,7 @@ module segment_stall_modify_table (
     and4$ op0_and (increment, op0_xnor_out[0], op0_xnor_out[1], op0_xnor_out[2], op0_is_valid);
 
     // see if wb_reg == reg_number
-    wire [2:0] wb_xnor_out
+    wire [2:0] wb_xnor_out;
     xnor2$ 
     wb_xnor_0 (wb_xnor_out[0], wb_reg[0], reg_number[0]),
     wb_xnor_1 (wb_xnor_out[1], wb_reg[1], reg_number[1]),
@@ -147,6 +213,7 @@ module segment_stall_modify_table (
     // set write enable only if we are adding or subtracting
     xor2$ we_xor (reg_we, increment, decrement);
 
+endmodule
 
 // determines if segment is being accessed this instruction
 module segment_stall_op_is_segment (
