@@ -261,6 +261,9 @@ module top_pipeline (
    wire [2:0]              a_op0_reg;
    wire [2:0]              a_op1_reg;
    wire                    a_op0_is_address;
+   wire                    a_op0_is_reg;
+   wire                    a_op0_is_segment;
+   wire                    a_op0_is_mmx;
    wire                    a_op1_is_address;
    wire [47:0]             a_imm;
    wire [3:0]              a_alu_op;
@@ -283,7 +286,10 @@ module top_pipeline (
    wire   [63:0]           e_op_b;           // value for operand b
    wire   [2:0]            e_op_a_reg;        // register number for operand a
    wire   [31:0]           e_op_a_address;    // address for operand a
-   wire                    e_op_a_is_address;       
+   wire                    e_op_a_is_address;
+   wire                    e_op_a_is_segment;
+   wire                    e_op_a_is_reg;
+   wire                    e_op_a_is_mmx;                   
    wire  [31:0]            e_stack_ptr;      // stack pointer address
    wire   [47:0]           e_imm;            // immediate
    wire   [3:0]            e_alu_op;          // alu operation defined in #decode channel
@@ -296,12 +302,16 @@ module top_pipeline (
    wire [15:0] 		   e_opcode;
    
    // Writeback Interfacre
-   wire                    wb_ready = 1'b1;
+   wire                    wb_ready;
    wire  [31:0]            wb_dest_address;
    wire  [31:0]            wb_dest_reg;
    wire  [63:0]            wb_result;
    wire  [1:0]             wb_opsize;
    wire                    wb_mem_or_reg;
+   wire                    wb_op_a_is_address;
+   wire                    wb_op_a_is_reg;
+   wire                    wb_op_a_is_segment;
+   wire                    wb_op_a_is_mmx;
    wire                    wb_valid;
    wire                    wb_branch_taken;
    wire                    wb_to_sys_controller;
@@ -320,6 +330,16 @@ module top_pipeline (
    
    wire 	           busy_ahead_of_decode;  
    wire 	           wb_accept;
+
+   wire                  test_rmem_valid;
+   wire   	           test_rmem_ready;
+   wire    [DADDRW-1:0]  test_rmem_address;
+   wire    	           test_rmem_wr_en;
+   wire   [DDATAW-1:0]   test_rmem_wr_data;
+   wire   [DSIZEW-1:0]   test_rmem_wr_size;
+   wire                   test_rmem_dp_valid;
+   wire                  test_rmem_dp_ready;
+   wire    [DDATAW-1:0]   test_rmem_dp_read_data;   
 
    fetch_top uut_fetch (
       clk,
@@ -414,6 +434,8 @@ module top_pipeline (
       clk,
       reset,
       reg_flush,
+      reg_cs,
+      reg_load_cs,					    
       d_valid,
       d_ready,
       d_size,
@@ -483,16 +505,16 @@ module top_pipeline (
       r_branch_taken,
       r_opcode,					    
       wb_reg_number,
-      (wb_reg_en & ~wb_stack),
+      (wb_op_a_is_reg & wb_valid),
       wb_stack,
       wb_reg_size,
-      wb_reg_data,
-      wb_seg_number,
-      wb_seg_en,
-      wb_seg_data,
-      wb_mmx_number,
-      wb_mmx_en,
-      wb_mmx_data
+      wb_reg_data[31:0],
+      wb_reg_number,
+      (wb_op_a_is_segment & wb_valid),
+      wb_reg_data[15:0],
+      wb_reg_number,
+      (wb_op_a_is_mmx & wb_valid),
+      wb_reg_data
   );
 
   address_generation_top uut_address_gen(
@@ -554,6 +576,9 @@ module top_pipeline (
       a_op0_reg,
       a_op1_reg,
       a_op0_is_address,
+      a_op0_is_reg,
+      a_op0_is_segment,
+      a_op0_is_mmx,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -578,7 +603,7 @@ module top_pipeline (
       // Write Back Interface (To Pop Addr Dependency)
       wb_valid,
       wb_ready,
-      wb_to_memory, 			
+      wb_op_a_is_address, 			
 
       // Memory Read Interface
       a_valid,
@@ -591,6 +616,9 @@ module top_pipeline (
       a_op0_reg,
       a_op1_reg,
       a_op0_is_address,
+      a_op0_is_reg,
+      a_op0_is_segment,
+      a_op0_is_mmx,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -614,6 +642,9 @@ module top_pipeline (
       e_op_a_reg,
       e_op_a_address,
       e_op_a_is_address,
+      e_op_a_is_reg,
+      e_op_a_is_segment,
+      e_op_a_is_mmx,				   				   
       e_stack_ptr,
       e_stack_op,
       e_imm,
@@ -625,15 +656,15 @@ module top_pipeline (
       e_to_sys_controller,
       e_opcode,
 
-      rmem_valid,
-      rmem_ready,
-      rmem_address,
-      rmem_wr_en,
-      rmem_wr_data,
-      rmem_wr_size,
-      rmem_dp_valid,
-      rmem_dp_ready,
-      rmem_dp_read_data	
+      test_rmem_valid,
+      1'b1, //rmem_ready,
+      test_rmem_address,
+      test_rmem_wr_en,
+      test_rmem_wr_data,
+      test_rmem_wr_size,
+      1'b1, //rmem_dp_valid,
+      test_rmem_dp_ready,
+      64'd444	
   );
    
   execute_top uut_execute(
@@ -642,7 +673,12 @@ module top_pipeline (
     exe_flush,
     e_valid,
     e_ready,
-    e_op_a_reg, 
+    e_op_a_reg,
+    e_op_a_address,			  
+    e_op_a_is_address,
+    e_op_a_is_reg,
+    e_op_a_is_segment,
+    e_op_a_is_mmx,
     1'b0,
     e_op_a,
     e_op_b,
@@ -667,6 +703,10 @@ module top_pipeline (
     wb_result,
     wb_opsize,
     wb_mem_or_reg,
+    wb_op_a_is_address,
+    wb_op_a_is_reg,
+    wb_op_a_is_segment,
+    wb_op_a_is_mmx,			  
     wb_stack,
     wb_valid,
     wb_branch_taken,
@@ -678,6 +718,14 @@ module top_pipeline (
     wb_cs_out,
     wb_br_misprediction		       
   );
+
+   assign  wb_ready = ~wb_op_a_is_address | 1'b1;
+ //wmem_ready;
+  assign  wmem_valid = (wb_valid & wb_op_a_is_address);
+  assign  wmem_address = wb_dest_address;
+  assign  wmem_wr_en = wb_op_a_is_address;
+  assign  wmem_wr_data = wb_result;
+  assign  wmem_wr_size = wb_opsize;    
 
   sys_cont_top uut_sys_cont (
      clk,
