@@ -70,6 +70,9 @@ module address_generation_top (
     a_op0_reg,
     a_op1_reg,
     a_op0_is_address,
+    a_op0_is_reg,
+    a_op0_is_segment,
+    a_op0_is_mmx,
     a_op1_is_address,
     a_imm,
     a_alu_op,
@@ -148,6 +151,9 @@ module address_generation_top (
     output [2:0] a_op0_reg;
     output [2:0] a_op1_reg;
     output a_op0_is_address;
+    output a_op0_is_reg;
+    output a_op0_is_segment;
+    output a_op0_is_mmx;
     output a_op1_is_address;
     output [47:0] a_imm;
     output [3:0] a_alu_op;
@@ -164,7 +170,7 @@ module address_generation_top (
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -173,10 +179,15 @@ module address_generation_top (
     wire  p_clear_d_flag;
     wire  [63:0] p_op0;
     wire  [63:0] p_op1;
+    wire  [63:0] gen_op1;   
     wire  [2:0] p_op0_reg;
     wire  [2:0] p_op1_reg;
     wire  p_op0_is_address;
+    wire  p_op0_is_reg;
+    wire  p_op0_is_segment;
+    wire  p_op0_is_mmx;
     wire  p_op1_is_address;
+    wire  gen_op1_is_address;   
     wire  [47:0] p_imm;
     wire  [3:0] p_alu_op;
     wire  [2:0] p_flag_0;
@@ -195,6 +206,9 @@ module address_generation_top (
       a_op0_reg,
       a_op1_reg,
       a_op0_is_address,
+      a_op0_is_reg,
+      a_op0_is_segment,
+      a_op0_is_mmx,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -216,6 +230,9 @@ module address_generation_top (
       r_op0_reg,
       r_op1_reg,
       p_op0_is_address,
+      p_op0_is_reg,
+      p_op0_is_segment,
+      p_op0_is_mmx,
       p_op1_is_address,
       r_imm,
       r_alu_op,
@@ -230,6 +247,32 @@ module address_generation_top (
  
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
 
+    // -------                    //
+    // Indicate What Dest Op0 is  //
+    // -------                    //
+
+    wire not_is_an_address,  p_op0_is_modrm, p_op0_is_modrm, gen_op0_is_address, gen_op0_is_address, is_an_address_modrm;
+   
+    compare #(.WIDTH(2)) (r_modrm[7:6], 2'b11, not_is_an_address); 
+    and2$ ( p_op0_is_modrm_mask, p_op0_is_modrm, not_is_an_address);
+    inv1$ ( is_an_address_modrm, not_is_an_address);
+
+    compare #(.WIDTH(3)) (r_op0 , 3'd1, p_op0_is_register);      
+    compare #(.WIDTH(3)) (r_op0 , 3'd4, p_op0_is_modrm);
+    
+    or2$ ( p_op0_is_reg, p_op0_is_register, p_op0_is_modrm_mask);     
+      
+    compare #(.WIDTH(3)) (r_op0 , 3'd2, p_op0_is_segment);      
+    compare #(.WIDTH(3)) (r_size, 3'd5, p_op0_is_mmx);
+
+    // -------                            //
+    // For Pops force op1 to be stack op  //
+    // -------                            //
+
+    mux  #(.WIDTH(64),.INPUTS(2)) idt_select ( {{32'b0,r_stack_address}, gen_op1}, p_op1, r_stack_op[1]);
+   
+    or2$ (p_op1_is_address, gen_op1_is_address, r_stack_op[1]);
+   
     // -------                    //
     // Indicate to Sys Controller //
     // -------                    //
@@ -285,8 +328,8 @@ module address_generation_top (
     // OP1 Mux //
     // ------- //
     op1_generator op1_generator0 (
-    p_op1,
-    p_op1_is_address,
+    gen_op1,
+    gen_op1_is_address,
 
     r_size,
 
@@ -565,8 +608,14 @@ module op0_generator (
     //     op0_mux_is_address
     // );
 
+ 
+    wire  op0_rm_and_address, op0_is_modrm;
+   
+    compare #(.WIDTH(3)) (r_op0, 3'd4, op0_is_modrm);
+    and2$ (op0_rm_and_address, op0_is_modrm,  op0_mod_rm_is_address);  
+
     // see if mod_rm is address
-    or2$ is_address_combine (a_op0_is_address, op0_mux_is_address, op0_mod_rm_is_address);
+    or2$ is_address_combine (a_op0_is_address, op0_mux_is_address, op0_rm_and_address);
 
 endmodule
 
@@ -823,7 +872,12 @@ module op1_generator (
         op1_mux_is_address
     );
 
-    or2$ is_address_combine (a_op1_is_address, op1_mux_is_address, op1_mod_rm_is_address);
+   wire  op1_rm_and_address;
+   
+   compare #(.WIDTH(3)) (r_op1, 3'd4, op1_is_modrm);
+   and2$ (op1_rm_and_address, op1_is_modrm,  op1_mod_rm_is_address);
+   
+   or2$ is_address_combine (a_op1_is_address, op1_mux_is_address, op1_rm_and_address);
 
 endmodule
 

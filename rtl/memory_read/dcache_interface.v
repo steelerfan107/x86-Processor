@@ -200,17 +200,24 @@ module dcache_interface_microsequencer (
     or2$ j2_or (next_state_reg_in[2], j[2], j2_cond);
 
     // from register_file
-    wire [31:0] next_state_out;
-    assign next_state = next_state_out[2:0];
-    register_32_reset next_state_reg (
-        next_state_out,     // d
-        {29'h0, next_state_reg_in},  // q
-        32'h0,              // reset value
-        1'b1,               // always enable
-        clk,                // clk
-        reset               // reset
-    );
+   // wire [31:0] next_state_out;
+   // assign next_state = next_state_out[2:0];
+   // register_32_reset next_state_reg (
+   //     next_state_out,     // d
+   //     {29'h0, next_state_reg_in},  // q
+   //     32'h0,              // reset value
+   //     1'b1,               // always enable
+   //     clk,                // clk
+   //     reset               // reset
+   // );
 
-
+   register #(.WIDTH(3)) state_reg (
+               clk,
+               reset,
+               next_state_reg_in,
+               next_state,
+               nc0,
+               1'b1				    
+           ); 
 
 endmodule
