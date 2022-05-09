@@ -28,6 +28,9 @@ module memory_read_top (
     a_op0_reg,
     a_op1_reg,
     a_op0_is_address,
+    a_op0_is_reg,
+    a_op0_is_segment,
+    a_op0_is_mmx,
     a_op1_is_address,
     a_imm,
     a_alu_op,
@@ -51,6 +54,9 @@ module memory_read_top (
     e_op_a_reg,
     e_op_a_address,
     e_op_a_is_address,
+    e_op_a_is_reg,
+    e_op_a_is_segment,
+    e_op_a_is_mmx,
     e_stack_ptr,
     e_stack_op,
     e_imm,
@@ -101,7 +107,10 @@ module memory_read_top (
     input [63:0] a_op1;
     input [2:0] a_op0_reg;
     input [2:0] a_op1_reg;
-    input a_op0_is_address;
+    input a_op0_is_address; 
+    input a_op0_is_reg;   
+    input a_op0_is_segment;  
+    input a_op0_is_mmx;
     input a_op1_is_address;
     input [47:0] a_imm;
     input [3:0] a_alu_op;
@@ -125,6 +134,9 @@ module memory_read_top (
     output [2:0] e_op_a_reg;        // register number for operand a
     output [31:0] e_op_a_address;    // address for operand a
     output e_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
+    output e_op_a_is_reg;   
+    output e_op_a_is_segment;  
+    output e_op_a_is_mmx;   
     output [31:0] e_stack_ptr;      // stack pointer address
     output [1:0]   e_stack_op;
     output [47:0] e_imm;            // immediate
@@ -145,19 +157,12 @@ module memory_read_top (
     input                   rmem_dp_valid;
     output                  rmem_dp_ready;
     input    [DDATAW-1:0]   rmem_dp_read_data;
-
-    assign                  rmem_valid = 'h0;
-    assign                  rmem_address = 'h0;
-    assign    	            rmem_wr_en = 'h0;
-    assign                  rmem_wr_data = 'h0;
-    assign                  rmem_wr_size = 'h0;
-    assign                  rmem_dp_ready = 'h0;
    
     // --------- //
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16+2;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16+2+3;
 
     // Pipestage interface
     wire p_valid;
@@ -170,6 +175,9 @@ module memory_read_top (
     wire [2:0] p_op_a_reg;        // register number for operand a
     wire [31:0] p_op_a_address;    // address for operand a
     wire p_op_a_is_address;       // Flag showing if operand a is an address (1 for address, 0 for register)
+    wire p_op_a_is_reg;   
+    wire p_op_a_is_segment;  
+    wire p_op_a_is_mmx;   
     wire [31:0] p_stack_ptr;      // stack pointer address
     wire [1:0] 	p_stack_op;
     wire [47:0] p_imm;            // immediate
@@ -191,6 +199,9 @@ module memory_read_top (
        e_op_a_reg,
        e_op_a_address,
        e_op_a_is_address,
+       e_op_a_is_reg,   
+       e_op_a_is_segment,  
+       e_op_a_is_mmx,
        e_stack_ptr,
        e_stack_op,
        e_imm,
@@ -212,6 +223,9 @@ module memory_read_top (
        p_op_a_reg,
        p_op_a_address,
        p_op_a_is_address,
+       p_op_a_is_reg,   
+       p_op_a_is_segment,  
+       p_op_a_is_mmx,
        p_stack_ptr,
        p_stack_op,
        p_imm,
@@ -225,7 +239,7 @@ module memory_read_top (
     };
    
     // assign p_valid = a_valid;    // decided by ready logic below
-    assign a_ready = p_ready;
+    // assign a_ready = p_ready;
     assign p_size = a_size;            
     assign p_set_d_flag = a_set_d_flag;
     assign p_clear_d_flag = a_clear_d_flag;
@@ -235,12 +249,22 @@ module memory_read_top (
     assign p_stack_op = a_stack_op;
 
     // If push force in stack address as destination   
-    //assign p_op_a_address = (a_stack_op[0]) ? a_stack_address : 'h0;   
-    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , 32'b0} ,  p_op_a_address, a_stack_op[0]);
+    //assign p_op_a_address = (a_stack_op[0]) ? a_stack_address : 'h0;
+    wire 		 stack_select;
+    and2$ ( stack_select, ~a_stack_op[1], a_stack_op[0]);
    
-    //assign p_op_a_is_address = a_op0_is_address | (a_stack_op[0]);  
-    or2$ ( p_op_a_is_address, a_op0_is_address, a_stack_op[0]);
-     
+    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , 32'b0} ,  p_op_a_address, stack_select);
+   
+    //assign p_op_a_is_address = a_op0_is_address | (a_stack_op[0]);
+   //   
+    or2$ ( p_op_a_is_address, a_op0_is_address, stack_select);
+
+
+    assign p_op_a_is_reg = a_op0_is_reg;
+    assign p_op_a_is_segment = a_op0_is_segment;
+    assign p_op_a_is_mmx = a_op0_is_mmx;
+   
+      
     assign p_stack_ptr = a_stack_address;  
     assign p_imm = a_imm;        
     assign p_alu_op = a_alu_op;          
@@ -271,6 +295,10 @@ module memory_read_top (
     wire dcache_ready;
     wire dcache_valid;
 
+    wire  read_transaction = a_op0_is_address | a_op1_is_address;
+
+    wire  read_mask = (~read_transaction) | (rmem_dp_valid & rmem_dp_ready);
+   
     dcache_interface dcache_interface0 (
         clk,
         reset,
@@ -288,12 +316,12 @@ module memory_read_top (
         a_op1,
         a_op1_is_address,
 
-        rd_req_valid,
-        rd_req_ready,
-        rd_req_address,
-        rd_dp_valid,
-        rd_dp_ready,
-        rd_dp_read_data
+        rmem_valid,
+        rmem_ready,
+        rmem_address,
+        rmem_dp_valid,
+        rmem_dp_ready,
+        rmem_dp_read_data
     );
 
     wire [63:0] dcache_out_resized;
@@ -357,9 +385,11 @@ module memory_read_top (
      .pop(pop_address_dependency)
    );
 
-   and2$ (halt0, addr0_match, a_op0_is_address);
-   and2$ (halt1, addr1_match, a_op1_is_address);
-   or2$  (halt, halt0, halt1);
+   //and2$ (halt0, addr0_match, a_op0_is_address);
+   //and2$ (halt1, addr1_match, a_op1_is_address);
+   //or2$  (halt, halt0, halt1);
+
+   assign halt = 1'b0;
 
    // Use halt signal to hold tranaction until dependency is cleared
 
@@ -380,9 +410,9 @@ module memory_read_top (
 
     wire halt_not;
     inv1$ halt_inv (halt_not, halt);
-
-    and3$ a_ready_and (a_ready, halt_not, dcache_ready, e_ready);
-
+   
+    //and3$ a_ready_and (a_ready, halt_not, dcache_ready, p_ready);
+    and3$ a_ready_and (a_ready, halt_not, read_mask, p_ready);
 endmodule
 
 // Masks out undesired data since dcache returns 64 bits of data

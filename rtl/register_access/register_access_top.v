@@ -111,8 +111,8 @@ module register_access_top (
     input flush;
 
     // Direct Segment Write
-    input  write_cs;
-    input [15:0] write_cs_enable;     
+    input  [15:0] write_cs;
+    input  write_cs_enable;     
 
     // Decode Interface
     input d_valid;
@@ -412,6 +412,9 @@ module register_access_top (
     wire [31:0] new_local_esi_push_m2;
     wire [31:0] new_local_esi_push_m4; 
 
+    wire [31:0] p_stack_address_push;
+    wire [31:0] p_stack_address_pop; 
+   
     compare #(.WIDTH(3)) esi_write (3'd6, wb_reg_number,reg_eq_esi);
    
     and3$ (local_commit    , d_valid  , d_ready   , stack_operation);
@@ -430,7 +433,7 @@ module register_access_top (
    
     or2$  (temp_esi_commit , wb_commit, local_commit);
    
-    slow_addr #(.WIDTH(32)) add4 (local_esi, 32'd4, ew_local_esi_pop_p4, nc0);
+    slow_addr #(.WIDTH(32)) add4 (local_esi, 32'd4, new_local_esi_pop_p4, nc0);
     slow_addr #(.WIDTH(32)) add2 (local_esi, 32'd2, new_local_esi_pop_p2, nc0);
 
     slow_addr #(.WIDTH(32)) m4 (local_esi, 32'hFFFFFFFC, new_local_esi_push_m4, nc0);
@@ -446,7 +449,10 @@ module register_access_top (
     mux #(.INPUTS(4),.WIDTH(32)) in_sel ({wb_reg_data, wb_reg_data, 
                                           new_local_esi_pop, new_local_esi_push}, local_esi_in, {wb_commit,stack_pop});	
      
-    slow_addr #(.WIDTH(32)) sub1 (r_ss, local_esi, p_stack_address, nc0);
+    slow_addr #(.WIDTH(32)) pop  (r_ss, local_esi         , p_stack_address_pop, nc0);
+    slow_addr #(.WIDTH(32)) push (r_ss, new_local_esi_push, p_stack_address_push, nc0);
+
+    mux #(.INPUTS(2),.WIDTH(32)) addr_sel  ({p_stack_address_pop,p_stack_address_push} ,  p_stack_address, stack_pop);	   
 
     register #(.WIDTH(32)) local_esi_reg (
                clk,

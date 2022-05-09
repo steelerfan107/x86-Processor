@@ -17,6 +17,5 @@
 0x29: 5a // Pop modrm 102
 0x2a: 5b // Pop modrm 102
 0x2b: 5c // Pop modrm 102
-0x2c: 5d // Pop modrm 102
-0x2d: 66 5e // Pop modrm 101
-0x2f: F4 00 00 00 00 00 // Halt
+0x2c: 66 5d // Pop modrm 101
+0x2e: F4 00 00 00 00 00 // Halt
