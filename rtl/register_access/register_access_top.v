@@ -102,6 +102,7 @@ module register_access_top (
     wb_mmx_en,
     wb_mmx_data,
 
+    flag_df
     // Stack Commit Interface
     wb_stack_en,
     wb_stack_size,
@@ -212,6 +213,8 @@ module register_access_top (
     input wb_mmx_en;
     input [63:0] wb_mmx_data;
 
+    // misc
+    input flag_df;
     input 	 wb_stack_en;
     input [2:0] 	 wb_stack_size;
     input [1:0]	 wb_stack_op; 
@@ -368,9 +371,9 @@ module register_access_top (
         clk,
         reset,
 
-	stack_operation,					  
+	    stack_operation,					  
 
-        d_size,
+        d_size[1:0],
 
         d_op0,
         p_op0_reg,
@@ -385,7 +388,7 @@ module register_access_top (
 
         ,    // not used...
         wb_reg_number,
-        wb_reg_size,
+        wb_reg_size[1:0],
         wb_reg_en,
 
         in_accept     // TODO: Not sure how to connect it to the next stage interface
@@ -396,7 +399,7 @@ module register_access_top (
         clk,
         reset,
 
-        segment_register_stall,
+        seg_reg_is_stall,
 
         wb_seg_number,
         wb_seg_en,
@@ -408,6 +411,34 @@ module register_access_top (
         d_op1_reg
     );
 
+    // ---- //
+    // MOVS //
+    // ---- //
+
+    wire [31:0] write_esi_data, write_edi_data;
+
+    // Directly modify ESI and EDI depending on size and DF flag
+
+    // Add and subtract 1, 2, and 4 to both ESI and EDI
+
+    register_access_movs_add_subtract add_sub_esi (
+        write_esi_data,
+        p_esi,
+        flag_df,
+        d_size
+    );
+
+        register_access_movs_add_subtract add_sub_edi (
+        write_edi_data,
+        p_edi,
+        flag_df,
+        d_size
+    );
+
+    // d_movs
+    // change the value in esi and edi if address generation is ready for new value
+    wire esi_edi_en;
+    and2$ and_change_esi_edi (esi_edi_en, d_movs, r_ready);
     
 
     // --------------- //
@@ -592,9 +623,13 @@ module register_access_top (
         
         .writeback_reg(wb_reg_number),
         .writeback_en(wb_reg_en),
-        .writeback_size(wb_reg_size),
+        .writeback_size(wb_reg_size[1:0]),
         .writeback_data(wb_reg_data),
 
+        .esi_data(write_esi_data),
+        .esi_en(esi_edi_en),
+        .edi_data(write_edi_data),
+        .edi_en(esi_edi_en),
         .write_esp(write_esp),
         .write_esp_enable(write_esp_enable),
 
@@ -654,3 +689,76 @@ module register_access_top (
     );
 
 endmodule
+
+module register_access_movs_add_subtract (
+    out,
+
+    in,
+    df_flag,
+    size
+);
+
+    output [31:0] out;
+
+    input [31:0] in;
+    input df_flag;
+    input [2:0] size;
+
+    // +1
+    wire [31:0] in_plus_1;
+    slow_addr #(.WIDTH(32)) plus_1 (in, 32'h1, in_plus_1, );
+
+    // -1
+    wire [31:0] in_minus_1;
+    slow_addr #(.WIDTH(32)) minus_1 (in, 32'hFFFFFFFF, in_minus_1, );
+
+    // +2
+    wire [31:0] in_plus_2;
+    slow_addr #(.WIDTH(32)) plus_2 (in, 32'h2, in_plus_2, );
+
+    // -2
+    wire [31:0] in_minus_2;
+    slow_addr #(.WIDTH(32)) minus_2 (in, 32'hFFFFFFFE, in_minus_2, );
+
+    // +4
+    wire [31:0] in_plus_4;
+    slow_addr #(.WIDTH(32)) plus_4 (in, 32'h4, in_plus_4, );
+
+    // -4
+    wire [31:0] in_minus_4;
+    slow_addr #(.WIDTH(32)) minus_4 (in, 32'hFFFFFFFC, in_minus_4, );
+
+    // select correct size
+    wire [31:0] size_mux_out_plus, size_mux_out_minus;
+
+    mux #(.WIDTH(32), .INPUTS(4)) size_mux_plus (
+        {
+            in_plus_4,   // 3
+            in_plus_2,   // 2
+            in_plus_1,   // 1
+            32'h0    // 0
+        },
+        size_mux_out_plus,
+        size[1:0]
+    );
+
+    mux #(.WIDTH(32), .INPUTS(4)) size_mux_minus (
+        {
+            in_minus_4,   // 3
+            in_minus_2,   // 2
+            in_minus_1,   // 1
+            32'h0    // 0
+        },
+        size_mux_out_minus,
+        size[1:0]
+    );
+
+    // plus or minus
+    mux #(.WIDTH(32), .INPUTS(2)) out_mux (
+        {size_mux_out_minus, size_mux_out_plus},
+        out,
+        df_flag
+    );
+    
+
+endmodule;

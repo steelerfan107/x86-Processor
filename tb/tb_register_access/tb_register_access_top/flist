@@ -11,9 +11,11 @@
 ../../../rtl/lib/logic_tree.v
 ../../../rtl/lib/slow_addr.v
 ../../../rtl/lib/logic_tree_bus.v
+../../../rtl/lib/compare.v
 ../../../rtl/register_access/register_file.v
 ../../../rtl/register_access/mmx_register.v
 ../../../rtl/register_access/segment_register.v
 ../../../rtl/register_access/register_access_top.v
 ../../../rtl/register_access/register_stall.v
+../../../rtl/register_access/segment_register_stall.v
 tb_register_access_top.v
