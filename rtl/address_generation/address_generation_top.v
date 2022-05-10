@@ -165,6 +165,9 @@ module address_generation_top (
     output a_branch_taken;
     output a_to_sys_controller;
     output [15:0] a_opcode;
+
+    // exception output
+    output segment_limit_exception;
    
     // -------   //
     // Pipestage //
@@ -313,8 +316,24 @@ module address_generation_top (
         r_size
     );
 
+    wire stack_is_address;
+    or2$ (stack_is_address, a_stack_op[1], a_stack_op[0]);
 
-         
+    wire stack_exception;
+    segment_limit_check stack_seg_check (
+        stack_exception,
+        a_stack_address,
+        stack_is_address,
+
+        3'b010,
+
+        r_size
+    );
+
+    // todo: or the 3 exceptions together and output it 
+    or3$ exception_or (segment_limit_exception, op0_exception, op1_exception, stack_exception);
+
+
     // ------- //
     // OP0 Mux //
     // ------- //
