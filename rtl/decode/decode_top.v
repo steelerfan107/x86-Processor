@@ -22,6 +22,7 @@ module decode_top (
    // EIP Modification Interface		       
    write_eip,
    eip,
+   curr_eip,
 
    // Repeat Interface
    ecx_register,
@@ -105,6 +106,7 @@ module decode_top (
    // EIP Modification Interface		       
    input                write_eip;
    input [31:0]         eip;
+   output [31:0]        curr_eip;
 
    // EFLAGS Interface  
    input [31:0] 	eflags_reg;   
@@ -306,6 +308,7 @@ module decode_top (
        iretd_halt,			       
        write_eip,
        eip,
+       curr_eip,
        ecx_register,
        wb_valid,
        wb_reg,

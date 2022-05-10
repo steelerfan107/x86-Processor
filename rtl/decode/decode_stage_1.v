@@ -24,7 +24,8 @@ module decode_stage_1 (
    // EIP Modification Interface		       
    write_eip,
    eip,
-
+   curr_eip,
+		       
    // Repeat Interface
    ecx_register,
    wb_valid,
@@ -110,6 +111,7 @@ module decode_stage_1 (
    // EIP Modification Interface		       
    input                write_eip;
    input [31:0]         eip;
+   output [31:0]        curr_eip;
 
    // EFLAGS Interface  
    input [31:0] 	eflags_reg;
@@ -299,6 +301,8 @@ module decode_stage_1 (
    // Int Handle and EIP
    mux #(.INPUTS(2),.WIDTH(4))  int_rc_mux ({4'd6,s0_rom_control}        , rom_control   , handle_int);   
    mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,rom_in_control_mask}   , rom_in_control, handle_int);
+
+   assign curr_eip = eip_reg;
 
    register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, write_eip);   
    

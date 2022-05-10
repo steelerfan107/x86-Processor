@@ -325,6 +325,7 @@ module top_pipeline (
    wire                    wb_br_misprediction;
    wire                    wb_stack;
    wire  [1:0]             wb_stack_op;
+   wire [15:0] 		   wb_opcode;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -342,7 +343,9 @@ module top_pipeline (
    wire   [DSIZEW-1:0]   test_rmem_wr_size;
    wire                   test_rmem_dp_valid;
    wire                  test_rmem_dp_ready;
-   wire    [DDATAW-1:0]   test_rmem_dp_read_data;   
+   wire    [DDATAW-1:0]   test_rmem_dp_read_data;
+
+   wire [31:0] 		  curr_pc;
 
    fetch_top uut_fetch (
       clk,
@@ -387,6 +390,7 @@ module top_pipeline (
       halt,
       wb_accept,
       wb_pc,
+      curr_pc,
       r_ecx,
       dec_wb_valid,
       dec_wb_reg,
@@ -709,6 +713,7 @@ module top_pipeline (
     wb_dest_reg,
     wb_result,
     wb_opsize,
+    wb_opcode,			  
     wb_mem_or_reg,
     wb_op_a_is_address,
     wb_op_a_is_reg,
@@ -796,6 +801,83 @@ module top_pipeline (
   assign wb_seg_data = 'h0;
   assign wb_mmx_number = 'h0;
   assign wb_mmx_en = 'h0;
-  assign wb_mmx_data = 'h0;  
+  assign wb_mmx_data = 'h0;
+
+  // Display Debug Items
+  wire 		  wb_accept = wb_ready & wb_ready;
+
+  reg 		  wb_accept0;
+  reg [31:0] 	  curr_pc0,  wb_pc0;
+  reg [15:0] 	  wb_opcode0;
+  reg 		  wb_op_a_is_address0,  wb_op_a_is_reg0, wb_op_a_is_segment0, wb_op_a_is_mmx0;
+  reg [31:0] 	  r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi;
+  reg [15:0] 	  r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss;
+  reg [63:0] 	  r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7;
+   reg 		  wb_to_sys_controller0;
+   
+  always @ (posedge clk) begin
+     begin
+	wb_accept0 <= wb_accept;
+	curr_pc0 <= curr_pc;
+	wb_pc0  <= wb_pc;
+	wb_opcode0 <= wb_opcode;
+	wb_op_a_is_address0 <= wb_op_a_is_address;
+	wb_op_a_is_reg0 <= wb_op_a_is_reg;
+	wb_op_a_is_segment0 <= wb_op_a_is_segment;
+	wb_op_a_is_mmx0 <= wb_op_a_is_mmx;
+	r0_eax <= r_eax;
+	r0_ecx <= r_ecx;
+	r0_edx <= r_edx;
+	r0_ebx <= r_ebx;
+	r0_esp <= r_esp; 
+	r0_ebp <= r_ebp;
+	r0_esi <= r_esi;
+	r0_edi <= r_edi;	
+	r0_cs <= r_cs;
+	r0_ds <= r_ds;
+	r0_es <= r_es;
+	r0_fs <= r_fs;
+	r0_gs <= r_gs;
+	r0_ss <= r_ss ;
+	r0_mm0 <= r_mm0;
+	r0_mm1 <=r_mm1 ;
+	r0_mm2 <= r_mm2;
+	r0_mm3 <= r_mm3;
+	r0_mm4 <= r_mm4;
+	r0_mm5 <= r_mm5;
+	r0_mm6 <= r_mm6;
+	r0_mm7 <= r_mm7;
+	wb_to_sys_controller0 <= wb_to_sys_controller;	
+     end
+  end   
+  
+  always @ (posedge clk) begin
+     if(wb_accept0) begin
+	$display("");	
+	$display("================ TRANSACTION COMMITED ================ ");
+	$display(" Opcode  : 0x%h", wb_opcode0);
+	$display(" Previous EIP : 0x%h", curr_pc0);			
+	$display(" Next EIP : 0x%h", wb_pc0);	
+	$display(" Operation to Memory : %b, Operation to Reg : %b, Operation to Seg : %b, Operation to MMX : %b", 
+                 wb_op_a_is_address0, wb_op_a_is_reg0, wb_op_a_is_segment0, wb_op_a_is_mmx0);
+	$display(" Going to Sys Controller : %b", wb_to_sys_controller);
+	$display(" Next ---------------------------");
+	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
+		 r_eax, r_ecx, r_edx, r_ebx, r_esp, r_ebp, r_esi, r_edi);
+	$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
+		 r_cs, r_ds, r_es, r_fs, r_gs, r_ss);
+	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
+                 r_mm0, r_mm1, r_mm2, r_mm3, r_mm4, r_mm5, r_mm6, r_mm7);
+	$display(" Previous   ---------------------------");
+	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
+		 r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi);
+	$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
+		 r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss);
+	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
+                 r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7);     	 
+	$display("====================================================== ");
+	$display("");
+     end
+  end
      
 endmodule   
