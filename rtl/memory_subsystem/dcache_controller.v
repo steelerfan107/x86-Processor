@@ -11,7 +11,7 @@ module dcache_controller(
     // write interface
     input wr_valid,
     output wr_ready,
-    input wr_size,
+    input wr_done,
 
     // DCache Internal
     input write_num,
@@ -28,6 +28,10 @@ module dcache_controller(
     output rd_wr_addr,
     output req_addr_en,
     output valid_src,
+
+    output addr2_mux,
+    output wr_cnt_z,
+    output wr_cnt_en,
 
     // TLB
     input TLB_hit,
@@ -67,7 +71,7 @@ module dcache_controller(
         .state0             (state[0]),
         .rd_valid           (rd_valid),
         .wr_valid           (wr_valid),
-        .wr_size            (wr_size),
+        .wr_done            (wr_done),
         .dp_ready           (dp_ready),
         .write_num          (write_num), 
         .read_num           (read_num),
@@ -84,6 +88,9 @@ module dcache_controller(
         .wr_ready           (wr_ready),
         .rd_wr_addr         (rd_wr_addr),
         .req_addr_en        (req_addr_en),
+        .addr2_mux          (addr2_mux),
+        .wr_cnt_z           (wr_cnt_z),
+        .wr_cnt_en          (wr_cnt_en),
         .read_num_sel       (read_num_sel),
         .read_num_wr_en     (read_num_wr_en),
         .dp_valid           (dp_valid),

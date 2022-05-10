@@ -38,7 +38,7 @@ module TOP;
     // interface to interconnect
     wire [31:0] mem_addr;
     wire mem_req;
-    wire mem_data_valid;
+    reg mem_data_valid;
     wire [31:0] mem_data;
     wire mem_rd_wr;
     wire mem_en;
@@ -150,15 +150,15 @@ module TOP;
         .bus_busy_in(bus_busy_in)
     );
 
-    test_memory mem(
-        clk,
-        reset,
-        mem_addr,
-        mem_en,
-        mem_data_valid,
-        mem_data,
-        mem_rd_wr
-    );
+    //test_memory mem(
+    //    clk,
+    //    reset,
+    //    mem_addr,
+    //    mem_en,
+    //    mem_data_valid,
+    //    mem_data,
+    //    mem_rd_wr
+    //);
 
     initial begin
         $readmemh("rom/rom_control_0_0", test_memory.test_rom_0.mem);
@@ -195,22 +195,33 @@ module TOP;
          wr_req_valid = 0;
          wr_req_address = 0;
          wr_req_data = 0;
-         wr_size_in = 0;
+         wr_size_in = 1;
 
         // Arbiter Interface
          grant_in = 0;
          bus_busy_in = 0;
 
+        mem_data_valid = 1;
 
         #20
         reset = 0;
 
         #20
         #20
-        rd_req_valid = 1;
-        rd_req_address = 32'h00000019;
+        wr_size_in = 0;
+        rd_req_valid = 0;
+        rd_req_address = 32'h05000019;
+
+        wr_req_address = 32'h02000EF0;
 
         #20
+
+        wr_req_valid = 1;
+        wr_req_data = 64'h12345678deadbeef;
+    
+        #20 
+        wr_req_valid = 0;
+        wr_req_data = 64'b0;
 
         
         #20 
@@ -304,7 +315,7 @@ module test_memory(
     end
 
     assign data_valid = 1'b1;
-    assign data = en ? out_data : 32'dz;
+    assign data = (en & !rd_wr) ? out_data : 32'dz;
 
 
 endmodule
