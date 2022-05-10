@@ -447,7 +447,14 @@ module top_pipeline (
    );
 
    and2$ wb_and ( wb_accept, wb_valid, wb_ready );
+   
+   wire        wb_reg_qual, wb_seg_qual, wb_mmx_qual, wb_stack_qual;
 
+   and2$ (wb_reg_qual, wb_valid, wb_op_a_is_reg );
+   and2$ (wb_seg_qual, wb_valid, wb_op_a_is_segment );
+   and2$ (wb_mmx_qual, wb_valid, wb_op_a_is_mmx );
+   and3$ (wb_stack_qual, wb_valid, wb_ready, wb_stack );
+   
    register_access_top uut_register_access (
       clk,
       reset,
@@ -524,20 +531,20 @@ module top_pipeline (
       r_opcode,	
       eflags_reg[10],				    
       wb_reg_number,
-      (wb_op_a_is_reg & wb_valid),
+      wb_reg_qual, //(wb_op_a_is_reg & wb_valid),
       wb_stack,
       wb_reg_size,
       wb_reg_data[31:0],
       wb_reg_number,
-      (wb_op_a_is_segment & wb_valid),
+      wb_seg_qual, //(wb_op_a_is_segment & wb_valid),
       wb_reg_data[15:0],
       wb_reg_number,
-      (wb_op_a_is_mmx & wb_valid),
+      wb_mmx_qual, //(wb_op_a_is_mmx & wb_valid),
       wb_reg_data,
-      (wb_valid & wb_valid & wb_stack),
+      wb_stack_qual, //(wb_valid & wb_valid & wb_stack),
       wb_opsize,
       wb_stack_op
-  );
+  );  
 
   address_generation_top uut_address_gen(
       clk,
@@ -743,9 +750,12 @@ module top_pipeline (
     wb_br_misprediction		       
   );
 
-   assign  wb_ready = ~wb_op_a_is_address | 1'b1;
+   assign  wb_ready = 1'b1;
  //wmem_ready;
-  assign  wmem_valid = (wb_valid & wb_op_a_is_address);
+  //assign  wmem_valid = (wb_valid & wb_op_a_is_address);
+   
+  and2$ (wmem_valid, wb_valid, wb_op_a_is_address);
+   
   assign  wmem_address = wb_dest_address;
   assign  wmem_wr_en = wb_op_a_is_address;
   assign  wmem_wr_data = wb_result;
