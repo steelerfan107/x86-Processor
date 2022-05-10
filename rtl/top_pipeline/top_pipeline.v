@@ -737,7 +737,7 @@ module top_pipeline (
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     interrupt[3:0],
+     interrupt,
      r_cs,		     
      emem_valid,
      emem_ready,

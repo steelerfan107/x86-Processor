@@ -115,6 +115,10 @@ module fetch_top (
    slow_addr #(.WIDTH(32)) ({26'b0,f_bytes_read},pc_out,pc_p_bytes_read,nc0); 
    
    mux  #(.WIDTH(32),.INPUTS(2)) idt_select ( {minus_cs, pc_p_bytes_read}, pc_in, load);
+
+   wire 		 out_accept_or_load;
+
+   or2$ (out_accept_or_load, out_accept, load);
    
    register #(.WIDTH(32)) pc_reg (
                clk,
@@ -122,20 +126,26 @@ module fetch_top (
                pc_in,
                pc_out,
                n_pc_out,
-               out_accept 				    
+               out_accept_or_load				    
            );
 
    // Logic to drop outstanding response if flush occurs
    wire 		 memory_accept;
    wire                  outstanding_a_flush;
+   wire                  not_outstanding;
+   wire                  not_data_accept__and__outstanding;
+
+   inv1$ ( not_outstanding, outstanding);
+  
    
    and2$( memory_accept, imem_valid, imem_ready);
    nand2$( not_data_accept, imem_dp_valid, imem_dp_ready);
-
+   and2$ (not_data_accept__and__outstanding,  not_data_accept, outstanding);
+   
    mux2$ ( outstanding_in , memory_accept, not_data_accept, outstanding);
 
    and2$ ( outstanding_a_flush, outstanding, flush);
-   mux2$ ( drop_in , outstanding_a_flush, not_data_accept, drop);
+   mux2$ ( drop_in , outstanding_a_flush, not_data_accept__and__outstanding, drop);
 
    
    register #(.WIDTH(1)) outstanding_reg (
