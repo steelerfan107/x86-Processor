@@ -190,10 +190,10 @@ module address_dependency_table (
    and2$ s3_and(set3,in_accept,eq_i3);
 
    // Clear indications of each entry
-   wire  c0 = (head[5:4] == 0) && (head_in[5:4] == 1);
-   wire  c1 = (head[5:4] == 1) && (head_in[5:4] == 2);
-   wire  c2 = (head[5:4] == 2) && (head_in[5:4] == 3);
-   wire  c3 = (head[5:4] == 3) && (head_in[5:4] == 0);
+   wire  c0 = (head[5:4] == 0) && (head_p16[5:4] == 1);
+   wire  c1 = (head[5:4] == 1) && (head_p16[5:4] == 2);
+   wire  c2 = (head[5:4] == 2) && (head_p16[5:4] == 3);
+   wire  c3 = (head[5:4] == 3) && (head_p16[5:4] == 0);
      
    and2$ c0_and(clear0,out_accept,c0);
    and2$ c1_and(clear1,out_accept,c1);

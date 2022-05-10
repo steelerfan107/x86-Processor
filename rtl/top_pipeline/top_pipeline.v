@@ -322,6 +322,7 @@ module top_pipeline (
    wire  [31:0]            wb_cs_out;
    wire                    wb_br_misprediction;
    wire                    wb_stack;
+   wire  [1:0]             wb_stack_op;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -514,7 +515,10 @@ module top_pipeline (
       wb_reg_data[15:0],
       wb_reg_number,
       (wb_op_a_is_mmx & wb_valid),
-      wb_reg_data
+      wb_reg_data,
+      (wb_valid & wb_valid & wb_stack),
+      wb_opsize,
+      wb_stack_op
   );
 
   address_generation_top uut_address_gen(
@@ -706,7 +710,8 @@ module top_pipeline (
     wb_op_a_is_address,
     wb_op_a_is_reg,
     wb_op_a_is_segment,
-    wb_op_a_is_mmx,			  
+    wb_op_a_is_mmx,
+    wb_stack_op,			  
     wb_stack,
     wb_valid,
     wb_branch_taken,

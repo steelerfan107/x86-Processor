@@ -15,7 +15,7 @@ module register_access_top (
     // Direct Segment Write
     write_cs,
     write_cs_enable,     
-
+			    
     // Decode Interface
     d_valid,
     d_ready,
@@ -100,7 +100,12 @@ module register_access_top (
 
     wb_mmx_number,
     wb_mmx_en,
-    wb_mmx_data
+    wb_mmx_data,
+
+    // Stack Commit Interface
+    wb_stack_en,
+    wb_stack_size,
+    wb_stack_op
 );
 
     // Clock Interface
@@ -112,7 +117,7 @@ module register_access_top (
 
     // Direct Segment Write
     input  [15:0] write_cs;
-    input  write_cs_enable;     
+    input  write_cs_enable;    
 
     // Decode Interface
     input d_valid;
@@ -206,6 +211,10 @@ module register_access_top (
     input [2:0] wb_mmx_number;
     input wb_mmx_en;
     input [63:0] wb_mmx_data;
+
+    input 	 wb_stack_en;
+    input [2:0] 	 wb_stack_size;
+    input [1:0]	 wb_stack_op; 
 
     wire 	stack_operation;
    
@@ -405,8 +414,8 @@ module register_access_top (
     // Stack Logic     //
     // --------------- //
 
-    // This contains the working esi. The true esi is only commited at the writeback stage in case of flush
-    wire [31:0] local_esi, local_esi_in, n_local_esi;
+    // This contains the working esp. The true esp is only commited at the writeback stage in case of flush
+    wire [31:0] local_esp, local_esp_in, n_local_esp;
     wire 	stack_pop = d_stack_op[1];
     wire 	stack_push = d_stack_op[0];
 
@@ -415,31 +424,60 @@ module register_access_top (
     wire 	n_wb_stack;
     inv1$ (n_wb_stack, wb_stack);
  
-    wire 	reg_eq_esi;   
+    wire 	reg_eq_esp;   
 
     wire 	local_commit;
     wire 	wb_commit;
-    wire 	temp_esi_commit;
+    wire 	temp_esp_commit;
 
     wire 	n_wb_commit_delay,wb_commit_delay; 
    
-    wire [31:0] new_local_esi_pop,  new_local_esi_push;
-    wire [31:0] new_local_esi_pop_p2;
-    wire [31:0] new_local_esi_pop_p4;
-    wire [31:0] new_local_esi_push_m1;   
-    wire [31:0] new_local_esi_push_m2;
-    wire [31:0] new_local_esi_push_m4; 
+    wire [31:0] new_local_esp_pop,  new_local_esp_push;
+    wire [31:0] new_local_esp_pop_p2;
+    wire [31:0] new_local_esp_pop_p4;
+    wire [31:0] new_local_esp_push_m1;   
+    wire [31:0] new_local_esp_push_m2;
+    wire [31:0] new_local_esp_push_m4; 
 
+    wire [31:0] new_esp_pop,  new_esp_push;
+    wire [31:0] new_esp_pop_p2;
+    wire [31:0] new_esp_pop_p4;
+    wire [31:0] new_esp_push_m1;   
+    wire [31:0] new_esp_push_m2;
+    wire [31:0] new_esp_push_m4; 
+   
     wire [31:0] p_stack_address_push;
     wire [31:0] p_stack_address_pop; 
    
-    compare #(.WIDTH(3)) esi_write (3'd6, wb_reg_number,reg_eq_esi);
+    compare #(.WIDTH(3)) esp_write (3'd4, wb_reg_number,reg_eq_esp);
    
     and3$ (local_commit    , d_valid  , d_ready   , stack_operation);
-    and3$ (wb_commit       , wb_reg_en, n_wb_stack, reg_eq_esi);
+    and3$ (wb_commit       , wb_reg_en, n_wb_stack, reg_eq_esp);
 
-    // After any non stack access to the ESI register load the tmp with what was written
-    // Stack operations cant start anyways until all ESI writes are out of the pipeline ahead of it.
+
+    // Stack commit logic from the writeback.
+    wire  	write_esp_enable;
+    wire [31:0] write_esp;
+
+    assign write_esp_enable = wb_stack_en;
+
+    slow_addr #(.WIDTH(32)) com_add4 (r_esp, 32'd4, new_esp_pop_p4, nc0);
+    slow_addr #(.WIDTH(32)) com_add2 (r_esp, 32'd2, new_esp_pop_p2, nc0);
+
+    slow_addr #(.WIDTH(32)) com_m4 (r_esp, 32'hFFFFFFFC, new_esp_push_m4, nc0);
+    slow_addr #(.WIDTH(32)) com_m2 (r_esp, 32'hFFFFFFFE, new_esp_push_m2, nc0);   
+    slow_addr #(.WIDTH(32)) com_m1 (r_esp, 32'hFFFFFFFF, new_esp_push_m1, nc0);   
+
+    mux #(.INPUTS(2),.WIDTH(32)) com_pop_sel  ({new_esp_pop_p4 , new_esp_pop_p2} , new_esp_pop , wb_stack_size[0]);	
+    mux #(.INPUTS(4),.WIDTH(32)) com_push_sel ({new_esp_push_m4, 
+                                                new_esp_push_m2,
+                                                new_esp_push_m1,
+                                                new_esp_push_m1}, new_esp_push, wb_stack_size);
+
+    mux #(.INPUTS(2),.WIDTH(32)) com  ({ new_esp_pop, new_esp_push} , write_esp , wb_stack_op[1]);
+   
+    // After any non stack access to the ESP register load the tmp with what was written
+    // Stack operations cant start anyways until all ESP writes are out of the pipeline ahead of it.
     register #(.WIDTH(32)) local_commit_delay (
                clk,
                reset,
@@ -449,36 +487,36 @@ module register_access_top (
                1'b1				    
     );
    
-    or2$  (temp_esi_commit , wb_commit, local_commit);
+    or2$  (temp_esp_commit , wb_commit, local_commit);
    
-    slow_addr #(.WIDTH(32)) add4 (local_esi, 32'd4, new_local_esi_pop_p4, nc0);
-    slow_addr #(.WIDTH(32)) add2 (local_esi, 32'd2, new_local_esi_pop_p2, nc0);
+    slow_addr #(.WIDTH(32)) add4 (local_esp, 32'd4, new_local_esp_pop_p4, nc0);
+    slow_addr #(.WIDTH(32)) add2 (local_esp, 32'd2, new_local_esp_pop_p2, nc0);
 
-    slow_addr #(.WIDTH(32)) m4 (local_esi, 32'hFFFFFFFC, new_local_esi_push_m4, nc0);
-    slow_addr #(.WIDTH(32)) m2 (local_esi, 32'hFFFFFFFE, new_local_esi_push_m2, nc0);   
-    slow_addr #(.WIDTH(32)) m1 (local_esi, 32'hFFFFFFFF, new_local_esi_push_m1, nc0);   
+    slow_addr #(.WIDTH(32)) m4 (local_esp, 32'hFFFFFFFC, new_local_esp_push_m4, nc0);
+    slow_addr #(.WIDTH(32)) m2 (local_esp, 32'hFFFFFFFE, new_local_esp_push_m2, nc0);   
+    slow_addr #(.WIDTH(32)) m1 (local_esp, 32'hFFFFFFFF, new_local_esp_push_m1, nc0);   
 
-    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({new_local_esi_pop_p4 , new_local_esi_pop_p2} , new_local_esi_pop , d_size[0]);	
-    mux #(.INPUTS(4),.WIDTH(32)) push_sel ({new_local_esi_push_m4, 
-                                            new_local_esi_push_m2,
-                                            new_local_esi_push_m1,
-                                            new_local_esi_push_m1}, new_local_esi_push, d_size);
+    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({new_local_esp_pop_p4 , new_local_esp_pop_p2} , new_local_esp_pop , d_size[0]);	
+    mux #(.INPUTS(4),.WIDTH(32)) push_sel ({new_local_esp_push_m4, 
+                                            new_local_esp_push_m2,
+                                            new_local_esp_push_m1,
+                                            new_local_esp_push_m1}, new_local_esp_push, d_size);
     
     mux #(.INPUTS(4),.WIDTH(32)) in_sel ({wb_reg_data, wb_reg_data, 
-                                          new_local_esi_pop, new_local_esi_push}, local_esi_in, {wb_commit,stack_pop});	
+                                          new_local_esp_pop, new_local_esp_push}, local_esp_in, {wb_commit,stack_pop});	
      
-    slow_addr #(.WIDTH(32)) pop  (r_ss, local_esi         , p_stack_address_pop, nc0);
-    slow_addr #(.WIDTH(32)) push (r_ss, new_local_esi_push, p_stack_address_push, nc0);
+    slow_addr #(.WIDTH(32)) pop  (r_ss, local_esp         , p_stack_address_pop, nc0);
+    slow_addr #(.WIDTH(32)) push (r_ss, new_local_esp_push, p_stack_address_push, nc0);
 
     mux #(.INPUTS(2),.WIDTH(32)) addr_sel  ({p_stack_address_pop,p_stack_address_push} ,  p_stack_address, stack_pop);	   
 
-    register #(.WIDTH(32)) local_esi_reg (
+    register #(.WIDTH(32)) local_esp_reg (
                clk,
                reset,
-               local_esi_in,
-               local_esi,
-               n_local_esi,
-               temp_esi_commit				    
+               local_esp_in,
+               local_esp,
+               n_local_esp,
+               temp_esp_commit				    
     );
    
     // --------------- //
@@ -556,6 +594,9 @@ module register_access_top (
         .writeback_en(wb_reg_en),
         .writeback_size(wb_reg_size),
         .writeback_data(wb_reg_data),
+
+        .write_esp(write_esp),
+        .write_esp_enable(write_esp_enable),
 
         .eax_out(p_eax),
         .ecx_out(p_ecx),
