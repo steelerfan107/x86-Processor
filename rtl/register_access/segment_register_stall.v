@@ -67,16 +67,22 @@ module segment_register_stall (
     wire ds_en;
     wire fs_en;
     wire gs_en;
-
-
-    register_32_reset 
-    es_accesses (es_out, es_in, 32'h0, es_en, clk, reset),
-    cs_accesses (cs_out, cs_in, 32'h0, cs_en, clk, reset),
-    ss_accesses (ss_out, ss_in, 32'h0, ss_en, clk, reset),
-    ds_accesses (ds_out, ds_in, 32'h0, ds_en, clk, reset),
-    fs_accesses (fs_out, fs_in, 32'h0, fs_en, clk, reset),
-    gs_accesses (gs_out, gs_in, 32'h0, gs_en, clk, reset);
-
+   
+    //register_32_reset 
+    //es_accesses (es_out, es_in, 32'h0, es_en, clk, reset),
+    //cs_accesses (cs_out, cs_in, 32'h0, cs_en, clk, reset),
+    //ss_accesses (ss_out, ss_in, 32'h0, ss_en, clk, reset),
+    //ds_accesses (ds_out, ds_in, 32'h0, ds_en, clk, reset),
+    //fs_accesses (fs_out, fs_in, 32'h0, fs_en, clk, reset),
+    //gs_accesses (gs_out, gs_in, 32'h0, gs_en, clk, reset);
+   
+    register #(.WIDTH(32))  es_accesses ( clk, reset, es_in, es_out, , es_en);
+    register #(.WIDTH(32))  cs_accesses ( clk, reset, cs_in, cs_out, , cs_en);
+    register #(.WIDTH(32))  ss_accesses ( clk, reset, ss_in, ss_out, , ss_en);
+    register #(.WIDTH(32))  ds_accesses ( clk, reset, ds_in, ds_out, , ds_en);
+    register #(.WIDTH(32))  fs_accesses ( clk, reset, fs_in, fs_out, , fs_en);
+    register #(.WIDTH(32))  gs_accesses ( clk, reset, gs_in, gs_out, , gs_en);
+   
     // see if the value of the regs is going to be changed
     segment_stall_modify_table
     es_mod (es_in, es_out, es_en, 3'd0, op0_reg, op0_is_segment, write_select, write_enable),
@@ -193,7 +199,7 @@ module segment_stall_modify_table (
 
     // see if all match
     wire decrement;
-    and4$ wb_and (increment, wb_xnor_out[0], wb_xnor_out[1], wb_xnor_out[2], wb_is_valid);
+    and4$ wb_and (decrement, wb_xnor_out[0], wb_xnor_out[1], wb_xnor_out[2], wb_is_valid);
 
     // add to reg out
     wire [31:0] reg_out_add;
