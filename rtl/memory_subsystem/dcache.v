@@ -35,6 +35,8 @@ module dcache(
     mem_data,
     mem_rd_wr,
     mem_en,
+    mem_wr_size,
+
 
     // Arbiter Interface
     grant_in,
@@ -79,6 +81,7 @@ module dcache(
     output [31:0] mem_data;
     output mem_rd_wr;
     output mem_en;
+    output [1:0] mem_wr_size;
 
     // Arbiter Interface
     input grant_in;
@@ -99,7 +102,8 @@ module dcache(
 
     wire [5:0] index = virt_addr[8:3];
     wire [22:0] phys_tag = phys_addr[31:9];
-    wire [2:0] byte_offset = virt_addr[2:0];
+
+    wire [1:0] byte_offset;
 
     wire [1:0] write_cnt;
     wire [1:0] write_cnt_mux_out;
@@ -124,6 +128,7 @@ module dcache(
     wire [31:0] addr_mux2_out;
     mux #(.WIDTH(32), .INPUTS(2)) addr_mux2({addr2_adder_out, addr_mux_out},  addr_mux2_out, ctrl_addr2_mux);
 
+    wire [1:0] byte_offset_in = addr_mux2_out[1:0];
    
  
     register #(.WIDTH(32)) req_addr_reg(clk, reset, addr_mux2_out, req_pending_addr, , ctrl_req_addr_en);
@@ -266,19 +271,27 @@ module dcache(
     );
 
     wire [63:0] wr_data_reg_out;
-    register #(.WIDTH(64)) wr_data_reg(clk, reset, wr_req_data, wr_data_reg_out, , ctrl_req_addr_en);
-    register #(.WIDTH(1)) wr_size_reg(clk, reset, wr_size_in, wr_size, , ctrl_req_addr_en);
+    wire wr_req_en;
+    wire a2m_n;
+    inv1$ a2m_inv(a2m_n, ctrl_addr2_mux);
+    and2$ wr_req_and(wr_req_en, ctrl_req_addr_en, a2m_n);
+    register #(.WIDTH(64)) wr_data_reg(clk, reset, wr_req_data, wr_data_reg_out, , wr_req_en);
+    register #(.WIDTH(1)) wr_size_reg(clk, reset, wr_size_in, wr_size, , wr_req_en);
  
+    register #(.WIDTH(2)) byte_offset_reg(clk, reset, byte_offset_in, byte_offset,, wr_req_en);
+
     wire [31:0] mem_data_driver; 
-    mux #(.WIDTH(32), .INPUTS(2)) mem_data_mux(wr_data_reg_out, mem_data_driver, write_num_n);
+    wr_data_select wds(wr_data_reg_out, write_cnt, byte_offset, mem_data_driver);
+    //mux #(.WIDTH(32), .INPUTS(2)) mem_data_mux(wr_data_reg_out, mem_data_driver, write_num_n);
      
     wire n_drive_bus; 
     wire ctrl_drive_bus;
     and2$ drive_bus_and(ctrl_drive_bus, mem_en, ctrl_rd_wr_addr);
     inv1$ drive_bus_inv(n_drive_bus, ctrl_drive_bus);
 
-    eval_wr_done ewd(wr_done, write_cnt, wr_size);
-     
+    eval_wr_done ewd(wr_done, write_cnt, byte_offset, wr_size);
+    
+    wr_size_select wss(write_cnt, byte_offset, wr_size, mem_wr_size);     
 
 
     tristate_bus_driver16$ data_bus_driver1(n_drive_bus, mem_data_driver[15:0], mem_data[15:0]);
@@ -289,8 +302,13 @@ endmodule
 module eval_wr_done(
     output wr_done,
     input [1:0] write_cnt,
+    input [1:0] off,
     input wr_size
 );
+    wire off0;
+    wire aob;
+    or2$ or33(aob, off[0], off[1]);
+    inv1$ invee(off0, aob);
 
     wire wr_size_n;
     inv1$ wsn(wr_size_n, wr_size);
@@ -307,12 +325,92 @@ module eval_wr_done(
     wire wr_cnt_eq_2;
     and2$ wc2a(wr_cnt_eq_2, write_cnt[1], write_cnt_0_n);
 
+    wire wr_cnt_eq_0;
+    and2$ wc0a(wr_cnt_eq_0, write_cnt_1_n, write_cnt_0_n);
+
+    wire wrsnandoffn;
+    or2$ wsnao(wrsnandoffn, wr_size_n, off0);
+
     wire term1;
-    and2$ t1a(term1, wr_cnt_eq_1, wr_size_n);
+    and2$ t1a(term1, wr_cnt_eq_1, wrsnandoffn);
 
     wire term2;
     and2$ t2a(term2, wr_cnt_eq_2, wr_size);
 
-    or2$ wr_done_or(wr_done, term1, term2);
+    wire term3;
+    and3$ t3a(term3, wr_cnt_eq_0, wr_size_n, off0);
+
+    or3$ wr_done_or(wr_done, term1, term2, term3);
+
+endmodule
+
+module wr_data_select(
+    input [63:0] wr_data_in,
+    input [1:0] wr_cnt,
+    input [1:0] off,
+    output reg [31:0] out
+);
+
+   // TODO behavioral
+   always @(*) begin
+    case({off, wr_cnt})
+        4'b0000: out <= wr_data_in[31:0];
+        4'b0001: out <= wr_data_in[63:32];
+        4'b0100: out <= wr_data_in[31:0];
+        4'b0101: out <= wr_data_in[55:24];
+        4'b0110: out <= {24'b0 , wr_data_in[63:56]};
+
+        4'b1000: out <= wr_data_in[31:0];
+        4'b1001: out <= wr_data_in[47:16];
+        4'b1010: out <= {16'b0, wr_data_in[63: 48]};
+
+        4'b1100: out <= wr_data_in[31:0];
+        4'b1101: out <= wr_data_in[39:8];
+        4'b1110: out <= {8'b0, wr_data_in[63:40]};
+        default: out <= 32'b0;
+    endcase   
+   end
+
+endmodule
+
+module wr_size_select(
+    input [1:0] wr_cnt,
+    input [1:0] off,
+    input size_in,
+    output [1:0] size_out
+);
+
+wire wr_cnt1_not;
+wire size_in_not;
+wire and0;
+wire wr_cnt0_not;
+wire and1;
+wire off0_not;
+wire and2;
+wire off1_not;
+wire and3;
+wire or0;
+wire and4;
+wire and5;
+wire or1;
+
+inv1$ wr_cnt1_inv (.out(wr_cnt1_not), .in(wr_cnt[1]));
+inv1$ size_in_inv (.out(size_in_not), .in(size_in));
+inv1$ wr_cnt0_inv (.out(wr_cnt0_not), .in(wr_cnt[0]));
+inv1$ off0_inv (.out(off0_not), .in(off[0]));
+inv1$ off1_inv (.out(off1_not), .in(off[1]));
+
+and4$ and_gate0(.out(and0), .in0(wr_cnt1_not), .in1(wr_cnt[0]), .in2(off[1]), .in3(size_in_not));
+and4$ and_gate1(.out(and1), .in0(wr_cnt[1]), .in1(wr_cnt0_not), .in2(off[1]), .in3(size_in));
+and4$ and_gate2(.out(and2), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off[1]), .in3(off0_not));
+and4$ and_gate3(.out(and3), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off1_not), .in3(off[0]));
+and3$ and_gate4(.out(and4), .in0(wr_cnt1_not), .in1(off[0]), .in2(size_in_not));
+and3$ and_gate5(.out(and5), .in0(wr_cnt0_not), .in1(off[0]), .in2(size_in));
+
+or4$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3));
+or2$ or_gate1(.out(or1), .in0(and4), .in1(and5));
+
+assign size_out[1] = or0;
+assign size_out[0] = or1;
 
 endmodule

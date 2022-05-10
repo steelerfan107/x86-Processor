@@ -208,10 +208,11 @@ module TOP;
 
         #20
         #20
+        wr_size_in = 0;
         rd_req_valid = 0;
         rd_req_address = 32'h05000019;
 
-        wr_req_address = 32'h02000FFE;
+        wr_req_address = 32'h02000EF0;
 
         #20
 
@@ -220,6 +221,7 @@ module TOP;
     
         #20 
         wr_req_valid = 0;
+        wr_req_data = 64'b0;
 
         
         #20 
