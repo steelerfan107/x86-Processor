@@ -14,7 +14,11 @@ module fetch_top (
    load,
    
    // Code Segment
-   cs_register,		  
+   cs_register,	
+
+   // Set EIP
+   eip,
+   set_eip,		  
 
    // Instruction Memory Interface
    imem_valid,
@@ -61,7 +65,10 @@ module fetch_top (
    input 	         load;
  
    // Code Segment
-   input [15:0] 	 cs_register;	
+   input [15:0] 	 cs_register;
+
+   output [31:0] 	 eip;
+   output                set_eip;	
 
    // Instruction Memory Interface
    output 	         imem_valid;
@@ -107,6 +114,9 @@ module fetch_top (
    wire 		 out_accept;
    wire [31:0] 		 minus_cs;
    wire [31:0] 		 pc_in, pc_out, n_pc_out, pc_p_bytes_read;
+
+   assign set_eip = load;
+   assign eip = minus_cs;
 
    assign minus_cs = load_address - cs_register;
    

@@ -149,6 +149,9 @@ module top_pipeline (
    wire [IADDRW-1:0]       f_pc;
    wire                    f_branch_taken;
 
+   wire [31:0] 		   f_set_eip;
+   wire                    f_eip;
+
    // Pipestage Interface
    wire  		   d_valid;   
    wire   		   d_ready;	       
@@ -353,7 +356,9 @@ module top_pipeline (
       fetch_flush,
       load_address,
       load,
-      r_cs_bypass,		  
+      r_cs_bypass,
+      f_eip,		
+      f_set_eip,		  
       imem_valid,
       imem_ready,
       imem_address,
@@ -377,6 +382,12 @@ module top_pipeline (
       f_branch_taken	  		  		  
    );
 
+   wire decode_set_eip;
+   wire [31:0] decode_eip;
+
+   or2$ (decode_set_eip, wb_accept, f_set_eip);
+   ao_mux #(.WIDTH(32), .NINPUTS(2)) ( {f_eip,wb_pc}, decode_eip, {f_eip,wb_accept});
+     
    decode_top #(.SINGLE_TXN(SINGLE_TXN)) uut_decode (
       clk,
       reset,
