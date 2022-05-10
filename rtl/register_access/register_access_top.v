@@ -409,7 +409,6 @@ module register_access_top (
     // ---- //
 
     wire [31:0] write_esi_data, write_edi_data;
-    wire write_esi_en, write_edi_enable;
 
     // Directly modify ESI and EDI depending on size and DF flag
 
@@ -428,6 +427,11 @@ module register_access_top (
         flag_df,
         d_size
     );
+
+    // d_movs
+    // change the value in esi and edi if address generation is ready for new value
+    wire esi_edi_en;
+    and2$ and_change_esi_edi (esi_edi_en, d_movs, r_ready);
     
 
     // --------------- //
@@ -587,9 +591,9 @@ module register_access_top (
         .writeback_data(wb_reg_data),
 
         .esi_data(write_esi_data),
-        .esi_en(write_esi_en),
+        .esi_en(esi_edi_en),
         .edi_data(write_edi_data),
-        .edi_en(write_edi_en),
+        .edi_en(esi_edi_en),
 
         .eax_out(p_eax),
         .ecx_out(p_ecx),
