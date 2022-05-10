@@ -281,6 +281,39 @@ module address_generation_top (
     // -------                    //
 
    compare #(.WIDTH(3)) (r_op0, 3'h7, p_to_sys_controller);
+
+    // ------------------- //
+    // Segment Limit Check //
+    // ------------------- //
+    wire [2:0] op0_segment;
+    wire op0_check_segment_limit;
+    wire [2:0] op1_segment;
+    wire op1_check_segment_limit;
+
+    wire op0_exception;
+    segment_limit_check op0_seg_check (
+        op0_exception,
+        p_op0,
+        p_op0_is_address,
+
+        op0_segment,
+
+        r_size
+    );
+
+    // checks op1 and the stack operand
+    wire op1_exception;
+    segment_limit_check op1_seg_check (
+        op1_exception,
+        p_op1,
+        p_op1_is_address,
+
+        op1_segment,
+
+        r_size
+    );
+
+
          
     // ------- //
     // OP0 Mux //
@@ -288,6 +321,8 @@ module address_generation_top (
     op0_generator op0_generator0 (
         p_op0,
         p_op0_is_address,
+        op0_segment,
+        op0_check_segment_limit,
 
         r_size,
 
@@ -333,6 +368,8 @@ module address_generation_top (
     op1_generator op1_generator0 (
     gen_op1,
     gen_op1_is_address,
+    op1_segment,
+    op1_check_segment_limit,
 
     r_size,
 
