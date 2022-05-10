@@ -45,6 +45,7 @@ module execute_top (
     wb_dest_reg,
     wb_result,
     wb_opsize,
+    wb_opcode,
     wb_mem_or_reg,
     wb_op_a_is_address,
     wb_op_a_is_reg,
@@ -106,6 +107,7 @@ module execute_top (
     output [31:0] wb_dest_reg;
     output [63:0] wb_result;
     output [2:0] wb_opsize;
+    output [15:0] wb_opcode;   
     output wb_mem_or_reg;
     output [1:0] wb_stack_op;   
     output wb_stack;
@@ -137,7 +139,7 @@ module execute_top (
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16;
 
     wire [31:0]  p_dest_address = e_op_a_address;
     wire  [31:0] p_dest_reg = e_dest_reg;
@@ -171,7 +173,8 @@ module execute_top (
         p_op_a_is_address,
         p_op_a_is_reg,
         p_op_a_is_segment,
-        p_op_a_is_mmx
+        p_op_a_is_mmx,
+	e_opcode
     };
 
     assign {
@@ -188,7 +191,8 @@ module execute_top (
         wb_op_a_is_address,
         wb_op_a_is_reg,
         wb_op_a_is_segment,
-        wb_op_a_is_mmx
+        wb_op_a_is_mmx,
+	wb_opcode
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);

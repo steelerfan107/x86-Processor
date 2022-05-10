@@ -274,7 +274,6 @@ module TOP;
         interrupt = 16'h04;     
 	#50
         interrupt = 0;     	  
-        $display("==========\n End Test \n==========");
   end
    
   initial #20000 $finish;
