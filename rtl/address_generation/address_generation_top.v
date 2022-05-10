@@ -170,7 +170,7 @@ module address_generation_top (
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3+1;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -196,6 +196,7 @@ module address_generation_top (
     wire  [31:0] p_stack_address;   
     wire  [31:0] p_pc;
     wire  p_branch_taken;
+    wire  p_to_sys_controller;
    
     assign {
       a_size,
@@ -218,7 +219,8 @@ module address_generation_top (
       a_stack_address,
       a_pc,
       a_branch_taken,
-      a_opcode	    
+      a_opcode,
+      a_to_sys_controller	    
     } = pipe_out_data;
 
     assign pipe_in_data = {
@@ -242,7 +244,8 @@ module address_generation_top (
       r_stack_address,
       r_pc,
       r_branch_taken,
-      r_opcode		    
+      r_opcode,
+      p_to_sys_controller		    
     };   
  
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
@@ -277,7 +280,7 @@ module address_generation_top (
     // Indicate to Sys Controller //
     // -------                    //
 
-   compare #(.WIDTH(3)) (r_op0, 3'h7, a_to_sys_controller);
+   compare #(.WIDTH(3)) (r_op0, 3'h7, p_to_sys_controller);
          
     // ------- //
     // OP0 Mux //

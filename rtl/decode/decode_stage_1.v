@@ -360,8 +360,11 @@ module decode_stage_1 (
    assign dec_valid = s0_valid;
    and3$ dra (dec_ready, repeat_halt_mask, pre_s1_ready, iretd_halt_mask);
 
+   wire 		rom_ready_mask;
+   and2$ rrm (rom_ready_mask, rom_ready, pre_s1_ready);
+   
    // Output Muxes
-   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,dec_ready},s0_ready, rom_in_control);     
+   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready_mask,dec_ready},s0_ready, rom_in_control);     
    mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},pre_s1_valid, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  size_mux({rom_size,dec_size},s1_size, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control);  

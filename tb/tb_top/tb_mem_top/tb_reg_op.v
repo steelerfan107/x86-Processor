@@ -130,6 +130,16 @@ module TOP;
    wire                dmem_w_dp_ready;     // unused
    wire  [IDATAW-1:0] dmem_w_dp_read_data; // unused
 
+   wire                  test_emem_valid;
+   wire   	         test_emem_ready = 1'b1;
+   wire    [IADDRW-1:0]  test_emem_address;
+   wire    	         test_emem_wr_en;
+   wire    [32-1:0]	 test_emem_wr_data;
+   wire    [ISIZEW-1:0]  test_emem_wr_size;
+   wire                  test_emem_dp_valid = 1'b1;
+   wire                  test_emem_dp_ready;
+   wire    [32-1:0] 	 test_emem_dp_read_data = 32'h40;    
+
    // System Controller Read Interface
    wire  sys_r_valid = 'h0 ;
    wire  sys_r_ready;
@@ -176,11 +186,11 @@ module TOP;
       wmem_dp_read_data,  	
 
       // System Controller Read Interface
-      emem_valid,
+      1'b0, //emem_valid,
       emem_ready,
       emem_address,
       emem_dp_valid,
-      emem_dp_ready,
+      1'b1, //emem_dp_ready,
       emem_dp_read_data,
 
       contents_concat
@@ -202,15 +212,15 @@ module TOP;
       imem_dp_ready,
       imem_dp_read_data,
 
-      emem_valid,
-      emem_ready,
-      emem_address,
-      emem_wr_en,
-      emem_wr_data,
-      emem_wr_size,
-      emem_dp_valid,
-      emem_dp_ready,
-      emem_dp_read_data, 
+      test_emem_valid,
+      test_emem_ready,
+      test_emem_address,
+      test_emem_wr_en,
+      test_emem_wr_data,
+      test_emem_wr_size,
+      test_emem_dp_valid,
+      test_emem_dp_ready,
+      test_emem_dp_read_data, 
 
       rmem_valid,
       rmem_ready,
@@ -260,8 +270,8 @@ module TOP;
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
-        #350
-        interrupt = 0;     
+        #2350
+        interrupt = 16'h04;     
 	#50
         interrupt = 0;     	  
         $display("==========\n End Test \n==========");
