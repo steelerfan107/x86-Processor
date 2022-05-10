@@ -339,8 +339,8 @@ module register_access_top (
    //assign d_ready = r_ready;
    wire register_file_stall;  
    wire seg_reg_is_stall;
-   and3$ (r_valid, d_valid, ~register_file_stall, ~seg_reg_is_stall);
-   and3$ (d_ready, r_ready, ~register_file_stall, ~seg_reg_is_stall);   
+   and3$ (r_valid, d_valid, ~register_file_stall, 1'b1);//~segment_register_stall); TODO
+   and3$ (d_ready, r_ready, ~register_file_stall, 1'b1);//~segment_register_stall);   
   
    //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
    
@@ -390,7 +390,7 @@ module register_access_top (
         segment_register_stall,
 
         wb_seg_number,
-        web_seg_en,
+        wb_seg_en,
 
         d_op0,
         d_op0_reg,
