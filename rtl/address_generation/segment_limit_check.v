@@ -5,7 +5,14 @@
 //
 
 module segment_limit_check (
-    
+    cause_exception,
+
+    address,
+    address_is_valid,
+
+    segment,
+
+    size
 );
     output cause_exception;
 
@@ -13,7 +20,6 @@ module segment_limit_check (
     input address_is_valid;
 
     input [2:0] segment;
-
 
     input [2:0] size;
 
@@ -49,7 +55,9 @@ module segment_limit_check (
     wire [31:0] added_address;
     wire c_out;
     // this should be a saturating adder tbh. bc it will loop back to 0 and not cause exception 
-    slow_addr #(.WIDTH(32)) size_adder (address, num_bytes, added_address, c_out);
+    // slow_addr #(.WIDTH(32)) size_adder (address, num_bytes, added_address, c_out);
+    // from rtl/execute/CLA.v
+    CLA32 size_adder (address, num_bytes, 1'b0, added_address, , c_out);
 
     wire [31:0] largest_address;
     mux #(.WIDTH(32), .INPUTS(2)) sat_mux (
@@ -59,16 +67,31 @@ module segment_limit_check (
     );
 
     // compare it to the current segment that is being used
-    
+    wire [31:0] seg_max;
+    mux #(.WIDTH(32), .INPUTS(8)) seg_limit_mux (
+        {
+            32'h0,
+            32'h0,
+            gs_limit,
+            fs_limit,
+            es_limit,
+            ss_limit,
+            ds_limit,
+            cs_limit
+        },
+        seg_max,
+        segment
+    );
 
-    // if the address is less than the limit, do not cause exception
+    // from rtl/execute/ucomp.v
+    // safe if largest_address < seg_max, so fault on inverse of this
+    wire safe;
+    ucomp32 seg_compare (largest_address, seg_max, , , safe);
 
+    wire unsafe;
+    inv1$ safe_inv (unsafe, safe);
 
-
-
-    // create a segment select parameter passed into the stage for the checking
-
-
-
+    // only cause exception if this address is valid
+    and2$ out_and (cause_exception, unsafe, address_is_valid);
 
 endmodule
