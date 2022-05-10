@@ -207,6 +207,11 @@ module register_access_top (
     input wb_mmx_en;
     input [63:0] wb_mmx_data;
 
+    // ---- //
+    // Misc //
+    // ---- //
+    input flag_df;
+
     wire 	stack_operation;
    
     // ------                     //
@@ -399,6 +404,30 @@ module register_access_top (
         d_op1_reg
     );
 
+    // ---- //
+    // MOVS //
+    // ---- //
+
+    wire [31:0] write_esi_data, write_edi_data;
+    wire write_esi_en, write_edi_enable;
+
+    // Directly modify ESI and EDI depending on size and DF flag
+
+    // Add and subtract 1, 2, and 4 to both ESI and EDI
+
+    register_access_movs_add_subtract add_sub_esi (
+        write_esi_data,
+        p_esi,
+        flag_df,
+        d_size
+    );
+
+        register_access_movs_add_subtract add_sub_edi (
+        write_edi_data,
+        p_edi,
+        flag_df,
+        d_size
+    );
     
 
     // --------------- //
@@ -557,6 +586,11 @@ module register_access_top (
         .writeback_size(wb_reg_size),
         .writeback_data(wb_reg_data),
 
+        .esi_data(write_esi_data),
+        .esi_en(write_esi_en),
+        .edi_data(write_edi_data),
+        .edi_en(write_edi_en),
+
         .eax_out(p_eax),
         .ecx_out(p_ecx),
         .edx_out(p_edx),
@@ -613,3 +647,76 @@ module register_access_top (
     );
 
 endmodule
+
+module register_access_movs_add_subtract (
+    out,
+
+    in,
+    df_flag,
+    size
+);
+
+    output [31:0] out;
+
+    input [31:0] in;
+    input df_flag;
+    input [2:0] size;
+
+    // +1
+    wire [31:0] in_plus_1;
+    slow_addr plus_1 (in, 32'h1, in_plus_1, );
+
+    // -1
+    wire [31:0] in_minux_1;
+    slow_addr minus_1 (in, 32'hFFFFFFFF, in_minux_1, );
+
+    // +2
+    wire [31:0] in_plus_2;
+    slow_addr plus_2 (in, 32'h2, in_plus_2, );
+
+    // -2
+    wire [31:0] in_minus_2;
+    slow_addr minus_2 (in, 32'hFFFFFFFE, in_minus_2, );
+
+    // +4
+    wire [31:0] in_plus_4;
+    slow_addr plus_4 (in, 32'h4, in_plus_4, );
+
+    // -4
+    wire [31:0] in_minus_4;
+    slow_addr minus_4 (in, 32'hFFFFFFFC, in_minus_4, );
+
+    // select correct size
+    wire [31:0] size_mux_out_plus, size_mux_out_minus;
+
+    mux #(.WIDTH(32), .INPUTS(4)) size_mux_plus (
+        {
+            in_plus_4,   // 3
+            in_plus_2,   // 2
+            in_plus_1,   // 1
+            32'h0    // 0
+        },
+        size_mux_out_plus,
+        size[1:0]
+    );
+
+    mux #(.WIDTH(32), .INPUTS(4)) size_mux_minus (
+        {
+            in_minus_4,   // 3
+            in_minus_2,   // 2
+            in_minus_1,   // 1
+            32'h0    // 0
+        },
+        size_mux_out_minus,
+        size[1:0]
+    );
+
+    // plus or minus
+    mux #(.WIDTH(32), .INPUTS(2)) out_mux (
+        {size_mux_out_minus, size_mux_out_plus},
+        out,
+        df_flag
+    );
+    
+
+endmodule;
