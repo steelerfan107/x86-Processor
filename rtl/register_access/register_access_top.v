@@ -100,7 +100,9 @@ module register_access_top (
 
     wb_mmx_number,
     wb_mmx_en,
-    wb_mmx_data
+    wb_mmx_data,
+
+    flag_df
 );
 
     // Clock Interface
@@ -207,9 +209,7 @@ module register_access_top (
     input wb_mmx_en;
     input [63:0] wb_mmx_data;
 
-    // ---- //
-    // Misc //
-    // ---- //
+    // misc
     input flag_df;
 
     wire 	stack_operation;
@@ -364,9 +364,9 @@ module register_access_top (
         clk,
         reset,
 
-	stack_operation,					  
+	    stack_operation,					  
 
-        d_size,
+        d_size[1:0],
 
         d_op0,
         p_op0_reg,
@@ -381,7 +381,7 @@ module register_access_top (
 
         ,    // not used...
         wb_reg_number,
-        wb_reg_size,
+        wb_reg_size[1:0],
         wb_reg_en,
 
         in_accept     // TODO: Not sure how to connect it to the next stage interface
@@ -392,10 +392,10 @@ module register_access_top (
         clk,
         reset,
 
-        segment_register_stall,
+        seg_reg_is_stall,
 
         wb_seg_number,
-        web_seg_en,
+        wb_seg_en,
 
         d_op0,
         d_op0_reg,
@@ -587,7 +587,7 @@ module register_access_top (
         
         .writeback_reg(wb_reg_number),
         .writeback_en(wb_reg_en),
-        .writeback_size(wb_reg_size),
+        .writeback_size(wb_reg_size[1:0]),
         .writeback_data(wb_reg_data),
 
         .esi_data(write_esi_data),
@@ -668,27 +668,27 @@ module register_access_movs_add_subtract (
 
     // +1
     wire [31:0] in_plus_1;
-    slow_addr plus_1 (in, 32'h1, in_plus_1, );
+    slow_addr #(.WIDTH(32)) plus_1 (in, 32'h1, in_plus_1, );
 
     // -1
-    wire [31:0] in_minux_1;
-    slow_addr minus_1 (in, 32'hFFFFFFFF, in_minux_1, );
+    wire [31:0] in_minus_1;
+    slow_addr #(.WIDTH(32)) minus_1 (in, 32'hFFFFFFFF, in_minus_1, );
 
     // +2
     wire [31:0] in_plus_2;
-    slow_addr plus_2 (in, 32'h2, in_plus_2, );
+    slow_addr #(.WIDTH(32)) plus_2 (in, 32'h2, in_plus_2, );
 
     // -2
     wire [31:0] in_minus_2;
-    slow_addr minus_2 (in, 32'hFFFFFFFE, in_minus_2, );
+    slow_addr #(.WIDTH(32)) minus_2 (in, 32'hFFFFFFFE, in_minus_2, );
 
     // +4
     wire [31:0] in_plus_4;
-    slow_addr plus_4 (in, 32'h4, in_plus_4, );
+    slow_addr #(.WIDTH(32)) plus_4 (in, 32'h4, in_plus_4, );
 
     // -4
     wire [31:0] in_minus_4;
-    slow_addr minus_4 (in, 32'hFFFFFFFC, in_minus_4, );
+    slow_addr #(.WIDTH(32)) minus_4 (in, 32'hFFFFFFFC, in_minus_4, );
 
     // select correct size
     wire [31:0] size_mux_out_plus, size_mux_out_minus;

@@ -12,8 +12,8 @@ module TOP;
     reg flush;
 
     // Direct Segment Write
-    // reg  write_cs;
-    //reg [15:0] write_cs_enable;     
+    reg [15:0] write_cs;
+    reg write_cs_enable;     
 
     // Decode Interface
     reg d_valid;
@@ -58,6 +58,7 @@ module TOP;
     wire [2:0] r_flag_0;
     wire [2:0] r_flag_1;
     wire [1:0] r_stack_op;
+    wire [31:0] r_stack_address;
     wire [2:0] r_seg_override;
     wire r_seg_override_valid;
     wire [31:0] r_eax;
@@ -93,6 +94,7 @@ module TOP;
     // register file writeback
     reg [2:0] wb_reg_number;
     reg wb_reg_en;
+    reg wb_stack;   
     reg [2:0] wb_reg_size;
     reg [31:0] wb_reg_data;
 
@@ -106,6 +108,8 @@ module TOP;
     reg wb_mmx_en;
     reg [63:0] wb_mmx_data;
 
+    reg flag_df;
+
     register_access_top uut (
         // Clock Interface
         clk,
@@ -115,8 +119,8 @@ module TOP;
         flush,
 
         // Direct Segment Write
-        //write_cs,
-        //write_cs_enable,     
+        write_cs,
+        write_cs_enable,     
 
         // Decode Interface
         d_valid,
@@ -161,6 +165,7 @@ module TOP;
         r_flag_0,
         r_flag_1,
         r_stack_op,
+        r_stack_address,
         r_seg_override,
         r_seg_override_valid,
         r_eax,
@@ -191,6 +196,7 @@ module TOP;
 
         wb_reg_number,
         wb_reg_en,
+        wb_stack,
         wb_reg_size,
         wb_reg_data,
 
@@ -200,7 +206,9 @@ module TOP;
 
         wb_mmx_number,
         wb_mmx_en,
-        wb_mmx_data
+        wb_mmx_data,
+
+        flag_df
 
     );
 
@@ -214,8 +222,8 @@ module TOP;
         flush = 0;
 
         // Direct Segment Write
-        // reg  write_cs;
-        //reg [15:0] write_cs_enable;     
+        write_cs = 0;
+        write_cs_enable = 0;
 
         // Decode Interface
         d_valid = 1;
@@ -240,6 +248,7 @@ module TOP;
         d_pc = 0;
         d_branch_taken = 0;
         d_opcode = 0;
+        flag_df = 0;
 
         // Address Generation Inferface
         r_ready = 1;

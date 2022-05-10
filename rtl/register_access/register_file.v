@@ -65,10 +65,10 @@ module register_file (
     input [31:0] writeback_data;
 
     // for movs
-    input [31:0] esi_data,
-    input esi_en,
-    input [31:0] edi_data,
-    input edi_en,
+    input [31:0] esi_data;
+    input esi_en;
+    input [31:0] edi_data;
+    input edi_en;
 
     output [31:0] eax_out;
     output [31:0] ecx_out;
