@@ -21,7 +21,12 @@ module byte_shifter_16B (
 	 wire [3:0] sel;
 	 wire 	    nc;	 
 	 //slow_addr #(.WIDTH(4)) shft_add (i, shift_amount, sel, nc);
-         assign sel = i - shift_amount;	 
+         //assign sel = i - shift_amount;
+	 subtract #(.WIDTH(4)) (
+	   i,
+           shift_amount,
+           sel	 
+         );
          mux #(.WIDTH(8), .INPUTS(16)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);	 
       end
    endgenerate

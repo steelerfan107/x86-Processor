@@ -178,7 +178,7 @@ module sys_cont_top (
            parameter IDT_ADDRESS13 = 32'hf000;   
            parameter IDT_ADDRESS14 = 32'hf000;   
            parameter IDT_ADDRESS15 = 32'hf000;
-   
+
            ////////////////////////////////
            // 
            // Control Accumulation
@@ -320,6 +320,15 @@ module sys_cont_top (
            
            assign  fetch_load_address_int = mem_dp_read_data;
            assign reg_cs_int = 'h0;
+
+          always @ (posedge or_int_vec) begin
+              if (or_int_vec) begin
+	         $display("=================== ");	 		 
+	         $display("=================== Approx Timing == Seen Interrupt");
+	         $display("=================== ");	 	 
+              end   
+          end  
+      
    
            int_controller ic (
                 clk,

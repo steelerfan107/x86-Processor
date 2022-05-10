@@ -26,14 +26,132 @@ byte_shifter_8B bs8 (
    s0_displacement_bytes
 );
 
-// TODO - Make Case
-assign imm_mask  = (48'hFFFFFFFFFFFF >> 8*(6-(s0_immediete_bytes+s0_displacement_bytes)));
-assign disp_mask = (32'hFFFFFFFF     >> 8*(4-s0_displacement_bytes));
+ wire [6:0] imm_mask_shift_factor;
+wire [6:0] disp_mask_shift_factor;
+ 
+wire [6:0] imm_shift_factor;
+wire [6:0] disp_shift_factor;
+   
+wire [3:0] imm_plus_disp_bytes;
+   
+slow_addr #(.WIDTH(4)) (s0_displacement_bytes,s0_immediete_bytes,imm_plus_disp_bytes,nc0); 
 
-assign imm  = (s0_displace_n_imm >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
-assign disp = (s0_displace_n_imm >> 8*(8-s0_displacement_bytes));
+wire [3:0] sub6_imm_bytes;
+wire [3:0] sub4_disp_bytes;
+wire [3:0] sub8_disp_bytes;
+wire [3:0] sub8_disp_p_imm_bytes;
+
+subtract #(.WIDTH(4)) (
+	4'd6,
+        s0_immediete_bytes,
+        sub6_imm_bytes	 
+   );
+
+subtract #(.WIDTH(4)) (
+	4'd4,
+        s0_displacement_bytes,
+        sub4_disp_bytes	 
+   );
+   
+subtract #(.WIDTH(4)) (
+	4'd8,
+        s0_displacement_bytes,
+        sub8_disp_bytes	 
+   );
+
+subtract #(.WIDTH(4)) (
+	4'd8,
+        imm_plus_disp_bytes,
+        sub8_disp_p_imm_bytes	 
+   ); 
+
+  
+byte_shifter_right_6B (48'hFFFFFFFFFFFF, imm_mask, sub6_imm_bytes[2:0]); 
+byte_shifter_right_8B (s0_displace_n_imm, imm, sub8_disp_p_imm_bytes[2:0]);
+
+byte_shifter_right_4B (32'hFFFFFFFF, disp_mask, sub4_disp_bytes[1:0]); 
+byte_shifter_right_8B (s0_displace_n_imm, disp, sub8_disp_bytes[2:0]);   
+
+// TODO - Make Case
+//assign imm_mask  = (48'hFFFFFFFFFFFF >> 8*(6-s0_immediete_bytes));
+//assign disp_mask = (32'hFFFFFFFF     >> 8*(4-s0_displacement_bytes));
+
+//assign imm  = (s0_displace_n_imm >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
+//assign disp = (s0_displace_n_imm >> 8*(8-s0_displacement_bytes));
    
 logic_tree_bus #(.WIDTH(32),.NINPUTS(2)) disp_maskb ({disp_mask,disp},dec_disp);
 logic_tree_bus #(.WIDTH(48),.NINPUTS(2)) imm_maskb  ({imm_mask,imm},dec_imm);
 	  
+endmodule
+
+////////////////////////////////////////////
+//
+// Byte Shifter 8B
+//
+// Shifter which can shift on a byte granularity. 8B Wide
+//
+module byte_shifter_right_8B (
+   in,
+   out,
+   shift_amount
+);
+
+   input [63:0] in;
+   output [63:0] out;
+   input [2:0]    shift_amount;
+
+   genvar         i;
+   generate
+      for(i = 0; i < 8; i=i+1) begin
+         wire [2:0] sel;
+         wire       nc;
+         slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
+         mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);
+      end
+   endgenerate
+
+endmodule // byte_shifter_right_6B
+
+module byte_shifter_right_6B (
+   in,
+   out,
+   shift_amount
+);
+
+   input [47:0] in;
+   output [47:0] out;
+   input [2:0]    shift_amount;
+
+   genvar         i;
+   generate
+      for(i = 0; i < 6; i=i+1) begin
+         wire [2:0] sel;
+         wire       nc;
+         slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
+         mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);
+      end
+   endgenerate
+
+endmodule // byte_shifter_right_6B
+
+module byte_shifter_right_4B (
+   in,
+   out,
+   shift_amount
+);
+
+   input [31:0] in;
+   output [31:0] out;
+   input [1:0]    shift_amount;
+
+   genvar         i;
+   generate
+      for(i = 0; i < 4; i=i+1) begin
+         wire [1:0] sel;
+         wire       nc;
+         slow_addr #(.WIDTH(2)) shft_add (i, shift_amount, sel, nc);        
+         mux #(.WIDTH(4), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);
+      end
+   endgenerate
+
 endmodule

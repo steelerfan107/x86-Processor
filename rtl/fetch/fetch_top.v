@@ -118,7 +118,12 @@ module fetch_top (
    assign set_eip = load;
    assign eip = minus_cs;
 
-   assign minus_cs = load_address - cs_register;
+   //assign minus_cs = load_address - cs_register;
+   subtract #(.WIDTH(32)) (
+	load_address,
+        cs_register,
+        minus_cs	 
+   );
    
    and2$ out_acc ( out_accept, f_valid, f_ready);
 

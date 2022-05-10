@@ -15,6 +15,7 @@
 ../../../rtl/lib/find_first.v
 ../../../rtl/lib/slow_addr.v
 ../../../rtl/lib/compare.v
+../../../rtl/lib/subtract.v
 ../../../rtl/decode/decode_stage_0.v
 ../../../rtl/decode/byte_shifter_16B.v
 ../../../rtl/decode/byte_shifter_8B.v

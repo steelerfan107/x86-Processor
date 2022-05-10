@@ -216,12 +216,28 @@ module decode_stage_1 (
    wire 		repeat_and_busy;
    wire 		repeat_and_out_accept;
 
+   always @ (posedge ret_near or posedge ret_far or posedge iretd) begin
+      if (iretd) begin
+	 $display("=================== Approx Timing == Seen IRETD");	 
+      end
+      if (ret_near) begin
+	 $display("=================== Approx Timing == Seen RET Near");	 	 
+      end
+      if (ret_far) begin
+	 $display("=================== Approx Timing == Seen Ret Far");	 	 
+      end      
+   end
+
+   
    and2$ (in_accept, s0_valid, s0_ready);
   
    and3$ ( repeat_and_busy, busy_ahead_of_decode, pre_repeat, not_halt_forward_progress);
    inv1$ ( not_busy, busy_ahead_of_decode);
+
+   wire not_in_accept;
+   inv1$ ( not_in_accept, in_accept);
 	   
-   mux2$ ( halt_forward_progress_in, not_busy, ~in_accept, halt_forward_progress);
+   mux2$ ( halt_forward_progress_in, not_busy, not_in_accept, halt_forward_progress);
    
    register #(.WIDTH(1)) half_forward_reg (
                clk,
@@ -237,10 +253,14 @@ module decode_stage_1 (
    and2$ ( hold_int_repeat, pending_int, pre_repeat);
 
    wire single_txn_mask;
-   nand2$ (single_txn_mask, SINGLE_TXN, busy_ahead_of_decode); 
+   nand2$ (single_txn_mask, SINGLE_TXN, busy_ahead_of_decode);
+
+   wire not_halt_forward_progress_mask, not_hold_int_repeat;
+   inv1$ (not_halt_forward_progress_mask,halt_forward_progress_mask);
+   inv1$ (not_hold_int_repeat,hold_int_repeat);
    
-   and4$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask, ~hold_int_repeat, single_txn_mask);
-   and4$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask, ~hold_int_repeat, single_txn_mask);   
+   and4$ (s1_valid    , pre_s1_valid, not_halt_forward_progress_mask, not_hold_int_repeat, single_txn_mask);
+   and4$ (pre_s1_ready,     s1_ready, not_halt_forward_progress_mask, not_hold_int_repeat, single_txn_mask);   
 
    // Repeat Logic
    wire 		store_temp_ecx, valid_temp_ecx_in, valid_temp_ecx, not_valid_temp_ecx;
@@ -257,7 +277,10 @@ module decode_stage_1 (
                store_temp_ecx		    
    );
 
-   mux #(.INPUTS(2),.WIDTH(1)) ({~out_accept_writeecx,store_temp_ecx}, valid_temp_ecx_in, valid_temp_ecx);
+   wire 		not_out_accept_writeecx;
+   inv1$ (not_out_accept_writeecx, out_accept_writeecx);
+   
+   mux #(.INPUTS(2),.WIDTH(1)) ({not_out_accept_writeecx,store_temp_ecx}, valid_temp_ecx_in, valid_temp_ecx);
 
    register #(.WIDTH(1)) v_temp_ecx (
                clk,
@@ -270,7 +293,7 @@ module decode_stage_1 (
    
    and3$ (hold_int, pending_int, busy_ahead_of_decode, pre_repeat); 
    
-   and4$ (out_accept_writeecx, s1_valid, s1_ready, ~halt_forward_progress_mask, pre_repeat);
+   and4$ (out_accept_writeecx, s1_valid, s1_ready, not_halt_forward_progress_mask, pre_repeat);
    
    compare #(.WIDTH(8)) movs_comp (8'hA5, s0_opcode[15:8], s1_movs);
    inv1$ ( not_movs, s1_movs);
@@ -284,7 +307,14 @@ module decode_stage_1 (
    
    assign wb_valid = out_accept_writeecx;
    assign wb_reg   = 3'b001;
-   assign wb_data  = ecx_register_selected - 1;  
+   
+   //assign wb_data  = ecx_register_selected - 1;
+   subtract #(.WIDTH(32)) (
+	ecx_register_selected,
+        32'd1,
+        wb_data	 
+   );
+   
    assign wb_size  = 3;
    
    // IRETd Logic
