@@ -75,7 +75,7 @@ module dcache(
     // interface to interconnect
     output [31:0] mem_addr;
     output mem_req;
-    output mem_data_valid;
+    input  mem_data_valid;
     output [31:0] mem_data;
     output mem_rd_wr;
     output mem_en;
@@ -90,24 +90,49 @@ module dcache(
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
+    
+
     assign mem_en = bus_busy_out;
+
+    wire ctrl_write_cnt_z;
+    wire ctrl_write_cnt_en;
+
+    wire [5:0] index = virt_addr[8:3];
+    wire [22:0] phys_tag = phys_addr[31:9];
+    wire [2:0] byte_offset = virt_addr[2:0];
+
+    wire [1:0] write_cnt;
+    wire [1:0] write_cnt_mux_out;
+    wire [1:0] write_cnt_p1;
+    assign write_cnt_p1 = write_cnt + 1;
+    mux #(.WIDTH(2), .INPUTS(2)) write_cnt_mux({2'b0, write_cnt_p1}, write_cnt_mux_out, ctrl_write_cnt_z);
+    register #(.WIDTH(2)) write_cnt_reg(clk, reset, write_cnt_mux_out, write_cnt, , ctrl_write_cnt_en );
 
     wire [31:0] addr_mux_out;
     mux #(.WIDTH(32), .INPUTS(2)) rd_wr_mux({wr_req_address, rd_req_address},  addr_mux_out, ctrl_rd_wr_addr);
 
     wire [31:0] req_pending_addr;
     wire ctrl_req_addr_en;
-    
-    register #(.WIDTH(32)) req_addr_reg(clk, reset, addr_mux_out, req_pending_addr, , ctrl_req_addr_en);
+
+    // TODO behavioral
+    wire [2:0] offset_mux_out;
+    mux #(.WIDTH(3), .INPUTS(2)) offset_mux({3'd4, 3'd4 - byte_offset}, offset_mux_out, write_cnt[0]);
+
+    wire [31:0] addr2_adder_out;
+    slow_addr #(.WIDTH(32)) addr2_adder({29'h0, offset_mux_out}, req_pending_addr, addr2_adder_out,  );
+
+    wire [31:0] addr_mux2_out;
+    mux #(.WIDTH(32), .INPUTS(2)) addr_mux2({addr2_adder_out, addr_mux_out},  addr_mux2_out, ctrl_addr2_mux);
+
+   
+ 
+    register #(.WIDTH(32)) req_addr_reg(clk, reset, addr_mux2_out, req_pending_addr, , ctrl_req_addr_en);
 
     wire virt_addr_mux_sel;
     wire [31:0] req_pending_addr_p8;
     slow_addr #(.WIDTH(32)) block_sel_adder(req_pending_addr, 32'd8, req_pending_addr_p8,);
     mux #(.WIDTH(32), .INPUTS(2)) virt_addr_mux({ req_pending_addr_p8, req_pending_addr},  virt_addr, virt_addr_mux_sel);
 
-    wire [5:0] index = virt_addr[8:3];
-    wire [22:0] phys_tag = phys_addr[31:9];
-    wire [2:0] byte_offset = virt_addr[2:0];
 
     wire [22:0] tag_out;
     wire valid_out;
@@ -153,6 +178,7 @@ module dcache(
     wire ctrl_staging_wr_en;
     wire ctrl_read2;
     wire ctrl_grant_pass;
+    wire wr_done;
 
     wire read_num;
 
@@ -165,7 +191,7 @@ module dcache(
         .dp_valid(rd_dp_valid),
         .wr_valid(wr_req_valid),
         .wr_ready(wr_req_ready),
-        .wr_size(wr_size),
+        .wr_done(wr_done),
         .write_num(write_num),
         .read_num(read_num),
         .cache_hit(cache_hit),
@@ -179,6 +205,9 @@ module dcache(
         .pa_wr_en(ctrl_pa_wr_en),
         .rd_wr_addr(ctrl_rd_wr_addr),
         .req_addr_en(ctrl_req_addr_en),
+        .addr2_mux(ctrl_addr2_mux),
+        .wr_cnt_z(ctrl_write_cnt_z),
+        .wr_cnt_en(ctrl_write_cnt_en),
         .valid_src(valid_in),
         .TLB_hit(tlb_hit),
         .TLB_rd_wr(tlb_rd_wr),
@@ -248,7 +277,42 @@ module dcache(
     and2$ drive_bus_and(ctrl_drive_bus, mem_en, ctrl_rd_wr_addr);
     inv1$ drive_bus_inv(n_drive_bus, ctrl_drive_bus);
 
+    eval_wr_done ewd(wr_done, write_cnt, wr_size);
+     
+
+
     tristate_bus_driver16$ data_bus_driver1(n_drive_bus, mem_data_driver[15:0], mem_data[15:0]);
     tristate_bus_driver16$ data_bus_driver2(n_drive_bus, mem_data_driver[31:16], mem_data[31:16]);
+
+endmodule
+
+module eval_wr_done(
+    output wr_done,
+    input [1:0] write_cnt,
+    input wr_size
+);
+
+    wire wr_size_n;
+    inv1$ wsn(wr_size_n, wr_size);
+   
+    wire write_cnt_1_n;
+    inv1$ wc1inv(write_cnt_1_n, write_cnt[1]);
+    
+    wire write_cnt_0_n;
+    inv1$ wc0inv(write_cnt_0_n, write_cnt[0]);
+
+    wire wr_cnt_eq_1;
+    and2$ wc1a(wr_cnt_eq_1, write_cnt[0], write_cnt_1_n);
+
+    wire wr_cnt_eq_2;
+    and2$ wc2a(wr_cnt_eq_2, write_cnt[1], write_cnt_0_n);
+
+    wire term1;
+    and2$ t1a(term1, wr_cnt_eq_1, wr_size_n);
+
+    wire term2;
+    and2$ t2a(term2, wr_cnt_eq_2, wr_size);
+
+    or2$ wr_done_or(wr_done, term1, term2);
 
 endmodule
