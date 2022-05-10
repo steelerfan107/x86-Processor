@@ -685,15 +685,15 @@ module top_pipeline (
       e_to_sys_controller,
       e_opcode,
 
-      test_rmem_valid,
-      1'b1, //rmem_ready,
-      test_rmem_address,
-      test_rmem_wr_en,
-      test_rmem_wr_data,
-      test_rmem_wr_size,
-      1'b1, //rmem_dp_valid,
-      test_rmem_dp_ready,
-      64'd444	
+      rmem_valid,
+      rmem_ready,
+      rmem_address,
+      rmem_wr_en,
+      rmem_wr_data,
+      rmem_wr_size,
+      rmem_dp_valid,
+      rmem_dp_ready,
+      rmem_dp_read_data
   );
    
   execute_top uut_execute(

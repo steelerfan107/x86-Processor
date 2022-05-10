@@ -90,7 +90,8 @@ module dcache(
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
-    assign mem_en = bus_busy_out;
+    //assign mem_en = bus_busy_out;
+    tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
 
     wire [31:0] addr_mux_out;
     mux #(.WIDTH(32), .INPUTS(2)) rd_wr_mux({wr_req_address, rd_req_address},  addr_mux_out, ctrl_rd_wr_addr);
@@ -118,7 +119,10 @@ module dcache(
     wire [31:0] pa_p4;
     wire [31:0] pa_reg_out;
 
-    assign mem_addr = pa_out;
+    tristate_bus_driver16$(~bus_busy_out, pa_out[15:0],  mem_addr[15:0]);
+    tristate_bus_driver16$(~bus_busy_out, pa_out[31:16], mem_addr[31:16]);
+			   
+    //assign mem_addr = pa_out;
 
     wire ctrl_pa_src;
     wire ctrl_pa_wr_en;

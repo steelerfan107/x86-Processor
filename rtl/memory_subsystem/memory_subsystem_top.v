@@ -111,6 +111,7 @@ module memory_subsystem_top (
     wire [BUSADDRW-1:0] bus_addr;
 
     wire bus_req_icache;
+    wire bus_req_dcache;   
     wire bus_req;
 
     //wire bus_done_icache;
@@ -189,9 +190,55 @@ module memory_subsystem_top (
         .d_pa_out(tlb_d_pa),
         .d_PCD_out(tlb_d_pcd)
     );
-    
-    //dcache dcache();
 
+   
+    //dcache dcache();
+    dcache uut(
+        .clk(clk),
+        .reset(reset),
+    
+        // read interface 
+        .rd_req_valid(dmem_r_valid),
+        .rd_req_ready(dmem_r_ready),
+        .rd_req_address(dmem_r_address),
+        .rd_dp_valid(dmem_r_dp_valid),
+        .rd_dp_ready(dmem_r_dp_ready),
+        .rd_dp_read_data(dmem_r_dp_read_data),
+
+        //  TLB
+        .virt_addr(d_virt_addr),
+        .phys_addr(tlb_d_pa),
+        .tlb_hit(tlb_d_hit),
+        .tlb_pcd(tlb_d_pcd),
+        .tlb_rd_wr(tlb_d_rd_wr),
+
+        // write interface
+        // TODO ...
+        .wr_req_valid(dmem_w_valid),
+        .wr_req_ready(dmem_w_ready),
+        .wr_req_address(dmem_w_address),
+        .wr_req_data(dmem_w_wr_data),
+        .wr_size_in(dmem_w_wr_size),
+
+        // interrupt
+        .page_fault(page_fault),
+
+        // interface to interconnect
+        .mem_addr(bus_addr),
+        .mem_req(bus_req_dcache),
+        .mem_data_valid(bus_data_valid),
+        .mem_data(bus_data),
+        .mem_rd_wr(bus_rd_wr),
+        .mem_en(bus_en),
+
+        // Arbiter Interface
+        .grant_in(arb_grant),
+        .grant_out(dcache_grant),
+
+        .bus_busy_out(bus_busy_out_nc),
+        .bus_busy_in(bus_busy)
+    );
+   
     // system controller interface 
     // make lower priority than dcache so that writes complete
     // FIXME check that writes complete, since dcache might release the bus in
@@ -215,7 +262,7 @@ module memory_subsystem_top (
         .mem_rd_wr(),
         .mem_en(),
 
-        .grant_in(arb_grant),
+        .grant_in(dcache_grant),
         .grant_out(sys_grant),
 
         .bus_busy_out(bus_busy_sys_controller_nc),
@@ -233,7 +280,7 @@ module memory_subsystem_top (
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
         .phys_addr(tlb_i_pa),   // from TLB
-	      .virt_addr(tlb_va),  	  
+	.virt_addr(tlb_va),  	  
         .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),

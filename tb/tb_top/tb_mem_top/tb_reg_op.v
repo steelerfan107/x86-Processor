@@ -186,11 +186,11 @@ module TOP;
       wmem_dp_read_data,  	
 
       // System Controller Read Interface
-      1'b0, //emem_valid,
+      emem_valid,
       emem_ready,
       emem_address,
       emem_dp_valid,
-      1'b1, //emem_dp_ready,
+      emem_dp_ready,
       emem_dp_read_data,
 
       contents_concat
@@ -212,15 +212,15 @@ module TOP;
       imem_dp_ready,
       imem_dp_read_data,
 
-      test_emem_valid,
-      test_emem_ready,
-      test_emem_address,
-      test_emem_wr_en,
-      test_emem_wr_data,
-      test_emem_wr_size,
-      test_emem_dp_valid,
-      test_emem_dp_ready,
-      test_emem_dp_read_data, 
+      emem_valid,
+      emem_ready,
+      emem_address,
+      emem_wr_en,
+      emem_wr_data,
+      emem_wr_size,
+      emem_dp_valid,
+      emem_dp_ready,
+      emem_dp_read_data, 
 
       rmem_valid,
       rmem_ready,
@@ -271,7 +271,7 @@ module TOP;
         #55
         reset = 0;
         #2350
-        interrupt = 16'h04;     
+        interrupt = 'h0; //16'h04;     
 	#50
         interrupt = 0;     	  
   end
