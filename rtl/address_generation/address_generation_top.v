@@ -379,6 +379,8 @@ endmodule
 module op0_generator (
     a_op0,
     a_op0_is_address,
+    op0_segment,
+    op0_check_segment_limit,
 
     r_size,
 
@@ -420,6 +422,8 @@ module op0_generator (
 
     output [63:0] a_op0;
     output a_op0_is_address;
+    output [2:0] op0_segment;
+    output op0_check_segment_limit;
 
     input [2:0] r_size;
 
@@ -620,11 +624,43 @@ module op0_generator (
     // see if mod_rm is address
     or2$ is_address_combine (a_op0_is_address, op0_mux_is_address, op0_rm_and_address);
 
+    // select segment
+    // if its memory, segment is ES
+    // if its not overridden then its ds
+    // if its overridden then its the overridden value
+
+    // {is_memory, r_seg_override_valid}
+    // 00: DS
+    // 01: r_seg_override
+    // 10: ES
+    // 11: ES
+
+    wire is_memory;
+    compare #(.WIDTH(3)) is_mem_cmp (op0_mux, 3'd6, is_memory);
+
+    mux #(.WIDTH(3), .INPUTS(4)) (
+        {
+            3'd0,
+            3'd0,
+            r_seg_override,
+            3'b011
+
+        }
+    );
+
+    // will this be read from memory later?
+    op0_is_address op0_is_address0 (
+        r_op0[2], r_op0[1], r_op0[0],
+        op0_check_segment_limit
+    );
+
 endmodule
 
 module op1_generator (
     a_op1,
     a_op1_is_address,
+    op1_segment,
+    op1_check_segment_limit,
 
     r_size,
 
@@ -667,6 +703,8 @@ module op1_generator (
 
     output [63:0] a_op1;
     output a_op1_is_address;
+    output [2:0] op1_segment;
+    output op1_check_segment_limit;
 
     input [2:0] r_size;
 
@@ -881,6 +919,18 @@ module op1_generator (
    and2$ (op1_rm_and_address, op1_is_modrm,  op1_mod_rm_is_address);
    
    or2$ is_address_combine (a_op1_is_address, op1_mux_is_address, op1_rm_and_address);
+
+   // set segment limit
+   // if its overridden, use that
+   // else use ds
+
+   mux #(.WIDTH(3), .INPUTS(2)) op1_seg_mux (
+       {r_seg_override, 3'b100},
+       op1_segment,
+       r_seg_override_valid
+   );
+
+   assign op1_check_segment_limit = a_op1_is_address;
 
 endmodule
 
