@@ -385,10 +385,10 @@ module register_stall_table (
     r6_out,
     r7_out;
    
-    wire  is_stall_table, is_stall_stack, non_zero_r6;
+    wire  is_stall_table, is_stall_stack, non_zero_r4;
 
-    or4$ (non_zero_r6 , r6_out[3],r6_out[2],r6_out[1],r6_out[0] );
-    and2$ (is_stall_stack, non_zero_r6, stack_op);
+    or4$ (non_zero_r4 , r4_out[3],r4_out[2],r4_out[1],r4_out[0] );
+    and2$ (is_stall_stack, non_zero_r4, stack_op);
    
     or2$ (is_stall, is_stall_table, is_stall_stack);
    

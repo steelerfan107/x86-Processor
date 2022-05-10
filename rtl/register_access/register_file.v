@@ -31,6 +31,8 @@ module register_file (
     esi_en,
     edi_data,
     edi_en,
+    write_esp,
+    write_esp_enable,
 
     eax_out,
     ecx_out,
@@ -70,6 +72,9 @@ module register_file (
     input [31:0] edi_data;
     input edi_en;
 
+    input [31:0]  write_esp;
+    input 	  write_esp_enable;
+  
     output [31:0] eax_out;
     output [31:0] ecx_out;
     output [31:0] edx_out;
@@ -223,14 +228,24 @@ module register_file (
         edi_en
     );
 
+    wire 	  ld_esp_comb;
+    wire [31:0]	  esp_data;
 
+    or2$ (ld_esp_comb, ld_esp, write_esp_enable);
+
+    mux #(.WIDTH(32), .INPUTS(2)) esb_mux (
+        {reg_inputs,write_esp},
+        esp_data,
+        ld_esp
+    );
+   
     // instantiate the registers
     register_32_reset 
     eax (eax_out, reg_inputs, eax_reset_in, ld_eax, clk, reset),
     ecx (ecx_out, reg_inputs, ecx_reset_in, ld_ecx, clk, reset),
     edx (edx_out, reg_inputs, edx_reset_in, ld_edx, clk, reset),
     ebx (ebx_out, reg_inputs, ebx_reset_in, ld_ebx, clk, reset),
-    esp (esp_out, reg_inputs, esp_reset_in, ld_esp, clk, reset),
+    esp (esp_out,   esp_data, esp_reset_in, ld_esp_comb, clk, reset),
     ebp (ebp_out, reg_inputs, ebp_reset_in, ld_ebp, clk, reset),
     esi (esi_out, esi_mux_data_out, esi_reset_in, esi_mux_ld_out, clk, reset),
     edi (edi_out, edi_mux_data_out, edi_reset_in, esi_mux_ld_out, clk, reset);

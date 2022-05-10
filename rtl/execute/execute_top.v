@@ -50,6 +50,7 @@ module execute_top (
     wb_op_a_is_reg,
     wb_op_a_is_segment,
     wb_op_a_is_mmx,
+    wb_stack_op,		    
     wb_stack,
     wb_valid,
     wb_branch_taken,
@@ -84,7 +85,7 @@ module execute_top (
     input [1:0] e_stack_op;
     input [3:0] e_op;
     input [15:0] e_opcode;
-    input [1:0] e_opsize;
+    input [2:0] e_opsize;
     input [2:0] e_flag_0_map;
     input [2:0] e_flag_1_map;
     input e_set_d_flag;
@@ -104,8 +105,9 @@ module execute_top (
     output [31:0] wb_dest_address;
     output [31:0] wb_dest_reg;
     output [63:0] wb_result;
-    output [1:0] wb_opsize;
+    output [2:0] wb_opsize;
     output wb_mem_or_reg;
+    output [1:0] wb_stack_op;   
     output wb_stack;
     output wb_valid;
     output wb_branch_taken;
@@ -135,12 +137,12 @@ module execute_top (
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1;
 
     wire [31:0]  p_dest_address = e_op_a_address;
     wire  [31:0] p_dest_reg = e_dest_reg;
     wire  [63:0] p_result = e_alu_out;
-    wire  [1:0]  p_opsize = e_opsize;
+    wire  [2:0]  p_opsize = e_opsize;
     wire         p_mem_or_reg = 'h0;
     wire         p_branch_taken = 'h0;
     wire         p_to_sys_controller = e_to_sys_controller;
@@ -164,7 +166,8 @@ module execute_top (
         e_branch_taken,
         e_to_sys_controller,
         e_pc,
-        p_stack,  
+        p_stack,
+        e_stack_op,  			   
         p_op_a_is_address,
         p_op_a_is_reg,
         p_op_a_is_segment,
@@ -180,7 +183,8 @@ module execute_top (
         wb_branch_taken,
         wb_to_sys_controller,
         wb_pc,
-	wb_stack,  
+	wb_stack,
+	wb_stack_op,  	    
         wb_op_a_is_address,
         wb_op_a_is_reg,
         wb_op_a_is_segment,

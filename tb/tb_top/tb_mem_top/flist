@@ -47,6 +47,7 @@
 ../../../rtl/register_access/segment_register.v
 ../../../rtl/register_access/register_access_top.v
 ../../../rtl/register_access/register_stall.v
+../../../rtl/register_access/segment_register_stall.v
 ../../../rtl/address_generation/address_generation_top.v
 ../../../rtl/address_generation/address_generator.v
 ../../../rtl/memory_read/memory_read_top.v

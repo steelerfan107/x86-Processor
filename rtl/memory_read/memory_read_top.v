@@ -305,7 +305,7 @@ module memory_read_top (
 
         dcache_data_out,
 
-        a_valid,   // valid in
+        (a_valid & ~halt),   // valid in
         e_ready,
 
         dcache_ready,   // ready out
@@ -357,7 +357,7 @@ module memory_read_top (
     // ------------------ //
 
     and3$ ( pop_address_dependency , wb_valid, wb_ready, wb_to_memory);
-    and3$ ( push_address_dependency, e_valid, e_ready, a_op0_is_address);   // changed from and2 to and3 - brandon
+    and3$ ( push_address_dependency, e_valid, e_ready, p_op_a_is_address);   // changed from and2 to and3 - brandon
 
     address_dependency_table (
      // Clock Interface
@@ -369,27 +369,27 @@ module memory_read_top (
 
      // Address Interface In	
      .push(push_address_dependency),		  
-     .push_address(a_op0),
-     .push_size(a_opsize),
+     .push_address(p_op_a_address),
+     .push_size(p_size),
 
      // Address Compare Interface
-     .compare_address_0(a_op0),
-     .compare_address_0_size(a_opsize),			  
+     .compare_address_0(p_op_a_address),
+     .compare_address_0_size(p_size),			  
      .compare_address_0_hit(addr0_match),			  
 
      .compare_address_1(a_op1),
-     .compare_address_1_size(a_opsize),			  
+     .compare_address_1_size(p_size),			  
      .compare_address_1_hit(addr1_match),
 		  
      // Address Interface Out
      .pop(pop_address_dependency)
    );
 
-   //and2$ (halt0, addr0_match, a_op0_is_address);
-   //and2$ (halt1, addr1_match, a_op1_is_address);
-   //or2$  (halt, halt0, halt1);
+   and2$ (halt0, addr0_match, p_op_a_is_address);
+   and2$ (halt1, addr1_match, a_op1_is_address);
+   or2$  (halt, halt0, halt1);
 
-   assign halt = 1'b0;
+   //assign halt = 1'b0;
 
    // Use halt signal to hold tranaction until dependency is cleared
 
