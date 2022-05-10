@@ -81,6 +81,7 @@ module decode_stage_1 (
 
    // Instruction Memory Interface Parameters
    parameter IADDRW = 32;
+   parameter SINGLE_TXN = 1'b0;
 
    // Clock Interface
    input                clk;
@@ -232,9 +233,12 @@ module decode_stage_1 (
    and2$ ( halt_forward_progress_mask, repeat_and_busy, not_halt_forward_progress);
 
    and2$ ( hold_int_repeat, pending_int, pre_repeat);
+
+   wire single_txn_mask;
+   nand2$ (single_txn_mask, SINGLE_TXN, busy_ahead_of_decode); 
    
-   and3$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask, ~hold_int_repeat);
-   and3$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask, ~hold_int_repeat);   
+   and4$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask, ~hold_int_repeat, single_txn_mask);
+   and4$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask, ~hold_int_repeat, single_txn_mask);   
 
    // Repeat Logic
    wire 		store_temp_ecx, valid_temp_ecx_in, valid_temp_ecx, not_valid_temp_ecx;

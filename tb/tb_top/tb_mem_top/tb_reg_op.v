@@ -18,6 +18,8 @@ module TOP;
     parameter BUSDATAW = 32;
     parameter BUSADDRW = 32;    
 
+    parameter SINGLE_TXN = 1'b1;
+   
    reg [127:0]           memory_data;
    reg                   memory_valid;
    reg [31:0]            memory_address;
@@ -184,7 +186,7 @@ module TOP;
       contents_concat
    );
    
-   top_pipeline uut_pipeline(
+   top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
       reset,
 		     
@@ -285,7 +287,7 @@ module TOP;
   //     emem_ready        = ~ememory_valid;     
   //end
    
-  always #100  clk          = ~clk;
+  always #25  clk          = ~clk;
 
   initial begin
         $vcdplusfile("fsys_reg.dump.vpd");

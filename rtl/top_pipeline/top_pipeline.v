@@ -57,6 +57,8 @@ module top_pipeline (
 
     // Bus Parameters   
     parameter BUSDATAW = 32;
+
+    parameter SINGLE_TXN = 1'b0;   
   
    input                   clk;
    input                   reset;
@@ -372,7 +374,7 @@ module top_pipeline (
       f_branch_taken	  		  		  
    );
 
-   decode_top uut_decode (
+   decode_top #(.SINGLE_TXN(SINGLE_TXN)) uut_decode (
       clk,
       reset,
       decode_0_flush,
@@ -777,7 +779,7 @@ module top_pipeline (
      wb_cs_out  
   );   
 
-  assign busy_ahead_of_decode = wb_valid | a_valid | r_valid;
+  or4$ ( busy_ahead_of_decode, wb_valid, a_valid, r_valid , e_valid);
    
   or2$ (wb_reg_en, wb_valid, dec_wb_valid);
 
