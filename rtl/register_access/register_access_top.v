@@ -88,6 +88,8 @@ module register_access_top (
     r_branch_taken,
     r_opcode,
 
+    flag_df,
+			    
     wb_reg_number,
     wb_reg_en,
     wb_stack,
@@ -102,7 +104,6 @@ module register_access_top (
     wb_mmx_en,
     wb_mmx_data,
 
-    flag_df
     // Stack Commit Interface
     wb_stack_en,
     wb_stack_size,
