@@ -74,7 +74,8 @@ module TOP;
         rd_dp_valid = 0;
         rd_dp_read_data = 0;
 
-        #12.5
+        #10
+        // state 0
 
         reset = 0;
 
@@ -83,24 +84,63 @@ module TOP;
         op0_address_is_valid = 1;
         
         #10
+        // state 2
 
+        op0_address_is_valid = 0;
         rd_req_ready = 0;
 
         #20
+        // state 2
 
         rd_req_ready = 1;
 
         #10
+        // state 6
 
         rd_req_ready = 0;
 
         #10
+        // state 6
 
         rd_dp_valid = 1;
 
         #10
+        // state 7
 
         rd_dp_valid = 0;
+
+
+        #20
+        // state 3 then state 0
+
+        op0_address_is_valid = 1;
+
+        // try and reset
+        #10
+        op0_address_is_valid = 0;
+
+        reset = 1;
+
+        #10
+
+        reset = 0;
+
+        // state 0
+
+        // #10
+        // // state 2
+
+        // op0_address_is_valid = 0;
+
+        // reset = 1;
+
+        // #10
+
+        // reset = 0;
+        // // state 0
+
+
+
 
 
 
