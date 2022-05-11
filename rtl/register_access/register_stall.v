@@ -381,7 +381,7 @@ module register_stall_table (   // fanout good
     wb_reg_16_2 (wb_reg_buf[2], wb_reg[2]);
 
     wire wb_is_valid_buf;
-    wb_is_valid_16 (wb_is_valid_buf, wb_is_valid);
+    bufferH16$ wb_is_valid_16 (wb_is_valid_buf, wb_is_valid);
 
     wire [2:0] op0_reg_buf;
     bufferH16$ 
@@ -390,7 +390,7 @@ module register_stall_table (   // fanout good
     op0_reg_16_2 (op0_reg_buf[2], op0_reg[2]);
 
     wire op0_reg_is_valid_buf;
-    op0_reg_is_valid_16 bufferH16$ (op0_reg_is_valid_buf, op0_reg_is_valid);
+    bufferH16$ op0_reg_is_valid_16 (op0_reg_is_valid_buf, op0_reg_is_valid);
 
     wire next_stage_ready_buf;
     bufferH16$ next_stage_ready_16 (next_stage_ready_buf, next_stage_ready);

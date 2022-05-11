@@ -6,5 +6,9 @@
 ../../../rtl/lib/lib5.v
 ../../../rtl/lib/lib6.v
 ../../../rtl/lib/logic_tree.v
+../../../rtl/lib/logic_tree_bus.v
+../../../rtl/lib/bufferH16.v
+../../../rtl/lib/mux.v
+../../../rtl/lib/ao_mux.v
 ../../../rtl/register_access/register_file.v
 tb_register_file.v

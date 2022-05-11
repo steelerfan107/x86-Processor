@@ -53,7 +53,7 @@ module mmx_register_file (      // fanout good
 
     wire writeback_enable_buf;
     generate
-        for (i = 0l i < 8; i = i + 1) begin
+        for (i = 0; i < 8; i = i + 1) begin
             bufferH16$ wb_en_16 (writeback_enable_buf, writeback_enable);
         end
     endgenerate
