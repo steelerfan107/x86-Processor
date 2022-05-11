@@ -350,6 +350,10 @@ module top_pipeline (
 
    wire [31:0] 		  curr_pc;
 
+   wire 		  test_valid_pipe;
+   wire                   segment_limit_int;
+  
+
    fetch_top uut_fetch (
       clk,
       reset,
@@ -533,7 +537,7 @@ module top_pipeline (
       wb_reg_number,
       wb_reg_qual, //(wb_op_a_is_reg & wb_valid),
       wb_stack,
-      wb_reg_size,
+      wb_opsize,
       wb_reg_data[31:0],
       wb_reg_number,
       wb_seg_qual, //(wb_op_a_is_segment & wb_valid),
@@ -618,7 +622,8 @@ module top_pipeline (
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
-      a_opcode
+      a_opcode,
+      segment_limit_int
   );  
 
   memory_read_top uut_memory_read (
@@ -761,10 +766,13 @@ module top_pipeline (
   assign  wmem_wr_data = wb_result;
   assign  wmem_wr_size = wb_opsize;    
 
+  wire        sys_cont_val;
+  and2$ (sys_cont_val, wb_to_sys_controller, wb_valid);
+      
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     interrupt,
+     {3'b0, segment_limit_int, 12'b0},
      r_cs,		     
      emem_valid,
      emem_ready,
@@ -792,7 +800,7 @@ module top_pipeline (
      ret_far,			     
      iretd,
      iretd_halt,
-     (wb_to_sys_controller & wb_valid), //iretd_pop_valid,
+     sys_cont_val, //iretd_pop_valid,
      wb_result, //iretd_pop_data,
      reg_load_eflags,
      reg_eflags,
@@ -804,7 +812,8 @@ module top_pipeline (
      wb_jump_address,   
      wb_jump_load_cs[15:0],
      wb_cs_out  
-  );   
+  );
+
 
   or4$ ( busy_ahead_of_decode, wb_valid, a_valid, r_valid , e_valid);
    
@@ -837,7 +846,7 @@ module top_pipeline (
    reg 		  wb_to_sys_controller0;
    
   always @ (posedge clk) begin
-     begin
+     begin    
 	wb_accept0 <= wb_accept;
 	curr_pc0 <= curr_pc;
 	wb_pc0  <= wb_pc;

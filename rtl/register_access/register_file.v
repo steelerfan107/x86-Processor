@@ -224,7 +224,7 @@ module register_file (
 
     mux #(.WIDTH(1), .INPUTS(2)) edi_mux_ld (
         {1'b1, ld_edi},
-        esi_mux_ld_out,
+        edi_mux_ld_out,
         edi_en
     );
 
@@ -248,7 +248,7 @@ module register_file (
     esp (esp_out,   esp_data, esp_reset_in, ld_esp_comb, clk, reset),
     ebp (ebp_out, reg_inputs, ebp_reset_in, ld_ebp, clk, reset),
     esi (esi_out, esi_mux_data_out, esi_reset_in, esi_mux_ld_out, clk, reset),
-    edi (edi_out, edi_mux_data_out, edi_reset_in, esi_mux_ld_out, clk, reset);
+    edi (edi_out, edi_mux_data_out, edi_reset_in, edi_mux_ld_out, clk, reset);
 
 endmodule
 

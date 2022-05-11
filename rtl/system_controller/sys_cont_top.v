@@ -174,7 +174,7 @@ module sys_cont_top (
            parameter IDT_ADDRESS9 = 32'h8000;
            parameter IDT_ADDRESS10 = 32'hc000;
            parameter IDT_ADDRESS11 = 32'hf000;   
-           parameter IDT_ADDRESS12 = 32'hf000;   
+           parameter IDT_ADDRESS12 = 32'h0100;   
            parameter IDT_ADDRESS13 = 32'hf000;   
            parameter IDT_ADDRESS14 = 32'hf000;   
            parameter IDT_ADDRESS15 = 32'hf000;
@@ -253,6 +253,13 @@ module sys_cont_top (
            //
 
            wire 		     mask_int_vec;
+           wire [31:0] 	             mem_address_p4;
+           wire [31:0] 	             mem_address_p0;
+           wire [31:0]               bottom_entry;
+           wire [31:0] 	             comb_adddress;
+           wire capture_bottom_eip;
+           wire [31:0] 	fixed_end_bus;
+   
    
            assign pending_int = or_int_vec;
    
@@ -261,10 +268,22 @@ module sys_cont_top (
   	   assign       reg_load_eip_int = 'h0;  
 	   assign       reg_eip_int = 'h0;  
    
-           assign int_clear_vec = {int_clear, int_clear, int_clear, int_clear};
+           assign int_clear_vec = {16{int_clear}};
    
            logic_tree_bus #(.WIDTH(16),.OPERATION(0),.NINPUTS(2)) ltb_mask ({int_clear_vec, int_serviced_oh}, int_clear_mask);
 
+           inv1$ (int_clear_mask_inv[15], int_clear_mask[15]);
+           inv1$ (int_clear_mask_inv[14], int_clear_mask[14]);
+           inv1$ (int_clear_mask_inv[13], int_clear_mask[13]);
+           inv1$ (int_clear_mask_inv[12], int_clear_mask[12]);   
+           inv1$ (int_clear_mask_inv[11], int_clear_mask[11]);
+           inv1$ (int_clear_mask_inv[10], int_clear_mask[10]);
+           inv1$ (int_clear_mask_inv[9], int_clear_mask[9]);
+           inv1$ (int_clear_mask_inv[8], int_clear_mask[8]);   
+           inv1$ (int_clear_mask_inv[7], int_clear_mask[7]);
+           inv1$ (int_clear_mask_inv[6], int_clear_mask[6]);
+           inv1$ (int_clear_mask_inv[5], int_clear_mask[5]);
+           inv1$ (int_clear_mask_inv[4], int_clear_mask[4]);   
            inv1$ (int_clear_mask_inv[3], int_clear_mask[3]);
            inv1$ (int_clear_mask_inv[2], int_clear_mask[2]);
            inv1$ (int_clear_mask_inv[1], int_clear_mask[1]);
@@ -287,6 +306,10 @@ module sys_cont_top (
            inv1$ (not_hold_int, hold_int); 
            and2$ (mask_int_vec, not_hold_int, or_int_vec);
 
+           slow_addr #(.WIDTH(32)) ( mem_address_p0, 32'd4 , mem_address_p4,);
+
+           wire 			     addr_p1;
+              
            mux  #(.WIDTH(32),.INPUTS(16)) idt_select ( {IDT_ADDRESS15,
                                                         IDT_ADDRESS14, 
                                                         IDT_ADDRESS13, 
@@ -303,8 +326,10 @@ module sys_cont_top (
                                                         IDT_ADDRESS2, 
                                                         IDT_ADDRESS1,
                                                         IDT_ADDRESS0
-           }, mem_address, int_serviced);
+           }, mem_address_p0, int_serviced);
 
+          mux  #(.WIDTH(32),.INPUTS(16)) addr_select ( {mem_address_p4, mem_address_p0}, mem_address, addr_p1);
+   
            find_first #(.WIDTH(16),.OPERATION(1)) ff (int_vec_r, int_serviced_oh);
 
            wire low_is_one;
@@ -317,9 +342,16 @@ module sys_cont_top (
 		  {1'b0,int_serviced_low},
                   {1'b1,int_serviced_high}
            }, int_serviced , low_is_one);   
-           
-           assign  fetch_load_address_int = mem_dp_read_data;
-           assign reg_cs_int = 'h0;
+
+          assign fixed_end_bus[31:24] = mem_dp_read_data[7:0];
+          assign fixed_end_bus[23:16] = mem_dp_read_data[15:8];
+          assign fixed_end_bus[15:8] = mem_dp_read_data[23:16];   
+          assign fixed_end_bus[7:0] = mem_dp_read_data[31:24];
+   
+          slow_addr #(.WIDTH(32)) ( {bottom_entry[31:16],16'b0}, {fixed_end_bus[31:16],bottom_entry[15:0]},comb_adddress,);
+    
+          assign fetch_load_address_int = {fixed_end_bus[31:16],bottom_entry[15:0]};
+          assign reg_cs_int = fixed_end_bus[31:16];
 
           always @ (posedge or_int_vec) begin
               if (or_int_vec) begin
@@ -327,9 +359,17 @@ module sys_cont_top (
 	         $display("=================== Approx Timing == Seen Interrupt");
 	         $display("=================== ");	 	 
               end   
-          end  
-      
+          end
    
+          register #(.WIDTH(32)) top_eip (
+            clk,
+            reset,
+            fixed_end_bus,
+            bottom_entry,
+            ,
+            capture_bottom_eip					    
+           );
+      
            int_controller ic (
                 clk,
                 reset,
@@ -356,7 +396,9 @@ module sys_cont_top (
                 reg_load_cs_int,
                 reg_cs_int,
                 int_clear,
-                mask_int_vec		       
+                mask_int_vec,
+                capture_bottom_eip,
+                addr_p1		       
            );
 
            ////////////////////////////////
@@ -393,7 +435,9 @@ module sys_cont_top (
                                             ,  {  ret_near , not_ret_near});
    
            and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
-           slow_addr #(.WIDTH(32)) ({16'b0,used_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
+
+           assign fetch_load_address_iretd = iretd_pop_data;
+           //slow_addr #(.WIDTH(32)) ({16'b0,used_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
            //assign       fetch_load_address_iretd = iretd_pop_data;  
 
            //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;

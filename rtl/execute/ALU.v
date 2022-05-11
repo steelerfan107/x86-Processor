@@ -15,7 +15,7 @@ input [31:0] cs;
 input [5:0] eflags_in;
 input [2:0] opsize;
 input [15:0] opcode;
-input [2:0] alu_op;
+input [3:0] alu_op;
 input [2:0] flag_0_map;
 input [2:0] flag_1_map;
 input branch_taken;

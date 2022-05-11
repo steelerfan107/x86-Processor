@@ -195,6 +195,9 @@ module TOP;
 
       contents_concat
    );
+
+   reg 		r_emem_valid;
+   reg 		r_r_emem_valid;
    
    top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
@@ -213,14 +216,14 @@ module TOP;
       imem_dp_read_data,
 
       emem_valid,
-      emem_ready,
+      1'b1, //emem_ready,
       emem_address,
       emem_wr_en,
       emem_wr_data,
       emem_wr_size,
-      emem_dp_valid,
+      r_emem_valid, //emem_dp_valid,
       emem_dp_ready,
-      emem_dp_read_data, 
+      (r_r_emem_valid ? (32'h00000000) : (32'h52000000)), //emem_dp_read_data, 
 
       rmem_valid,
       rmem_ready,
@@ -243,12 +246,22 @@ module TOP;
       wmem_dp_read_data  		     
   );
 
+  always @ (posedge clk) begin
+     r_emem_valid <=  emem_valid;
+     r_r_emem_valid <=  r_emem_valid;     
+  end
+   
   initial begin
-        $readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.test_rom_0.mem);
-        $readmemh("rom/rom_control_0_1", uut_memory.main_memory_top.test_rom_1.mem);
-        $readmemh("rom/rom_control_0_2", uut_memory.main_memory_top.test_rom_2.mem);
-        $readmemh("rom/rom_control_0_3", uut_memory.main_memory_top.test_rom_3.mem);
+        $readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.test_rom_0_0.mem);
+        $readmemh("rom/rom_control_0_1", uut_memory.main_memory_top.test_rom_0_1.mem);
+        $readmemh("rom/rom_control_0_2", uut_memory.main_memory_top.test_rom_0_2.mem);
+        $readmemh("rom/rom_control_0_3", uut_memory.main_memory_top.test_rom_0_3.mem);
 
+        $readmemh("rom/rom_control_1_0", uut_memory.main_memory_top.test_rom_1_0.mem);
+        $readmemh("rom/rom_control_1_1", uut_memory.main_memory_top.test_rom_1_1.mem);
+        $readmemh("rom/rom_control_1_2", uut_memory.main_memory_top.test_rom_1_2.mem);
+        $readmemh("rom/rom_control_1_3", uut_memory.main_memory_top.test_rom_1_3.mem);
+     
         $readmemb("rom/dec_rom_program_0_0", uut_pipeline.uut_decode.ds1.rom_block.b0.mem);
         $readmemb("rom/dec_rom_program_0_1", uut_pipeline.uut_decode.ds1.rom_block.b1.mem);
 
@@ -271,7 +284,7 @@ module TOP;
         #55
         reset = 0;
         #2350
-        interrupt = 'h0; //16'h04;     
+        interrupt = 0; //16'h04;     
 	#50
         interrupt = 0;     	  
   end

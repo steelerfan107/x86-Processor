@@ -33,6 +33,17 @@ wire [6:0] imm_shift_factor;
 wire [6:0] disp_shift_factor;
    
 wire [3:0] imm_plus_disp_bytes;
+
+wire [63:0] end_swap_s0_displace_n_imm;
+
+   assign end_swap_s0_displace_n_imm[7:0] = s0_displace_n_imm[63:56];
+   assign end_swap_s0_displace_n_imm[15:8] = s0_displace_n_imm[55:48];
+   assign end_swap_s0_displace_n_imm[23:16] = s0_displace_n_imm[47:40];
+   assign end_swap_s0_displace_n_imm[31:24] = s0_displace_n_imm[39:32];
+   assign end_swap_s0_displace_n_imm[39:32] = s0_displace_n_imm[31:24];
+   assign end_swap_s0_displace_n_imm[47:40] = s0_displace_n_imm[23:16];
+   assign end_swap_s0_displace_n_imm[55:48] = s0_displace_n_imm[15:8];
+   assign end_swap_s0_displace_n_imm[63:56] = s0_displace_n_imm[7:0]; 
    
 slow_addr #(.WIDTH(4)) (s0_displacement_bytes,s0_immediete_bytes,imm_plus_disp_bytes,nc0); 
 
@@ -67,10 +78,10 @@ subtract #(.WIDTH(4)) (
 
   
 byte_shifter_right_6B (48'hFFFFFFFFFFFF, imm_mask, sub6_imm_bytes[2:0]); 
-byte_shifter_right_8B (s0_displace_n_imm, imm, sub8_disp_p_imm_bytes[2:0]);
+byte_shifter_right_8B (end_swap_s0_displace_n_imm, imm, s0_displacement_bytes[2:0]);
 
 byte_shifter_right_4B (32'hFFFFFFFF, disp_mask, sub4_disp_bytes[1:0]); 
-byte_shifter_right_8B (s0_displace_n_imm, disp, sub8_disp_bytes[2:0]);   
+byte_shifter_right_8B (end_swap_s0_displace_n_imm, disp, 0);   
 
 // TODO - Make Case
 //assign imm_mask  = (48'hFFFFFFFFFFFF >> 8*(6-s0_immediete_bytes));
@@ -79,7 +90,7 @@ byte_shifter_right_8B (s0_displace_n_imm, disp, sub8_disp_bytes[2:0]);
 //assign imm  = (s0_displace_n_imm >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
 //assign disp = (s0_displace_n_imm >> 8*(8-s0_displacement_bytes));
    
-logic_tree_bus #(.WIDTH(32),.NINPUTS(2)) disp_maskb ({disp_mask,disp},dec_disp);
+logic_tree_bus #(.WIDTH(32),.NINPUTS(2)) disp_maskb ({disp_mask,end_swap_s0_displace_n_imm[31:0]},dec_disp);
 logic_tree_bus #(.WIDTH(48),.NINPUTS(2)) imm_maskb  ({imm_mask,imm},dec_imm);
 	  
 endmodule
@@ -98,6 +109,7 @@ module byte_shifter_right_8B (
 
    input [63:0] in;
    output [63:0] out;
+   wire [63:0] out_pre;   
    input [2:0]    shift_amount;
 
    genvar         i;
@@ -106,7 +118,8 @@ module byte_shifter_right_8B (
          wire [2:0] sel;
          wire       nc;
          slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
-         mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);
+         mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out_pre[((i+1)*8)-1:(i*8)],sel);
+         mux #(.WIDTH(8), .INPUTS(2)) byte_mux_mask ({8'b0, out_pre[((i+1)*8)-1:(i*8)]}, out[((i+1)*8)-1:(i*8)],nc);	 	 
       end
    endgenerate
 
@@ -120,6 +133,7 @@ module byte_shifter_right_6B (
 
    input [47:0] in;
    output [47:0] out;
+   wire [47:0] out_pre;   
    input [2:0]    shift_amount;
 
    genvar         i;
@@ -128,7 +142,8 @@ module byte_shifter_right_6B (
          wire [2:0] sel;
          wire       nc;
          slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
-         mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);
+         mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out_pre[((i+1)*8)-1:(i*8)],sel);
+         mux #(.WIDTH(8), .INPUTS(2)) byte_mux_mask ({8'b0, out_pre[((i+1)*8)-1:(i*8)]}, out[((i+1)*8)-1:(i*8)],nc);	 	 
       end
    endgenerate
 
@@ -142,6 +157,7 @@ module byte_shifter_right_4B (
 
    input [31:0] in;
    output [31:0] out;
+   wire [31:0] out_pre;   
    input [1:0]    shift_amount;
 
    genvar         i;
@@ -150,7 +166,8 @@ module byte_shifter_right_4B (
          wire [1:0] sel;
          wire       nc;
          slow_addr #(.WIDTH(2)) shft_add (i, shift_amount, sel, nc);        
-         mux #(.WIDTH(4), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);
+         mux #(.WIDTH(8), .INPUTS(4)) byte_mux (in, out_pre[((i+1)*8)-1:(i*8)],sel);
+         mux #(.WIDTH(8), .INPUTS(2)) byte_mux_mask ({8'b0, out_pre[((i+1)*8)-1:(i*8)]}, out[((i+1)*8)-1:(i*8)],nc);	 
       end
    endgenerate
 

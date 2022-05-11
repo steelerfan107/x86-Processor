@@ -51,6 +51,7 @@
 ../../../rtl/register_access/segment_register_stall.v
 ../../../rtl/address_generation/address_generation_top.v
 ../../../rtl/address_generation/address_generator.v
+../../../rtl/address_generation/segment_limit_check.v
 ../../../rtl/memory_read/memory_read_top.v
 ../../../rtl/memory_read/dcache_interface.v
 ../../../rtl/memory_read/address_dependency_table.v

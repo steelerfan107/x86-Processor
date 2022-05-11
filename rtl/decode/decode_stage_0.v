@@ -100,6 +100,8 @@ module decode_stage_0 (
 
    wire 		reset_or_flush;
    or2$(reset_or_flush, reset, flush);
+
+   wire detected_f4_op, detected_f4_prefix, detected_f4_prefix;
    
    register halt_reg (clk, reset_or_flush, halt_detect, halt_capture, halt_capture_n, 1'b1);
 
@@ -122,7 +124,7 @@ module decode_stage_0 (
    assign s0_prefix = f_instruction[127:104];
    assign s0_size_override = size_prefix;
    
-   prefix_size_detect psd (f_instruction[127:104], s0_prefix_bytes, size_prefix);
+   prefix_size_detect psd (f_instruction[127:104], s0_prefix_bytes, size_prefix, detected_f4_prefix);
 
    // Adds - Can make these faster by doing one hot adds. or lookahead carry ads. Probable Long Path
    slow_addr  #(.WIDTH(2))            po_addr  (s0_prefix_bytes, s0_opcode_bytes, po_bytes[1:0], po_bytes[2]);
