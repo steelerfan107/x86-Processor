@@ -17,13 +17,6 @@ module TOP;
     reg rd_dp_ready;
     wire [63:0] rd_dp_read_data;
 
-    //  TLB
-    wire [31:0] virt_addr;
-    reg [31:0] phys_addr;
-    reg tlb_hit;
-    reg tlb_pcd;
-    reg tlb_rd_wr;
-
     // write interface
     // TODO ...
     reg wr_req_valid;
@@ -38,10 +31,11 @@ module TOP;
     // interface to interconnect
     wire [31:0] mem_addr;
     wire mem_req;
-    reg mem_data_valid;
+    wire mem_data_valid;
     wire [31:0] mem_data;
     wire mem_rd_wr;
     wire mem_en;
+    wire [1:0] mem_wr_size;
 
     // Arbiter Interface
     reg grant_in;
@@ -141,6 +135,7 @@ module TOP;
         .mem_data(mem_data),
         .mem_rd_wr(mem_rd_wr),
         .mem_en(mem_en),
+        .mem_wr_size(mem_wr_size),
 
         // Arbiter Interface
         .grant_in(grant_in),
@@ -148,6 +143,18 @@ module TOP;
 
         .bus_busy_out(bus_busy_out),
         .bus_busy_in(bus_busy_in)
+    );
+
+
+    main_memory_top mem(
+        clk,
+        reset,
+        mem_en,
+        mem_rd_wr,
+        mem_wr_size,
+        mem_addr,
+        mem_data,
+        mem_data_valid
     );
 
     //test_memory mem(
@@ -161,10 +168,10 @@ module TOP;
     //);
 
     initial begin
-        $readmemh("rom/rom_control_0_0", test_memory.test_rom_0.mem);
-        $readmemh("rom/rom_control_0_1", test_memory.test_rom_1.mem);
-        $readmemh("rom/rom_control_0_2", test_memory.test_rom_2.mem);
-        $readmemh("rom/rom_control_0_3", test_memory.test_rom_3.mem);
+        //$readmemh("rom/rom_control_0_0", test_memory.test_rom_0.mem);
+        //$readmemh("rom/rom_control_0_1", test_memory.test_rom_1.mem);
+        //$readmemh("rom/rom_control_0_2", test_memory.test_rom_2.mem);
+        //$readmemh("rom/rom_control_0_3", test_memory.test_rom_3.mem);
 
         $display("============ \n Begin Test \n============");
        
@@ -186,10 +193,10 @@ module TOP;
         rd_dp_ready = 1;
 
         //  TLB
-         phys_addr = 0;
-         tlb_hit = 0;
-         tlb_pcd = 0;
-         tlb_rd_wr = 0;
+        // phys_addr = 0;
+        // tlb_hit = 0;
+        // tlb_pcd = 0;
+        // tlb_rd_wr = 0;
 
         // write interface
          wr_req_valid = 0;
@@ -201,18 +208,17 @@ module TOP;
          grant_in = 0;
          bus_busy_in = 0;
 
-        mem_data_valid = 1;
 
         #20
         reset = 0;
 
         #20
         #20
-        wr_size_in = 0;
+        wr_size_in = 1;
         rd_req_valid = 0;
-        rd_req_address = 32'h05000019;
+        rd_req_address = 32'h02000003;
 
-        wr_req_address = 32'h02000EF0;
+        wr_req_address = 32'h02000003;
 
         #20
 
@@ -226,14 +232,16 @@ module TOP;
         
         #20 
         grant_in = 1;
+        
         #20
+        rd_req_valid = 1;
         
 
         $display("==========\n End Test \n==========");
     end
 
 
-    initial #1000 $finish;
+    initial #3000 $finish;
 
 
 

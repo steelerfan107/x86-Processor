@@ -1,0 +1,13 @@
+.i 5
+.o 8
+
+.ilb state1  state0  read    write   cnt_eqz     
+.ob done ce  oe  wr  cnt_en  cnt_src new_state1  new_state0
+0000- 01110000
+0010- 01111001
+0001- 01111010
+01--0 00011101
+01--1 10011000
+10--0 00101110
+10--1 10101000
+

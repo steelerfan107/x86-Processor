@@ -287,7 +287,7 @@ module dcache(
     inv1$ drive_bus_inv(n_drive_data, ctrl_drive_bus);
 
     wire n_drive_addr;
-    inv$ drive_bus_addr_inv(n_drive_addr, mem_en);
+    inv1$ drive_bus_addr_inv(n_drive_addr, mem_en);
 
     tristate_bus_driver16$ data_bus_driver1(n_drive_data, mem_data_driver[15:0], mem_data[15:0]);
     tristate_bus_driver16$ data_bus_driver2(n_drive_data, mem_data_driver[31:16], mem_data[31:16]);

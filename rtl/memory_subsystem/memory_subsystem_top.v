@@ -235,6 +235,11 @@ module memory_subsystem_top (
         .grant_in(arb_grant),
         .grant_out(dcache_grant),
 
+        .bus_busy_out(bus_busy_dcache),
+        .bus_busy_in(bus_busy)
+
+    );
+
     // system controller interface 
     // make lower priority than dcache so that writes complete
     // FIXME check that writes complete, since dcache might release the bus in

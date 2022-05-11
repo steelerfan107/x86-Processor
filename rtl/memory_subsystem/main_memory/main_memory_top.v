@@ -22,7 +22,7 @@ module main_memory_top(
 
 
     wire [31:0] dec_out;
-    decoder5_32 dec(addr[11:7], dec_out);
+    decoder5_32$ dec(addr[11:7], dec_out);
 
 
     wire [31:0] dio_internal;
@@ -34,10 +34,46 @@ module main_memory_top(
     wire ctrl_rd;
     wire ctrl_wr;
 
+    wire ctrl_drive_rd_tri;
+
     wire ctrl_rd_n;
-    inv1$ crn(ctrl_rd_n, ctrl_rd);
+    inv1$ crn(sram_rd, ctrl_drive_rd_tri);
     tristate_bus_driver16$ rd_driver0(ctrl_rd_n, dio_internal[15:0], data[15:0]);
     tristate_bus_driver16$ rd_driver1(ctrl_rd_n, dio_internal[31:16], data[31:16]);
+   
+    wire sram_done;
+    wire reg_wr;
+
+    wire direct;
+ 
+    main_mem_controller mem_control(
+        clk,
+        reset,
+
+        en,
+        rd_wr,
+        sram_done,
+        direct,
+        
+        ready,
+        ctrl_rd,
+        ctrl_wr,
+        reg_wr,
+        ctrl_drive_rd_tri
+    );
+
+    sram_controller sram_control(
+        clk,
+        reset,
+        ctrl_rd,
+        ctrl_wr,
+        
+        ctrl_ce,
+        ctrl_we,
+        ctrl_oe,
+        
+        sram_done
+    );
 
 
     genvar i;
@@ -47,9 +83,18 @@ module main_memory_top(
             wire oe;
             wire wr;
 
-            and2$ ceand(ce, dec_out[i], ctrl_ce);
-            and2$ oeand(oe, dec_out[i], ctrl_oe);
-            and2$ wrand(wr, dec_out[i], ctrl_wr);
+            
+            wire ce_n;
+            wire oe_n;
+            wire wr_n;
+
+            inv1$ cein(ctrl_ce_n, ctrl_ce);
+            inv1$ oein(ctrl_oe_n, ctrl_oe);
+            inv1$ wrin(ctrl_wr_n, ctrl_we);
+
+            and2$ ceand(ce, dec_out[i], ctrl_ce_n);
+            and2$ oeand(oe, dec_out[i], ctrl_oe_n);
+            and2$ wrand(wr, dec_out[i], ctrl_wr_n);
 
             wire ce_n;
             wire oe_n;
@@ -69,6 +114,11 @@ module main_memory_top(
         end
     endgenerate
 
+
+    // direct write
+    assign direct = (addr[1:0] == 0) & (wr_size == 0);
+
+
     wire [31:0] reg_out;
     register #(.WIDTH(32)) staging_reg(clk, reset, dio_internal, reg_out, , reg_wr);
     
@@ -80,80 +130,4 @@ module main_memory_top(
     tristate_bus_driver16$ wr_driver0(ctrl_wr_n, aligned_wr_data[15:0], dio_internal[15:0]);
     tristate_bus_driver16$ wr_driver1(ctrl_wr_n, aligned_wr_data[31:16], dio_internal[31:16]);
 
-
 endmodule
-
-
-//module main_memory_top(
-//    clk,
-//    reset,
-//    en,
-//    rd_wr,
-//    addr,
-//    data,
-//    valid
-//);
-//
-//   input clk;
-//    input reset;
-//
-//    input [31:0] addr;
-//    input en;
-//    output valid;
-//    output [31:0] data;
-//    input rd_wr;
-//
-//    reg [31:0] memory [0:1023];
-//
-//    reg [31:0] out_data;
-//
-//    wire [31:0] 		rom_data_0, rom_data_1, rom_data_2, rom_data_3;
-//
-//    wire [31:0]			rom_data;
-//
-//    assign rom_data = (addr[3:2] == 3) ? rom_data_0 : 
-//                      (addr[3:2] == 2) ? rom_data_1 :    
-//                      (addr[3:2] == 1) ? rom_data_2 : rom_data_3;
-// 
-//    rom32b32w$ test_rom_0 (
-//     addr[8:4],
-//     1'b1,
-//     rom_data_0		      
-//    );
-//
-//    rom32b32w$ test_rom_1 (
-//     addr[8:4],
-//     1'b1,
-//     rom_data_1		      
-//    );
-//   
-//    rom32b32w$ test_rom_2 (
-//     addr[8:4],
-//     1'b1,
-//     rom_data_2		      
-//    );
-//   
-//    rom32b32w$ test_rom_3 (
-//     addr[8:4],
-//     1'b1,
-//     rom_data_3		      
-//    );       
-//
-//    //always @(posedge clk, negedge reset) begin
-//    //
-//    //
-//    //end
-//
-//    //always @(posedge clk) begin
-//    //    out_data <= addr;
-//    //end
-//    //
-//    always @(*) begin
-//        out_data = rom_data;
-//    end
-//
-//    assign valid = 1'b1;
-//    assign data = en ? out_data : 32'dz;
-//
-//
-//endmodule
