@@ -123,7 +123,7 @@ module memory_subsystem_top (
     wire bus_en;
 
     wire bus_busy_icache;
-    wire bus_busy_dcache = 'h0;
+    wire bus_busy_dcache;
     wire bus_busy_sys_controller = 'h0;
     wire bus_busy_dma = 'h0;
     wire bus_busy;
@@ -240,7 +240,7 @@ module memory_subsystem_top (
         .bus_busy_in(bus_busy)
 
     );
-   
+
     // system controller interface 
     // make lower priority than dcache so that writes complete
     // FIXME check that writes complete, since dcache might release the bus in
