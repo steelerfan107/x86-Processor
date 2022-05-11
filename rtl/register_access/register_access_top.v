@@ -348,14 +348,23 @@ module register_access_top (
        d_opcode    
     };
 
-   //assign r_valid = d_valid;
-   //assign d_ready = r_ready;
-   wire register_file_stall;  
-   wire seg_reg_is_stall;
-   and3$ (r_valid, d_valid, ~register_file_stall, 1'b1);//~segment_register_stall); TODO
-   and3$ (d_ready, r_ready, ~register_file_stall, 1'b1);//~segment_register_stall);   
-  
-   //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
+    //assign r_valid = d_valid;
+    //assign d_ready = r_ready;
+    wire register_file_stall;  
+    wire seg_reg_is_stall;
+    wire mmx_is_stall;
+
+    wire reg_file_valid, seg_reg_valid, mmx_valid;
+
+    inv1$ 
+    reg_file_valid_inv (reg_file_valid, register_file_stall), 
+    seg_reg_valid_inv (seg_reg_valid, seg_reg_is_stall),
+    mmx_valid_inv (mmx_valid, mmx_is_stall);
+
+    and4$ r_valid_and (r_valid, d_valid, reg_file_valid, seg_reg_valid, mmx_valid); 
+    and4$ d_ready_and (d_ready, r_ready, reg_file_valid, seg_reg_valid, mmx_valid);
+
+    //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
    
     // ------ //
     // Stalls //
@@ -392,7 +401,7 @@ module register_access_top (
         wb_reg_size[1:0],
         wb_reg_en,
 
-        in_accept     // TODO: Not sure how to connect it to the next stage interface
+        in_accept     
     );
 
     // Segment Register Stall
@@ -409,7 +418,29 @@ module register_access_top (
         d_op0_reg,
 
         d_op1,
-        d_op1_reg
+        d_op1_reg,
+
+        in_accept
+    );
+
+    mmx_stall mmx_stall0 (
+        clk,
+        reset,
+
+        mmx_is_stall,
+
+        wb_mmx_number,
+        wb_mmx_en,
+
+        d_modrm,
+
+        d_op0,
+        d_op0_reg,
+
+        d_op1,
+        d_op1_reg,
+
+        in_accept
     );
 
     // ---- //
