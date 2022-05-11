@@ -148,6 +148,36 @@ module instruction_queue (
    register #(.WIDTH(7)) head_r (clk, reset, head_in, head, head_b, accept_or_load);
 
    // Registers to hold each entries data
+
+   // Generate F4 Mask to Mask Bad Data to 00
+   /* wire [15:0] 	  f4_detect;
+   wire [15:0] 	  f4_ffo;
+   wire [15:0] 	  f4_mask;
+   wire [15:0] 	  inv_f4_mask;
+   wire [127:0]   full_inv_f4_mask;
+
+   genvar 	  i;
+   generate
+   for ( i = 0; i < 16; i=i+1) begin
+      compare #(.WIDTH(8)) (data_i[((i+1)*8)-1:i*8], 8'hF4, f4_detect[i]);
+      inv1$ (inv_f4_mask[i], f4_mask[i]);    
+   end
+   endgenerate
+
+    find_first #(.WIDTH(16)) (f4_detect, f4_ffo);
+   
+    subtract #(.WIDTH(16),.OPERATION(1)) (
+	f4_ffo,
+        16'd1,
+        f4_mask	 
+    );
+
+   assign full_inv_f4_mask = {{8{inv_f4_mask[15]}}, {8{inv_f4_mask[14]}}, {8{inv_f4_mask[13]}}, {8{inv_f4_mask[12]}},
+                              {8{inv_f4_mask[11]}}, {8{inv_f4_mask[10]}}, {8{inv_f4_mask[9]}} , {8{inv_f4_mask[8]}},
+                              {8{inv_f4_mask[7]}} , {8{inv_f4_mask[6]}} , {8{inv_f4_mask[5]}} , {8{inv_f4_mask[4]}},
+                              {8{inv_f4_mask[3]}} , {8{inv_f4_mask[2]}} , {8{inv_f4_mask[1]}} , {8{inv_f4_mask[0]}}};*/
+   
+   
    register #(.WIDTH(128)) entry_0_r (clk, int_reset, data_i, data0, data0_b, set0);
    register #(.WIDTH(128)) entry_1_r (clk, int_reset, data_i, data1, data1_b, set1);
    register #(.WIDTH(128)) entry_2_r (clk, int_reset, data_i, data2, data2_b, set2);

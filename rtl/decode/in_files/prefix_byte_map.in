@@ -1,0 +1,12 @@
+.i 8
+.o 2
+.ilb i7 i6 i5 i4 i3 i2 i1 i0
+.ob o0 size_prefix
+00101110 10
+00110110 10 # to the outputs, both in order specified above. 
+00111110 10
+00100110 10
+01100100 10
+01100101 10
+11110011 10
+01100110 11

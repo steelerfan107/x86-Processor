@@ -351,6 +351,8 @@ module top_pipeline (
    wire [31:0] 		  curr_pc;
 
    wire 		  test_valid_pipe;
+   wire                   segment_limit_int;
+  
 
    fetch_top uut_fetch (
       clk,
@@ -535,7 +537,7 @@ module top_pipeline (
       wb_reg_number,
       wb_reg_qual, //(wb_op_a_is_reg & wb_valid),
       wb_stack,
-      wb_reg_size,
+      wb_opsize,
       wb_reg_data[31:0],
       wb_reg_number,
       wb_seg_qual, //(wb_op_a_is_segment & wb_valid),
@@ -620,7 +622,8 @@ module top_pipeline (
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
-      a_opcode
+      a_opcode,
+      segment_limit_int
   );  
 
   memory_read_top uut_memory_read (
@@ -769,7 +772,7 @@ module top_pipeline (
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     interrupt,
+     {3'b0, segment_limit_int, 12'b0},
      r_cs,		     
      emem_valid,
      emem_ready,

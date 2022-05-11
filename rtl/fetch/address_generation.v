@@ -62,7 +62,10 @@ module address_generation (
    mux #(.INPUTS(2),.WIDTH(32))  bypass_mux   ({load_address,address},address_mux,load);
    mux #(.INPUTS(4),.WIDTH(32))  reg_load_mux ({load_address_p16, load_address,address_p16,address}, address_in, {sel1,vro});
 
-   slow_addr #(.WIDTH(32)) cs_addr   (address_mux, {cs_register,16'b0}, imem_address,         nc0);
+   wire [3:0] 		 nc3;
+   assign imem_address[3:0] = 'h0;
+   
+   slow_addr #(.WIDTH(32)) cs_addr   (address_mux, {cs_register,16'b0}, {imem_address[31:4],nc3},         nc0);
    slow_addr #(.WIDTH(32)) reg_addr  (32'd16,      address,             address_p16,          nc1);
    slow_addr #(.WIDTH(32)) load_addr (32'd16,      load_address,        load_address_p16,     nc2);
 

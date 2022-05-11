@@ -320,10 +320,18 @@ module decode_stage_1 (
    // IRETd Logic
    wire 		iretd_halt_mask;
    inv1$ ( iretd_halt_mask, iretd_halt);
+
+   wire 		ret_near0, ret_near1, ret_far0, ret_far1;
    
    compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
-   compare #(.WIDTH(7)) ret_n_comp (7'hC1, s0_opcode[15:9], ret_near);
-   compare #(.WIDTH(7)) ret_f_comp (7'hC5, s0_opcode[15:9], ret_far);
+   compare #(.WIDTH(8)) ret_n_comp (7'hC3, s0_opcode[15:8], ret_near0);
+   compare #(.WIDTH(8)) ret_n0_comp (7'hC2, s0_opcode[15:8], ret_near1);
+
+   compare #(.WIDTH(8)) ret_f_comp (7'hCB, s0_opcode[15:8], ret_far0);
+   compare #(.WIDTH(8)) ret_f0_comp (7'hCA, s0_opcode[15:8], ret_far1);
+
+   or2$ (ret_near,ret_near0, ret_near1);
+   or2$ (ret_far,ret_far0, ret_far1);   
 
    wire 		rom_in_control_mask;
    and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
