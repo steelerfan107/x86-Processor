@@ -3,7 +3,8 @@ module imm_disp_seperate (
         s0_immediete_bytes,
         s0_displacement_bytes,	    
        	dec_imm,
-        dec_disp			  
+        dec_disp,
+        dec_size			  
 );
      
 input [63:0]	s0_displace_n_imm;
@@ -11,12 +12,14 @@ input [3:0]     s0_immediete_bytes;  // 6, 4, 2, 1
 input [3:0]     s0_displacement_bytes;	// 4, 1, 0    
 output [47:0]   dec_imm;
 output [31:0]   dec_disp;
+ input [2:0] 	dec_size;
 
-wire [47:0] 	imm_mask;
+   wire [47:0] 	imm_mask;
 wire [31:0] disp_mask;
 
 wire [47:0] 	imm;
 wire [31:0]    disp;   
+wire [31:0]    dec_disp_masked;   
 
 wire [63:0] s0_displace_n_imm_shift;
 
@@ -89,9 +92,39 @@ byte_shifter_right_8B (end_swap_s0_displace_n_imm, disp, 0);
 
 //assign imm  = (s0_displace_n_imm >> 8*(8-(s0_immediete_bytes+s0_displacement_bytes)));
 //assign disp = (s0_displace_n_imm >> 8*(8-s0_displacement_bytes));
+
+// Create Extend OR Vector   
+wire    sign_extend_4B_disp = {{24{end_swap_s0_displace_n_imm[7]}},8'b0};
+  
+wire    sign_extend_4B_imm = {16'b0, {24{imm[7]}}, 8'b0};
+wire    sign_extend_2B_imm = {32'b0, {8{imm[7]}}, 8'b0};
+
+wire [47:0] sign_extend_imm; 
+wire [31:0] sign_extend_disp;
+wire [47:0] dec_disp_masked; 
+wire [31:0] dec_imm_masked;   
+wire [2:0]    masked_size;
+
+compare #(.WIDTH(4)) (4'd1, s0_immediete_bytes,  imm_byte_one);
+compare #(.WIDTH(4)) (4'd1, s0_displacement_bytes,  disp_byte_one);   
+
+logic_tree_bus #(.WIDTH(3),.NINPUTS(2))  ({~imm_byte_one,dec_size},masked_size);
+
+mux #(.WIDTH(32),.INPUTS(2)) ({sign_extend_disp,32'b0}, sign_extend_disp, disp_byte_one);
+mux #(.WIDTH(48),.INPUTS(2)) ({sign_extend_4B_imm,sign_extend_2B_imm,32'b0,32'b0}, sign_extend_imm, masked_size);
+
+wire [31:0] dec_disp_extend;
    
-logic_tree_bus #(.WIDTH(32),.NINPUTS(2)) disp_maskb ({disp_mask,end_swap_s0_displace_n_imm[31:0]},dec_disp);
-logic_tree_bus #(.WIDTH(48),.NINPUTS(2)) imm_maskb  ({imm_mask,imm},dec_imm);
+logic_tree_bus #(.WIDTH(32),.NINPUTS(2)) disp_maskb ({disp_mask,end_swap_s0_displace_n_imm[31:0]},dec_disp_masked);
+logic_tree_bus #(.WIDTH(48),.NINPUTS(2)) imm_maskb  ({imm_mask,imm},dec_imm_masked);
+
+logic_tree_bus #(.WIDTH(32),.NINPUTS(2),.OPERATION(1)) disp_ext ({sign_extend_disp,dec_disp_masked},dec_disp_extend);
+logic_tree_bus #(.WIDTH(48),.NINPUTS(2),.OPERATION(1)) imm_ext  ({sign_extend_imm,dec_imm_masked},dec_imm);   
+
+// Possibly Zero out DISP		      
+mux #(.WIDTH(32),.INPUTS(2)) ({32'h0,dec_disp_extend}, dec_disp, disp_byte_zero);
+
+nor3$ (disp_byte_zero, s0_displacement_bytes[2], s0_displacement_bytes[1], s0_displacement_bytes[0]);
 	  
 endmodule
 

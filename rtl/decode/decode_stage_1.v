@@ -348,9 +348,10 @@ module decode_stage_1 (
    imm_disp_seperate imm_disp_seperate(
 	s0_displace_n_imm,
         s0_immediete_bytes,
-        s0_displacement_bytes,	    
+        s0_displacement_bytes,
        	dec_imm,
-        dec_disp	    
+        dec_disp,	
+        dec_size	    
    );
    
    assign dec_modrm = s0_addressing[15:8];
