@@ -66,7 +66,7 @@ module TOP;
    wire                  rmem_dp_ready;
    wire    [64-1:0]      rmem_dp_read_data;
 
-   wire                  wmem_valid;
+   wire                  wmem_valid = 1'b0;
    wire   	         wmem_ready;
    wire    [IADDRW-1:0]  wmem_address;
    wire    	         wmem_wr_en;
@@ -109,23 +109,21 @@ module TOP;
    wire [31:0] tlb_va;
 
    // Data Memory Read Interface
-   wire  	            dmem_r_valid = 'h0;
+   wire  	            dmem_r_valid;
    wire 	            dmem_r_ready;
-   wire  [DADDRW-1:0]  dmem_r_address = 'h0;
+   wire  [DADDRW-1:0]  dmem_r_address;
    wire                dmem_r_wr_en;   // unused 
    wire  [DDATAW-1:0]	dmem_r_wr_data; // unused
    wire  [DSIZEW-1:0] 	dmem_r_wr_size; // unused
    wire               dmem_r_dp_valid;
-   wire                dmem_r_dp_ready = 'h0;
+   wire                dmem_r_dp_ready ;
    wire  [DDATAW-1:0] dmem_r_dp_read_data;
 
    // Data Memory Write Interface
-   wire  	            dmem_w_valid = 'h0;
+   wire  	            dmem_w_valid;
    wire  	            dmem_w_ready;
-   wire  [IADDRW-1:0]  dmem_w_address = 'h0; 
-   wire                dmem_w_wr_en = 'h0;
-   wire  [IDATAW-1:0]	dmem_w_wr_data = 'h0;
-   wire  [ISIZEW-1:0] 	dmem_w_wr_size = 'h0;
+   wire  [IADDRW-1:0]  dmem_w_address;
+   wire                dmem_w_wr_en;
    wire               dmem_w_dp_valid;     // unused 
    wire                dmem_w_dp_ready;     // unused
    wire  [IDATAW-1:0] dmem_w_dp_read_data; // unused
@@ -149,53 +147,44 @@ module TOP;
    wire  [31:0] sys_r_dp_read_data;   
 
    memory_subsystem_top uut_memory (
-      clk,
-      reset,
-
-      // Instruction Memory Interface
-      imem_valid,
-      imem_ready,
-      imem_address,
-      imem_wr_en,    // unused
-      imem_wr_data,  // unused
-      imem_wr_size,  // unused
-      imem_dp_valid,
-      imem_dp_ready,
-      imem_dp_read_data,
-
-      // Data Memory Read Interface
-      rmem_valid,
-      rmem_ready,
-      rmem_address,
-      rmem_wr_en,
-      rmem_wr_data,
-      rmem_wr_size,
-      rmem_dp_valid,
-      rmem_dp_ready,
-      rmem_dp_read_data,
-
-      // Data Memory Write Interface
-      wmem_valid,
-      wmem_ready,
-      wmem_address,
-      wmem_wr_en,
-      wmem_wr_data,
-      wmem_wr_size,
-      wmem_dp_valid,
-      wmem_dp_ready,
-      wmem_dp_read_data,  	
-
-      // System Controller Read Interface
-      emem_valid,
-      emem_ready,
-      emem_address,
-      emem_dp_valid,
-      emem_dp_ready,
-      emem_dp_read_data,
-
-      contents_concat
-   );
-
+    .clk                    (clk            ),
+    .reset                  (reset          ),
+    .imem_valid             (imem_valid     ),
+    .imem_ready            (imem_ready     ),
+    .imem_address           (imem_address   ),
+    .imem_wr_en             (imem_wr_en     ), 
+    .imem_wr_data           (imem_wr_data   ), 
+    .imem_wr_size           (imem_wr_size   ), 
+    .imem_dp_valid          (imem_dp_valid  ),
+    .imem_dp_ready          (imem_dp_ready  ),
+    .imem_dp_read_data      (imem_dp_ready_data  ),
+    .dmem_r_valid           (rmem_valid),
+    .dmem_r_ready           (rmem_ready),
+    .dmem_r_address         (rmem_address     ),
+    .dmem_r_wr_en           (rmem_wr_en     ),
+    .dmem_r_wr_data         (rmem_wr_data   ),
+    .dmem_r_wr_size         (rmem_wr_size     ),
+    .dmem_r_dp_valid        (rmem_dp_valid   ),
+    .dmem_r_dp_ready        (rmem_dp_ready   ),
+    .dmem_r_dp_read_data    (rmem_dp_ready_data  ),
+    .dmem_w_valid           (wmem_valid  ),
+    .dmem_w_ready           (wmem_ready),
+    .dmem_w_address         (wmem_address     ),
+    .dmem_w_wr_en           (wmem_wr_en     ),    
+    .dmem_w_wr_data         (wmem_wr_data   ),  
+    .dmem_w_wr_size         (wmem_wr_size    ),  
+    .dmem_w_dp_valid        (wmem_dp_valid   ),
+    .dmem_w_dp_ready        (wmem_dp_ready   ),
+    .dmem_w_dp_read_data    (wmem_dp_read_data  ),
+    .sys_r_valid            (emem_valid  ),
+    .sys_r_ready            (emem_ready),
+    .sys_r_address          (emem_address     ),
+    .sys_r_dp_valid         (emem_dp_valid     ),
+    .sys_r_dp_ready         (emem_dp_ready   ),
+    .sys_r_dp_read_data     (emem_dp_read_data  ),
+    .tlb_contents           (contents_concat)
+   );                                        
+                             
    reg 		r_emem_valid;
    reg 		r_r_emem_valid;
    
@@ -252,16 +241,11 @@ module TOP;
   end
    
   initial begin
-        $readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.test_rom_0_0.mem);
-        $readmemh("rom/rom_control_0_1", uut_memory.main_memory_top.test_rom_0_1.mem);
-        $readmemh("rom/rom_control_0_2", uut_memory.main_memory_top.test_rom_0_2.mem);
-        $readmemh("rom/rom_control_0_3", uut_memory.main_memory_top.test_rom_0_3.mem);
+        $readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.genblk1[0].sram32x32$.mem);
+        //$readmemh("rom/rom_control_0_1", uut_memory.main_memory_top..mem);
+        //$readmemh("rom/rom_control_0_2", uut_memory.main_memory_top..mem);
+        //$readmemh("rom/rom_control_0_3", uut_memory.main_memory_top..mem);
 
-        $readmemh("rom/rom_control_1_0", uut_memory.main_memory_top.test_rom_1_0.mem);
-        $readmemh("rom/rom_control_1_1", uut_memory.main_memory_top.test_rom_1_1.mem);
-        $readmemh("rom/rom_control_1_2", uut_memory.main_memory_top.test_rom_1_2.mem);
-        $readmemh("rom/rom_control_1_3", uut_memory.main_memory_top.test_rom_1_3.mem);
-     
         $readmemb("rom/dec_rom_program_0_0", uut_pipeline.uut_decode.ds1.rom_block.b0.mem);
         $readmemb("rom/dec_rom_program_0_1", uut_pipeline.uut_decode.ds1.rom_block.b1.mem);
 
@@ -279,12 +263,26 @@ module TOP;
         clk = 0;
         reset = 1;
         interrupt = 'h0;   
+  
+        //rmem_ready = 'h0;
+        //rmem_dp_valid = 'h0;
+        //rmem_dp_read_data = 'h0;
+        //contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[4] = {20'h0c000,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[6] = 44'h12345123451;
+        //contents[7] = 44'h12344123441;
      
+        //clk = 0;
+        //reset = 1;
+        interrupt = 'h0;   
+
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
         #2350
-        interrupt = 0; //16'h04;     
+        interrupt = 'h0; //16'h04;     
 	#50
         interrupt = 0;     	  
   end

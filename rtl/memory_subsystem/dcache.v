@@ -93,8 +93,7 @@ module dcache(
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
-    //assign mem_en = bus_busy_out;
-  tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
+    //tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
 
     wire ctrl_write_cnt_z;
     wire ctrl_write_cnt_en;
@@ -146,11 +145,6 @@ module dcache(
     wire [31:0] pa_out;
     wire [31:0] pa_p4;
     wire [31:0] pa_reg_out;
-
-    tristate_bus_driver16$(~bus_busy_out, pa_out[15:0],  mem_addr[15:0]);
-    tristate_bus_driver16$(~bus_busy_out, pa_out[31:16], mem_addr[31:16]);
-			   
-    //assign mem_addr = pa_out;
 
     wire ctrl_pa_src;
     wire ctrl_pa_wr_en;
@@ -286,18 +280,24 @@ module dcache(
     wr_data_select wds(wr_data_reg_out, write_cnt, byte_offset, mem_data_driver);
     //mux #(.WIDTH(32), .INPUTS(2)) mem_data_mux(wr_data_reg_out, mem_data_driver, write_num_n);
      
-    wire n_drive_bus; 
+    wire n_drive_data; 
     wire ctrl_drive_bus;
     and2$ drive_bus_and(ctrl_drive_bus, mem_en, ctrl_rd_wr_addr);
-    inv1$ drive_bus_inv(n_drive_bus, ctrl_drive_bus);
+    inv1$ drive_bus_inv(n_drive_data, ctrl_drive_bus);
 
+    wire n_drive_addr;
+    inv1$ drive_bus_addr_inv(n_drive_addr, mem_en);
+
+    tristate_bus_driver16$ data_bus_driver1(n_drive_data, mem_data_driver[15:0], mem_data[15:0]);
+    tristate_bus_driver16$ data_bus_driver2(n_drive_data, mem_data_driver[31:16], mem_data[31:16]);
+
+    tristate_bus_driver16$(n_drive_addr, pa_out[15:0],  mem_addr[15:0]);
+    tristate_bus_driver16$(n_drive_addr, pa_out[31:16], mem_addr[31:16]);
+   
+ 
     eval_wr_done ewd(wr_done, write_cnt, byte_offset, wr_size);
     
     wr_size_select wss(write_cnt, byte_offset, wr_size, mem_wr_size);     
-
-
-    tristate_bus_driver16$ data_bus_driver1(n_drive_bus, mem_data_driver[15:0], mem_data[15:0]);
-    tristate_bus_driver16$ data_bus_driver2(n_drive_bus, mem_data_driver[31:16], mem_data[31:16]);
 
 endmodule
 

@@ -130,6 +130,7 @@ module memory_subsystem_top (
 
     or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
 
+    or4$ _or_en(bus_en, d_bus_en, i_bus_en, 1'b0, 1'b0);
 
     //or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
     //or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
@@ -152,8 +153,6 @@ module memory_subsystem_top (
     wire dec_mem_en;
     wire dec_io_en;
     arb_decoder dec(
-        .clk(clk),
-        .reset(reset),
         .bus_addr(bus_addr),
         .rd_wr_in(bus_rd_wr),
         .rd_wr_out(dec_rd_wr),
@@ -191,7 +190,9 @@ module memory_subsystem_top (
         .d_PCD_out(tlb_d_pcd)
     );
 
-   
+
+    wire [1:0] mem_wr_size;   
+
     //dcache dcache();
     dcache uut(
         .clk(clk),
@@ -229,11 +230,17 @@ module memory_subsystem_top (
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
-        .mem_en(bus_en),
+        .mem_en(d_bus_en),
+        .mem_wr_size(mem_wr_size),
 
         // Arbiter Interface
         .grant_in(arb_grant),
         .grant_out(dcache_grant),
+        .bus_busy_out(bus_busy_dcache),
+        .bus_busy_in(bus_busy)
+
+    );
+
 
         .bus_busy_out(bus_busy_out_nc),
         .bus_busy_in(bus_busy)
@@ -280,14 +287,14 @@ module memory_subsystem_top (
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
         .phys_addr(tlb_i_pa),   // from TLB
-	.virt_addr(tlb_va),  	  
+	      .virt_addr(tlb_va),  	  
         .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
-        .mem_en(bus_en),
+        .mem_en(i_bus_en),
         .grant_in(sys_grant),
         .grant_out(icache_grant),
         .bus_busy_out(bus_busy_icache),
@@ -299,11 +306,12 @@ module memory_subsystem_top (
     main_memory_top main_memory_top(
         .clk(clk),
         .reset(reset),
-        .en(1'b1), //dec_mem_en),
+        .en(dec_mem_en),
         .rd_wr(dec_rd_wr),
         .addr(bus_addr),
         .data(bus_data),
-        .valid(bus_data_valid)
+        .ready(bus_data_valid),
+        .wr_size(mem_wr_size)
     );
 
     //io_device_top io_device();
