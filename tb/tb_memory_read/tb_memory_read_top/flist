@@ -17,4 +17,5 @@
 ../../../rtl/lib/compare.v
 ../../../rtl/memory_read/memory_read_top.v
 ../../../rtl/memory_read/address_dependency_table.v
+../../../rtl/memory_read/dcache_interface.v
 tb_memory_read_top.v
