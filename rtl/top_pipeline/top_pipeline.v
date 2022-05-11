@@ -772,7 +772,8 @@ module top_pipeline (
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     {3'b0, segment_limit_int, 12'b0},
+     //{3'b0, segment_limit_int, 12'b0},
+     {3'b0, 1'b0, 12'b0},			     
      r_cs,		     
      emem_valid,
      emem_ready,

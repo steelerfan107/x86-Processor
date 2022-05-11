@@ -101,6 +101,30 @@ module instruction_queue (
    
    // Ready Out if any entry is open
    nand4$ ready_o_nand(ready_i, valid0, valid1, valid2, valid3);
+ /*
+   mux #(.WIDTH(1), .INPUTS(16)) (
+	{
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //1111
+	    //01
+	    //0011
+	    //0010
+	    //0001
+	    //0000
+        }			  
+        ,
+        ,
+				  
+  );*/
    
    // Set indications of each entry
    and2$ s0_and(set0,in_accept,eq_i0);
