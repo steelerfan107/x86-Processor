@@ -292,7 +292,7 @@ module memory_subsystem_top (
         .mem_req(bus_req_icache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
-        .mem_rd_wr(bus_rd_wr),
+        .mem_rd_wr(nc), //bus_rd_wr),
         .mem_en(i_bus_en),
         .grant_in(sys_grant),
         .grant_out(icache_grant),
