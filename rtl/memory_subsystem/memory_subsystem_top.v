@@ -174,7 +174,7 @@ module memory_subsystem_top (
     wire [31:0] tlb_d_pa;
     wire tlb_d_pcd;
 
-    wire d_virt_addr;
+    wire [31:0] d_virt_addr;
 
     TLB tlb(
         .contents(tlb_contents),   

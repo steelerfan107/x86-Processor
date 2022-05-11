@@ -70,23 +70,42 @@ pre_detect (
 	                  det2,
 	                  size2
 	    );   
-	    
-   or3$ ( size_prefix, size0, size1, size2);
 
-   mux #(.WIDTH(2), .INPUTS(8)) (
+
+   wire 			masks0, masks1, masks2;
+   
+   or3$ ( size_prefix, (size0 & masks0), (size1 & masks1), (size2 & masks2));   
+   
+   mux #(.WIDTH(5), .INPUTS(8)) (
 	 {
-	     2'b11, // 111
-	     2'b10, // 110
-	     2'b00, // 101
-	     2'b01, // 100
-	     2'b00, // 011
-	     2'b00, // 010
-	     2'b00, // 001
-	     2'b00  // 000
+	     5'b11111, // 111
+	     5'b10110, // 110
+	     5'b00100, // 101
+	     5'b01100, // 100
+	     5'b00000, // 011
+	     5'b00000, // 010
+	     5'b00000, // 001
+	     5'b00000  // 000
 	 },
-	 {s1, s0},
-	 {size0, size1, size2}
+	 {s1, s0, masks0, masks1, masks2},
+	 {det0, det1, det2}
    );
+
+    /*
+   mux #(.WIDTH(1), .INPUTS(8)) (
+	 {
+	     1'b1, // 111
+	     1'b1, // 110
+	     size0, // 101
+	     1'b1, // 100
+	     1'b1, // 011
+	     1'b1, // 010
+	     1'b1, // 001
+	     1'b0  // 000
+	 },
+	 {size_prefix_det},
+	 {size0, size1, size2}
+   );*/
 
    //slow_addr #(.WIDTH(2)) ({1'b0,det0}, {1'b0,det1}, sum0, );
    //slow_addr #(.WIDTH(2)) (sum0       , {1'b0,det2}, {s1, s0}, );
