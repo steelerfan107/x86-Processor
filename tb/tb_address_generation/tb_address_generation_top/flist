@@ -10,7 +10,14 @@
 ../../../rtl/lib/ao_mux.v
 ../../../rtl/lib/logic_tree_bus.v
 ../../../rtl/lib/logic_tree.v
+../../../rtl/lib/compare.v
+../../../rtl/lib/pipestage.v
+../../../rtl/lib/register.v
 ../../../rtl/address_generation/address_generator.v
 ../../../rtl/address_generation/address_generation_top.v
+../../../rtl/address_generation/segment_limit_check.v
 ../../../rtl/register_access/register_file.v
+../../../rtl/execute/ucomp.v
+../../../rtl/execute/CLA.v
+../../../rtl/execute/halfadder.v
 tb_address_generation_top.v

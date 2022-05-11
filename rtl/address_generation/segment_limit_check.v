@@ -74,10 +74,10 @@ module segment_limit_check (
             32'h0,
             gs_limit,
             fs_limit,
-            es_limit,
-            ss_limit,
             ds_limit,
-            cs_limit
+            ss_limit,
+            cs_limit,
+            es_limit
         },
         seg_max,
         segment

@@ -83,7 +83,9 @@ module address_generation_top (
     a_pc,
     a_branch_taken,
     a_to_sys_controller,			       
-    a_opcode
+    a_opcode,
+
+    segment_limit_exception
 );
 
     // Clock Interface
@@ -296,8 +298,8 @@ module address_generation_top (
     wire op0_exception;
     segment_limit_check op0_seg_check (
         op0_exception,
-        p_op0,
-        p_op0_is_address,
+        p_op0[31:0],
+        op0_check_segment_limit,
 
         op0_segment,
 
@@ -308,8 +310,8 @@ module address_generation_top (
     wire op1_exception;
     segment_limit_check op1_seg_check (
         op1_exception,
-        p_op1,
-        p_op1_is_address,
+        p_op1[31:0],
+        op1_check_segment_limit,
 
         op1_segment,
 
@@ -330,8 +332,11 @@ module address_generation_top (
         r_size
     );
 
-    // todo: or the 3 exceptions together and output it 
-    or3$ exception_or (segment_limit_exception, op0_exception, op1_exception, stack_exception);
+    wire maybe_segment_limit_exception;
+    or3$ exception_or (maybe_segment_limit_exception, op0_exception, op1_exception, stack_exception);
+
+    // only cause exception if the incoming data is valid
+    and2$ except_and (segment_limit_exception, r_valid, maybe_segment_limit_exception);
 
 
     // ------- //
@@ -435,7 +440,7 @@ endmodule
 module op0_generator (
     a_op0,
     a_op0_is_address,
-    op0_segment,
+    op0_segment_num,
     op0_check_segment_limit,
 
     r_size,
@@ -478,7 +483,7 @@ module op0_generator (
 
     output [63:0] a_op0;
     output a_op0_is_address;
-    output [2:0] op0_segment;
+    output [2:0] op0_segment_num;
     output op0_check_segment_limit;
 
     input [2:0] r_size;
@@ -692,7 +697,7 @@ module op0_generator (
     // 11: ES
 
     wire is_memory;
-    compare #(.WIDTH(3)) is_mem_cmp (op0_mux, 3'd6, is_memory);
+    compare #(.WIDTH(3)) is_mem_cmp (r_op0, 3'd6, is_memory);
 
     mux #(.WIDTH(3), .INPUTS(4)) (
         {
@@ -700,22 +705,26 @@ module op0_generator (
             3'd0,
             r_seg_override,
             3'b011
-
-        }
+        },
+        op0_segment_num,
+        {is_memory, r_seg_override_valid}
     );
 
     // will this be read from memory later?
+    wire op0_check_segment_limit_mem;
     op0_is_address op0_is_address0 (
         r_op0[2], r_op0[1], r_op0[0],
-        op0_check_segment_limit
+        op0_check_segment_limit_mem
     );
+
+    or2$ is_segment_check (op0_check_segment_limit, op0_check_segment_limit_mem, op0_rm_and_address);
 
 endmodule
 
 module op1_generator (
     a_op1,
     a_op1_is_address,
-    op1_segment,
+    op1_segment_num,
     op1_check_segment_limit,
 
     r_size,
@@ -759,7 +768,7 @@ module op1_generator (
 
     output [63:0] a_op1;
     output a_op1_is_address;
-    output [2:0] op1_segment;
+    output [2:0] op1_segment_num;
     output op1_check_segment_limit;
 
     input [2:0] r_size;
@@ -982,7 +991,7 @@ module op1_generator (
 
    mux #(.WIDTH(3), .INPUTS(2)) op1_seg_mux (
        {r_seg_override, 3'b100},
-       op1_segment,
+       op1_segment_num,
        r_seg_override_valid
    );
 
