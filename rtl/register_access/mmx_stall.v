@@ -9,7 +9,7 @@ module mmx_stall (
     clk,
     reset,
 
-    size,
+    // size,
 
     is_stall,
 
@@ -28,7 +28,7 @@ module mmx_stall (
     input clk;
     input reset;
 
-    input [2:0] size;
+    // input [2:0] size;
 
     output is_stall;
 
@@ -44,8 +44,8 @@ module mmx_stall (
     input [2:0] op1_reg;
 
     // first see if op0 and op1 are mmx
-    wire is_mmx;
-    compare (.WIDTH(3)) is_mmx_cmp (size, 3'd5, is_mmx);
+    // wire is_mmx;
+    // compare (.WIDTH(3)) is_mmx_cmp (size, 3'd5, is_mmx);
 
     // value can come from either mm register or modr/m
     wire op0_is_mmx;
@@ -109,14 +109,14 @@ module mmx_stall (
 
     // determine when it be modified
     mmx_stall_modify_table 
-    mm0_modify (mm0_in, mm0_out, mm0_en, 3'b0, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm1_modify (mm1_in, mm1_out, mm1_en, 3'b1, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm2_modify (mm2_in, mm2_out, mm2_en, 3'b2, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm3_modify (mm3_in, mm3_out, mm3_en, 3'b3, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm4_modify (mm4_in, mm4_out, mm4_en, 3'b4, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm5_modify (mm5_in, mm5_out, mm5_en, 3'b5, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm6_modify (mm6_in, mm6_out, mm6_en, 3'b6, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm7_modify (mm7_in, mm7_out, mm7_en, 3'b7, op0_reg, op0_mmx_reg, op0_is_mmx, write_select, write_enable);
+    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
+    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg, op0_is_mmx, write_select, write_enable);
 
     // see if there is a stall
     wire [31:0] op0_table_data;
@@ -136,7 +136,7 @@ module mmx_stall (
     );
 
     wire op0_table_zero;
-    compare (.WIDTH(32)) op0_table_cmp (op0_table_data, 32'd0, op0_table_zero);
+    compare #(.WIDTH(32)) op0_table_cmp (op0_table_data, 32'd0, op0_table_zero);
 
     wire op0_table_not_empty;
     inv1$ op0_inv (op0_table_not_empty, op0_table_zero);
@@ -162,7 +162,7 @@ module mmx_stall (
     );
 
     wire op1_table_zero;
-    compare (.WIDTH(32)) op1_table_cmp (op1_table_data, 32'd0, op1_table_zero);
+    compare #(.WIDTH(32)) op1_table_cmp (op1_table_data, 32'd0, op1_table_zero);
 
     wire op1_table_not_empty;
     inv1$ op1_inv (op1_table_not_empty, op1_table_zero);
@@ -300,13 +300,13 @@ module mmx_stall_is_reg (
     // is valid?
     // valid = (op == 3) || (op == 4 && mod == 2'b11)
     wire op_is_3;
-    compare (.WIDTH(3)) op_3_cmp (op, 3'd3, op_is_3);
+    compare #(.WIDTH(3)) op_3_cmp (op, 3'd3, op_is_3);
 
     wire op_is_4;
-    compare (.WIDTH(3)) op_4_cmp (op, 3'd4, op_is_4);
+    compare #(.WIDTH(3)) op_4_cmp (op, 3'd4, op_is_4);
 
     wire mod_is_3;
-    compare(.WIDTH(3)) mod_3_cmp (mod, 2'b11, mod_is_3);
+    compare #(.WIDTH(2)) mod_3_cmp (mod, 2'b11, mod_is_3);
 
     wire and_res;
     and2$ and0 (and_res, op_is_4, mod_is_3);
