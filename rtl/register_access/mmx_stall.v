@@ -5,7 +5,7 @@
 //
 //  Holds components for mmx register stalling
 
-module mmx_stall (
+module mmx_stall (  // fanout good
     clk,
     reset,
 
@@ -111,16 +111,41 @@ module mmx_stall (
     register #(.WIDTH(32)) mm6_accesses (clk, reset, mm6_in, mm6_out, , mm6_en);
     register #(.WIDTH(32)) mm7_accesses (clk, reset, mm7_in, mm7_out, , mm7_en);
 
+    // buffering
+    wire [2:0] op0_mmx_reg_buf;
+    bufferH16$ 
+    op0_mmx_reg_16_0 (op0_mmx_reg_buf[0], op0_mmx_reg[0]),
+    op0_mmx_reg_16_1 (op0_mmx_reg_buf[1], op0_mmx_reg[1]),
+    op0_mmx_reg_16_2 (op0_mmx_reg_buf[2], op0_mmx_reg[2]);
+
+    wire op0_is_mmx_buf;
+    bufferH16$ op0_is_mmx_16 (op0_is_mmx_buf, op0_is_mmx);
+
+    wire [2:0] write_select_buf;
+    bufferH16$ 
+    write_select_16_0 (write_select_buf[0], write_select[0]),
+    write_select_16_1 (write_select_buf[1], write_select[1]),
+    write_select_16_2 (write_select_buf[2], write_select[2]);
+
+    wire write_enable_buf;
+    bufferH16$ write_enable_16 (write_enable_buf, write_enable);
+
+    wire next_stage_ready_buf;
+    bufferH16$ next_stage_ready_16 (next_stage_ready_buf, next_stage_ready);
+
+
+
+
     // determine when it be modified
     mmx_stall_modify_table 
-    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready);
+    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg_buf, op0_is_mmx_buf, write_select_buf, write_enable_buf, next_stage_ready_buf);
 
     // see if there is a stall
     wire [31:0] op0_table_data;
@@ -176,13 +201,6 @@ module mmx_stall (
 
     // final stall signal
     or2$ or_stall (is_stall, op0_stall, op1_stall);
-
-
-    
-
-
-
-
 
 
 endmodule
