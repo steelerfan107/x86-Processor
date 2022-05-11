@@ -74,7 +74,7 @@ module main_memory_top(
     genvar j;
 
     wire [7:0] dec8_out;
-    decoder3_8$ dec8(addr[14:!2], dec8_out);
+    decoder3_8$ dec8(addr[14:12], dec8_out);
 
     generate
     for (j = 0; j < 8; j=j+1) begin
