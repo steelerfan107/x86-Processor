@@ -24,7 +24,8 @@ module decode_stage_1 (
    // EIP Modification Interface		       
    write_eip,
    eip,
-
+   curr_eip,
+		       
    // Repeat Interface
    ecx_register,
    wb_valid,
@@ -81,6 +82,7 @@ module decode_stage_1 (
 
    // Instruction Memory Interface Parameters
    parameter IADDRW = 32;
+   parameter SINGLE_TXN = 1'b0;
 
    // Clock Interface
    input                clk;
@@ -109,6 +111,7 @@ module decode_stage_1 (
    // EIP Modification Interface		       
    input                write_eip;
    input [31:0]         eip;
+   output [31:0]        curr_eip;
 
    // EFLAGS Interface  
    input [31:0] 	eflags_reg;
@@ -213,12 +216,28 @@ module decode_stage_1 (
    wire 		repeat_and_busy;
    wire 		repeat_and_out_accept;
 
+   always @ (posedge ret_near or posedge ret_far or posedge iretd) begin
+      if (iretd) begin
+	 $display("=================== Approx Timing == Seen IRETD");	 
+      end
+      if (ret_near) begin
+	 $display("=================== Approx Timing == Seen RET Near");	 	 
+      end
+      if (ret_far) begin
+	 $display("=================== Approx Timing == Seen Ret Far");	 	 
+      end      
+   end
+
+   
    and2$ (in_accept, s0_valid, s0_ready);
   
    and3$ ( repeat_and_busy, busy_ahead_of_decode, pre_repeat, not_halt_forward_progress);
    inv1$ ( not_busy, busy_ahead_of_decode);
+
+   wire not_in_accept;
+   inv1$ ( not_in_accept, in_accept);
 	   
-   mux2$ ( halt_forward_progress_in, not_busy, ~in_accept, halt_forward_progress);
+   mux2$ ( halt_forward_progress_in, not_busy, not_in_accept, halt_forward_progress);
    
    register #(.WIDTH(1)) half_forward_reg (
                clk,
@@ -232,9 +251,16 @@ module decode_stage_1 (
    and2$ ( halt_forward_progress_mask, repeat_and_busy, not_halt_forward_progress);
 
    and2$ ( hold_int_repeat, pending_int, pre_repeat);
+
+   wire single_txn_mask;
+   nand2$ (single_txn_mask, SINGLE_TXN, busy_ahead_of_decode);
+
+   wire not_halt_forward_progress_mask, not_hold_int_repeat;
+   inv1$ (not_halt_forward_progress_mask,halt_forward_progress_mask);
+   inv1$ (not_hold_int_repeat,hold_int_repeat);
    
-   and3$ (s1_valid    , pre_s1_valid, ~halt_forward_progress_mask, ~hold_int_repeat);
-   and3$ (pre_s1_ready,     s1_ready, ~halt_forward_progress_mask, ~hold_int_repeat);   
+   and4$ (s1_valid    , pre_s1_valid, not_halt_forward_progress_mask, not_hold_int_repeat, single_txn_mask);
+   and4$ (pre_s1_ready,     s1_ready, not_halt_forward_progress_mask, not_hold_int_repeat, single_txn_mask);   
 
    // Repeat Logic
    wire 		store_temp_ecx, valid_temp_ecx_in, valid_temp_ecx, not_valid_temp_ecx;
@@ -251,7 +277,10 @@ module decode_stage_1 (
                store_temp_ecx		    
    );
 
-   mux #(.INPUTS(2),.WIDTH(1)) ({~out_accept_writeecx,store_temp_ecx}, valid_temp_ecx_in, valid_temp_ecx);
+   wire 		not_out_accept_writeecx;
+   inv1$ (not_out_accept_writeecx, out_accept_writeecx);
+   
+   mux #(.INPUTS(2),.WIDTH(1)) ({not_out_accept_writeecx,store_temp_ecx}, valid_temp_ecx_in, valid_temp_ecx);
 
    register #(.WIDTH(1)) v_temp_ecx (
                clk,
@@ -264,7 +293,7 @@ module decode_stage_1 (
    
    and3$ (hold_int, pending_int, busy_ahead_of_decode, pre_repeat); 
    
-   and4$ (out_accept_writeecx, s1_valid, s1_ready, ~halt_forward_progress_mask, pre_repeat);
+   and4$ (out_accept_writeecx, s1_valid, s1_ready, not_halt_forward_progress_mask, pre_repeat);
    
    compare #(.WIDTH(8)) movs_comp (8'hA5, s0_opcode[15:8], s1_movs);
    inv1$ ( not_movs, s1_movs);
@@ -278,16 +307,31 @@ module decode_stage_1 (
    
    assign wb_valid = out_accept_writeecx;
    assign wb_reg   = 3'b001;
-   assign wb_data  = ecx_register_selected - 1;  
+   
+   //assign wb_data  = ecx_register_selected - 1;
+   subtract #(.WIDTH(32)) (
+	ecx_register_selected,
+        32'd1,
+        wb_data	 
+   );
+   
    assign wb_size  = 3;
    
    // IRETd Logic
    wire 		iretd_halt_mask;
    inv1$ ( iretd_halt_mask, iretd_halt);
+
+   wire 		ret_near0, ret_near1, ret_far0, ret_far1;
    
    compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
-   compare #(.WIDTH(7)) ret_n_comp (7'hC1, s0_opcode[15:9], ret_near);
-   compare #(.WIDTH(7)) ret_f_comp (7'hC5, s0_opcode[15:9], ret_far);
+   compare #(.WIDTH(8)) ret_n_comp (7'hC3, s0_opcode[15:8], ret_near0);
+   compare #(.WIDTH(8)) ret_n0_comp (7'hC2, s0_opcode[15:8], ret_near1);
+
+   compare #(.WIDTH(8)) ret_f_comp (7'hCB, s0_opcode[15:8], ret_far0);
+   compare #(.WIDTH(8)) ret_f0_comp (7'hCA, s0_opcode[15:8], ret_far1);
+
+   or2$ (ret_near,ret_near0, ret_near1);
+   or2$ (ret_far,ret_far0, ret_far1);   
 
    wire 		rom_in_control_mask;
    and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
@@ -296,15 +340,18 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(4))  int_rc_mux ({4'd6,s0_rom_control}        , rom_control   , handle_int);   
    mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,rom_in_control_mask}   , rom_in_control, handle_int);
 
+   assign curr_eip = eip_reg;
+
    register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, write_eip);   
    
    // Seperate Imm and Disp
    imm_disp_seperate imm_disp_seperate(
 	s0_displace_n_imm,
         s0_immediete_bytes,
-        s0_displacement_bytes,	    
+        s0_displacement_bytes,
        	dec_imm,
-        dec_disp	    
+        dec_disp,	
+        dec_size	    
    );
    
    assign dec_modrm = s0_addressing[15:8];
@@ -356,8 +403,11 @@ module decode_stage_1 (
    assign dec_valid = s0_valid;
    and3$ dra (dec_ready, repeat_halt_mask, pre_s1_ready, iretd_halt_mask);
 
+   wire 		rom_ready_mask;
+   and2$ rrm (rom_ready_mask, rom_ready, pre_s1_ready);
+   
    // Output Muxes
-   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready,dec_ready},s0_ready, rom_in_control);     
+   mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready_mask,dec_ready},s0_ready, rom_in_control);     
    mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},pre_s1_valid, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  size_mux({rom_size,dec_size},s1_size, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control);  

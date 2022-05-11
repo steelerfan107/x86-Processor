@@ -10,9 +10,18 @@ module addressing_disp_size_detect (
 
    assign addressing = addressing_aligned;
 
-   mux #(.WIDTH(4), .INPUTS(4)) disp_size_mux ({4'd4, 4'd4, 4'd1, 4'd0}, displacement_bytes, {disp1, disp0});
+   wire  disp0mask;
+   wire  disp1mask;
+
+   and2$ (disp0mask,disp0,have_modrm);
+   and2$ (disp1mask,disp1,have_modrm);
+
+   mux #(.WIDTH(4), .INPUTS(4)) disp_size_mux ({4'd4, 4'd4, 4'd1, 4'd0}, displacement_bytes, {disp1mask, disp0mask});
+
+   wire  sib_mask;
+   and2$( sib_mask, sib_byte, have_modrm);
    
-   mux #(.WIDTH(2), .INPUTS(4)) addr_size_mux ({2'd2, 2'd2, 2'd1, 2'd0}, addressing_bytes, {sib_byte, have_modrm});
+   mux #(.WIDTH(2), .INPUTS(4)) addr_size_mux ({2'd2, 2'd2, 2'd1, 2'd0}, addressing_bytes, {sib_mask, have_modrm});
   
    modrm_size_map msm (
       addressing_aligned[15],

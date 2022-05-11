@@ -14,7 +14,12 @@ module execute_top (
     // Pipestage Interface
     e_valid,
     e_ready,
-    e_dest_reg, 
+    e_dest_reg,
+    e_op_a_address,
+    e_op_a_is_address,
+    e_op_a_is_reg,
+    e_op_a_is_segment,
+    e_op_a_is_mmx, 
     e_mmr,
     e_op_a,
     e_op_b,
@@ -40,7 +45,13 @@ module execute_top (
     wb_dest_reg,
     wb_result,
     wb_opsize,
+    wb_opcode,
     wb_mem_or_reg,
+    wb_op_a_is_address,
+    wb_op_a_is_reg,
+    wb_op_a_is_segment,
+    wb_op_a_is_mmx,
+    wb_stack_op,		    
     wb_stack,
     wb_valid,
     wb_branch_taken,
@@ -66,6 +77,7 @@ module execute_top (
     output e_ready;
     input e_mmr;
     input [2:0] e_dest_reg;
+    input [31:0] e_op_a_address;   
     input [63:0] e_op_a;
     input [63:0] e_op_b;
     input [31:0] e_eax;
@@ -74,7 +86,7 @@ module execute_top (
     input [1:0] e_stack_op;
     input [3:0] e_op;
     input [15:0] e_opcode;
-    input [1:0] e_opsize;
+    input [2:0] e_opsize;
     input [2:0] e_flag_0_map;
     input [2:0] e_flag_1_map;
     input e_set_d_flag;
@@ -83,14 +95,21 @@ module execute_top (
     input e_branch_taken;
     input e_to_sys_controller;
     input [31:0] e_pc;
+    input e_op_a_is_address;
+    input e_op_a_is_reg;
+    input e_op_a_is_segment;
+    input e_op_a_is_mmx;
+   
 
     // Writeback Interface
     input wb_ready;
     output [31:0] wb_dest_address;
     output [31:0] wb_dest_reg;
     output [63:0] wb_result;
-    output [1:0] wb_opsize;
+    output [2:0] wb_opsize;
+    output [15:0] wb_opcode;   
     output wb_mem_or_reg;
+    output [1:0] wb_stack_op;   
     output wb_stack;
     output wb_valid;
     output wb_branch_taken;
@@ -101,6 +120,10 @@ module execute_top (
     output wb_jump_load_cs;
     output [31:0] wb_cs_out;
     output wb_br_misprediction;
+    output wb_op_a_is_address;
+    output wb_op_a_is_reg;
+    output wb_op_a_is_segment;
+    output wb_op_a_is_mmx;
 
    
     wire [63:0] a;
@@ -116,17 +139,22 @@ module execute_top (
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16;
 
-    wire [31:0]  p_dest_address = 'h0;;
+    wire [31:0]  p_dest_address = e_op_a_address;
     wire  [31:0] p_dest_reg = e_dest_reg;
     wire  [63:0] p_result = e_alu_out;
-    wire  [1:0]  p_opsize = e_opsize;
+    wire  [2:0]  p_opsize = e_opsize;
     wire         p_mem_or_reg = 'h0;
     wire         p_branch_taken = 'h0;
     wire         p_to_sys_controller = e_to_sys_controller;
     wire  [31:0] p_pc = e_pc;
 
+    wire p_op_a_is_address = e_op_a_is_address;
+    wire p_op_a_is_reg = e_op_a_is_reg;
+    wire p_op_a_is_segment = e_op_a_is_segment;
+    wire p_op_a_is_mmx = e_op_a_is_mmx;
+   
     or2$ (p_stack, e_stack_op[0], e_stack_op[1]);
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
@@ -140,7 +168,13 @@ module execute_top (
         e_branch_taken,
         e_to_sys_controller,
         e_pc,
-        p_stack	    
+        p_stack,
+        e_stack_op,  			   
+        p_op_a_is_address,
+        p_op_a_is_reg,
+        p_op_a_is_segment,
+        p_op_a_is_mmx,
+	e_opcode
     };
 
     assign {
@@ -152,7 +186,13 @@ module execute_top (
         wb_branch_taken,
         wb_to_sys_controller,
         wb_pc,
-	wb_stack
+	wb_stack,
+	wb_stack_op,  	    
+        wb_op_a_is_address,
+        wb_op_a_is_reg,
+        wb_op_a_is_segment,
+        wb_op_a_is_mmx,
+	wb_opcode
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);

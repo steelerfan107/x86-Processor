@@ -8,7 +8,7 @@ module address_generation_top (
     // Clock Interface
     clk,
     reset,
-
+			       
     // Control Interface
     flush,
 
@@ -70,6 +70,9 @@ module address_generation_top (
     a_op0_reg,
     a_op1_reg,
     a_op0_is_address,
+    a_op0_is_reg,
+    a_op0_is_segment,
+    a_op0_is_mmx,
     a_op1_is_address,
     a_imm,
     a_alu_op,
@@ -80,7 +83,9 @@ module address_generation_top (
     a_pc,
     a_branch_taken,
     a_to_sys_controller,			       
-    a_opcode
+    a_opcode,
+
+    segment_limit_exception
 );
 
     // Clock Interface
@@ -148,6 +153,9 @@ module address_generation_top (
     output [2:0] a_op0_reg;
     output [2:0] a_op1_reg;
     output a_op0_is_address;
+    output a_op0_is_reg;
+    output a_op0_is_segment;
+    output a_op0_is_mmx;
     output a_op1_is_address;
     output [47:0] a_imm;
     output [3:0] a_alu_op;
@@ -159,12 +167,15 @@ module address_generation_top (
     output a_branch_taken;
     output a_to_sys_controller;
     output [15:0] a_opcode;
+
+    // exception output
+    output segment_limit_exception;
    
     // -------   //
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3+1;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -173,10 +184,15 @@ module address_generation_top (
     wire  p_clear_d_flag;
     wire  [63:0] p_op0;
     wire  [63:0] p_op1;
+    wire  [63:0] gen_op1;   
     wire  [2:0] p_op0_reg;
     wire  [2:0] p_op1_reg;
     wire  p_op0_is_address;
+    wire  p_op0_is_reg;
+    wire  p_op0_is_segment;
+    wire  p_op0_is_mmx;
     wire  p_op1_is_address;
+    wire  gen_op1_is_address;   
     wire  [47:0] p_imm;
     wire  [3:0] p_alu_op;
     wire  [2:0] p_flag_0;
@@ -185,6 +201,7 @@ module address_generation_top (
     wire  [31:0] p_stack_address;   
     wire  [31:0] p_pc;
     wire  p_branch_taken;
+    wire  p_to_sys_controller;
    
     assign {
       a_size,
@@ -195,6 +212,9 @@ module address_generation_top (
       a_op0_reg,
       a_op1_reg,
       a_op0_is_address,
+      a_op0_is_reg,
+      a_op0_is_segment,
+      a_op0_is_mmx,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -204,7 +224,8 @@ module address_generation_top (
       a_stack_address,
       a_pc,
       a_branch_taken,
-      a_opcode	    
+      a_opcode,
+      a_to_sys_controller	    
     } = pipe_out_data;
 
     assign pipe_in_data = {
@@ -216,6 +237,9 @@ module address_generation_top (
       r_op0_reg,
       r_op1_reg,
       p_op0_is_address,
+      p_op0_is_reg,
+      p_op0_is_segment,
+      p_op0_is_mmx,
       p_op1_is_address,
       r_imm,
       r_alu_op,
@@ -225,23 +249,104 @@ module address_generation_top (
       r_stack_address,
       r_pc,
       r_branch_taken,
-      r_opcode		    
+      r_opcode,
+      p_to_sys_controller		    
     };   
  
     pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
 
     // -------                    //
+    // Indicate What Dest Op0 is  //
+    // -------                    //
+
+    wire not_is_an_address,  p_op0_is_modrm, p_op0_is_modrm, gen_op0_is_address, gen_op0_is_address, is_an_address_modrm;
+   
+    compare #(.WIDTH(2)) (r_modrm[7:6], 2'b11, not_is_an_address); 
+    and2$ ( p_op0_is_modrm_mask, p_op0_is_modrm, not_is_an_address);
+    inv1$ ( is_an_address_modrm, not_is_an_address);
+
+    compare #(.WIDTH(3)) (r_op0 , 3'd1, p_op0_is_register);      
+    compare #(.WIDTH(3)) (r_op0 , 3'd4, p_op0_is_modrm);
+    
+    or2$ ( p_op0_is_reg, p_op0_is_register, p_op0_is_modrm_mask);     
+      
+    compare #(.WIDTH(3)) (r_op0 , 3'd2, p_op0_is_segment);      
+    compare #(.WIDTH(3)) (r_size, 3'd5, p_op0_is_mmx);
+
+    // -------                            //
+    // For Pops force op1 to be stack op  //
+    // -------                            //
+
+    mux  #(.WIDTH(64),.INPUTS(2)) idt_select ( {{32'b0,r_stack_address}, gen_op1}, p_op1, r_stack_op[1]);
+   
+    or2$ (p_op1_is_address, gen_op1_is_address, r_stack_op[1]);
+   
+    // -------                    //
     // Indicate to Sys Controller //
     // -------                    //
 
-   compare #(.WIDTH(3)) (r_op0, 3'h7, a_to_sys_controller);
-         
+   compare #(.WIDTH(3)) (r_op0, 3'h7, p_to_sys_controller);
+
+    // ------------------- //
+    // Segment Limit Check //
+    // ------------------- //
+    wire [2:0] op0_segment;
+    wire op0_check_segment_limit;
+    wire [2:0] op1_segment;
+    wire op1_check_segment_limit;
+
+    wire op0_exception;
+    segment_limit_check op0_seg_check (
+        op0_exception,
+        p_op0[31:0],
+        op0_check_segment_limit,
+
+        op0_segment,
+
+        r_size
+    );
+
+    // checks op1 and the stack operand
+    wire op1_exception;
+    segment_limit_check op1_seg_check (
+        op1_exception,
+        p_op1[31:0],
+        op1_check_segment_limit,
+
+        op1_segment,
+
+        r_size
+    );
+
+    wire stack_is_address;
+    or2$ (stack_is_address, a_stack_op[1], a_stack_op[0]);
+
+    wire stack_exception;
+    segment_limit_check stack_seg_check (
+        stack_exception,
+        a_stack_address,
+        stack_is_address,
+
+        3'b010,
+
+        r_size
+    );
+
+    wire maybe_segment_limit_exception;
+    or3$ exception_or (maybe_segment_limit_exception, op0_exception, op1_exception, stack_exception);
+
+    // only cause exception if the incoming data is valid
+    and2$ except_and (segment_limit_exception, r_valid, maybe_segment_limit_exception);
+
+
     // ------- //
     // OP0 Mux //
     // ------- //
     op0_generator op0_generator0 (
         p_op0,
         p_op0_is_address,
+        op0_segment,
+        op0_check_segment_limit,
 
         r_size,
 
@@ -285,8 +390,10 @@ module address_generation_top (
     // OP1 Mux //
     // ------- //
     op1_generator op1_generator0 (
-    p_op1,
-    p_op1_is_address,
+    gen_op1,
+    gen_op1_is_address,
+    op1_segment,
+    op1_check_segment_limit,
 
     r_size,
 
@@ -333,6 +440,8 @@ endmodule
 module op0_generator (
     a_op0,
     a_op0_is_address,
+    op0_segment_num,
+    op0_check_segment_limit,
 
     r_size,
 
@@ -374,6 +483,8 @@ module op0_generator (
 
     output [63:0] a_op0;
     output a_op0_is_address;
+    output [2:0] op0_segment_num;
+    output op0_check_segment_limit;
 
     input [2:0] r_size;
 
@@ -557,20 +668,64 @@ module op0_generator (
     );
 
     // determine if op0 is an address or normie value
-    wire op0_mux_is_address;
-    op0_is_address op0_is_address0 (
-        r_op0[2], r_op0[1], r_op0[0],
-        op0_mux_is_address
-    );
+    // only read from memory if mod rm is an address
+    // if op0 is memory, is_address should be zero since mem_read shouldn't do anything
+    wire op0_mux_is_address = 1'b0;
+    // op0_is_address op0_is_address0 (
+    //     r_op0[2], r_op0[1], r_op0[0],
+    //     op0_mux_is_address
+    // );
+
+ 
+    wire  op0_rm_and_address, op0_is_modrm;
+   
+    compare #(.WIDTH(3)) (r_op0, 3'd4, op0_is_modrm);
+    and2$ (op0_rm_and_address, op0_is_modrm,  op0_mod_rm_is_address);  
 
     // see if mod_rm is address
-    or2$ is_address_combine (a_op0_is_address, op0_mux_is_address, op0_mod_rm_is_address);
+    or2$ is_address_combine (a_op0_is_address, op0_mux_is_address, op0_rm_and_address);
+
+    // select segment
+    // if its memory, segment is ES
+    // if its not overridden then its ds
+    // if its overridden then its the overridden value
+
+    // {is_memory, r_seg_override_valid}
+    // 00: DS
+    // 01: r_seg_override
+    // 10: ES
+    // 11: ES
+
+    wire is_memory;
+    compare #(.WIDTH(3)) is_mem_cmp (r_op0, 3'd6, is_memory);
+
+    mux #(.WIDTH(3), .INPUTS(4)) (
+        {
+            3'd0,
+            3'd0,
+            r_seg_override,
+            3'b011
+        },
+        op0_segment_num,
+        {is_memory, r_seg_override_valid}
+    );
+
+    // will this be read from memory later?
+    wire op0_check_segment_limit_mem;
+    op0_is_address op0_is_address0 (
+        r_op0[2], r_op0[1], r_op0[0],
+        op0_check_segment_limit_mem
+    );
+
+    or2$ is_segment_check (op0_check_segment_limit, op0_check_segment_limit_mem, op0_rm_and_address);
 
 endmodule
 
 module op1_generator (
     a_op1,
     a_op1_is_address,
+    op1_segment_num,
+    op1_check_segment_limit,
 
     r_size,
 
@@ -613,6 +768,8 @@ module op1_generator (
 
     output [63:0] a_op1;
     output a_op1_is_address;
+    output [2:0] op1_segment_num;
+    output op1_check_segment_limit;
 
     input [2:0] r_size;
 
@@ -821,7 +978,24 @@ module op1_generator (
         op1_mux_is_address
     );
 
-    or2$ is_address_combine (a_op1_is_address, op1_mux_is_address, op1_mod_rm_is_address);
+   wire  op1_rm_and_address;
+   
+   compare #(.WIDTH(3)) (r_op1, 3'd4, op1_is_modrm);
+   and2$ (op1_rm_and_address, op1_is_modrm,  op1_mod_rm_is_address);
+   
+   or2$ is_address_combine (a_op1_is_address, op1_mux_is_address, op1_rm_and_address);
+
+   // set segment limit
+   // if its overridden, use that
+   // else use ds
+
+   mux #(.WIDTH(3), .INPUTS(2)) op1_seg_mux (
+       {r_seg_override, 3'b100},
+       op1_segment_num,
+       r_seg_override_valid
+   );
+
+   assign op1_check_segment_limit = a_op1_is_address;
 
 endmodule
 

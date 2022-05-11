@@ -22,6 +22,7 @@ module decode_top (
    // EIP Modification Interface		       
    write_eip,
    eip,
+   curr_eip,
 
    // Repeat Interface
    ecx_register,
@@ -79,6 +80,7 @@ module decode_top (
 );
    // Instruction Memory Interface Parameters
    parameter IADDRW = 32;
+   parameter SINGLE_TXN = 1'b0;
 
    // Clock Interface
    input                clk;
@@ -104,6 +106,7 @@ module decode_top (
    // EIP Modification Interface		       
    input                write_eip;
    input [31:0]         eip;
+   output [31:0]        curr_eip;
 
    // EFLAGS Interface  
    input [31:0] 	eflags_reg;   
@@ -289,7 +292,7 @@ module decode_top (
    pipestage #(.WIDTH(S0_PIPEWIDTH)) stage0 ( clk, (reset | flush_0), s0_valid, s0_ready, s0_data, s0_valid_r, s0_ready_r, s0_data_r);
    
    // Stage 0 and Pipe   
-   decode_stage_1 #(.IADDRW(IADDRW)) ds1 (
+   decode_stage_1 #(.IADDRW(IADDRW), .SINGLE_TXN(SINGLE_TXN)) ds1 (
        clk,
        reset,
        flush_1,
@@ -305,6 +308,7 @@ module decode_top (
        iretd_halt,			       
        write_eip,
        eip,
+       curr_eip,
        ecx_register,
        wb_valid,
        wb_reg,

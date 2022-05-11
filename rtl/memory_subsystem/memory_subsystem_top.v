@@ -111,6 +111,7 @@ module memory_subsystem_top (
     wire [BUSADDRW-1:0] bus_addr;
 
     wire bus_req_icache;
+    wire bus_req_dcache;   
     wire bus_req;
 
     //wire bus_done_icache;
@@ -191,6 +192,7 @@ module memory_subsystem_top (
 
 
     wire [1:0] mem_wr_size;   
+
     //dcache dcache();
     dcache uut(
         .clk(clk),
@@ -234,12 +236,16 @@ module memory_subsystem_top (
         // Arbiter Interface
         .grant_in(arb_grant),
         .grant_out(dcache_grant),
-
         .bus_busy_out(bus_busy_dcache),
         .bus_busy_in(bus_busy)
 
     );
 
+
+        .bus_busy_out(bus_busy_out_nc),
+        .bus_busy_in(bus_busy)
+    );
+   
     // system controller interface 
     // make lower priority than dcache so that writes complete
     // FIXME check that writes complete, since dcache might release the bus in
@@ -281,7 +287,7 @@ module memory_subsystem_top (
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
         .phys_addr(tlb_i_pa),   // from TLB
-	    .virt_addr(tlb_va),  	  
+	      .virt_addr(tlb_va),  	  
         .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),

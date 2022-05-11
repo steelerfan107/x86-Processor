@@ -24,7 +24,9 @@ module int_controller (
      reg_load_cs,
      reg_cs,
      int_clear,
-     or_int_vec		       
+     or_int_vec,
+     capture_bottom_eip,
+     addr_p1	       
 );
 
    input      clk;
@@ -53,6 +55,9 @@ module int_controller (
    output     [15:0] reg_cs;
    input      or_int_vec;
    output     int_clear;
+   output     capture_bottom_eip;
+   output     addr_p1;
+   
 
    assign mem_dp_ready = 1'b1;
    
@@ -68,6 +73,7 @@ module int_controller (
    );
    
    int_comb_output_cloud coc (
+       1'b0,
        curr_state[2],
        curr_state[1],
        curr_state[0],
@@ -82,7 +88,9 @@ module int_controller (
        mem_valid,
        fetch_load,
        reg_load_cs,
-       int_clear
+       int_clear,
+       capture_bottom_eip,
+       addr_p1
    );
 
    int_next_state_cloud nsc (

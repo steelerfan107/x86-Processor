@@ -21,7 +21,12 @@ module byte_shifter_8B (
 	 wire [2:0] sel;
 	 wire 	    nc;	 
 	 //slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);
-	 assign sel = i - shift_amount; 	 
+	 //assign sel = i - shift_amount; 
+	 subtract #(.WIDTH(3)) (
+	   i,
+           shift_amount,
+           sel	 
+         );	 	 
          mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out[((i+1)*8)-1:(i*8)],sel);	 
       end
    endgenerate

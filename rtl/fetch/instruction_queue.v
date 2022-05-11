@@ -1,3 +1,5 @@
+
+
 //////////////////////////////////////
 //
 //  Instruction Queue Module
@@ -86,7 +88,9 @@ module instruction_queue (
 
    wire 	  nc0, nc1, nc2, nc3, nc4, nc5, nc6;
 
-   wire 	  int_reset = reset | flush;
+   wire 	  int_reset; // = reset | flush;
+
+   or2$ ( int_reset, reset, flush);
    
    // Signals indicating data has been accepted or read.
    and2$ vr_i_and(in_accept, valid_i, ready_i);
@@ -105,10 +109,30 @@ module instruction_queue (
    and2$ s3_and(set3,in_accept,eq_i3);
 
    // Clear indications of each entry
-   wire  c0 = (head[5:4] == 0) && (head_in[5:4] == 1);
-   wire  c1 = (head[5:4] == 1) && (head_in[5:4] == 2);
-   wire  c2 = (head[5:4] == 2) && (head_in[5:4] == 3);
-   wire  c3 = (head[5:4] == 3) && (head_in[5:4] == 0);
+   wire 	  head_eq_0, head_in_eq_0;
+   wire 	  head_eq_1, head_in_eq_1;
+   wire 	  head_eq_1, head_in_eq_2;
+   wire 	  head_eq_3, head_in_eq_3;
+   
+   compare #(.WIDTH(2)) (2'd0,head[5:4],head_eq_0);
+   compare #(.WIDTH(2)) (2'd1,head[5:4],head_eq_1);
+   compare #(.WIDTH(2)) (2'd2,head[5:4],head_eq_2);
+   compare #(.WIDTH(2)) (2'd3,head[5:4],head_eq_3);
+
+   compare #(.WIDTH(2)) (2'd0,head_in[5:4],head_in_eq_0);
+   compare #(.WIDTH(2)) (2'd1,head_in[5:4],head_in_eq_1);
+   compare #(.WIDTH(2)) (2'd2,head_in[5:4],head_in_eq_2);
+   compare #(.WIDTH(2)) (2'd3,head_in[5:4],head_in_eq_3);
+
+   and2$ (c0, head_eq_0, head_in_eq_1);
+   and2$ (c1, head_eq_1, head_in_eq_2);
+   and2$ (c2, head_eq_2, head_in_eq_3);
+   and2$ (c3, head_eq_3, head_in_eq_0);
+   
+   //wire  c0 = (head[5:4] == 0) && (head_in[5:4] == 1);
+   //wire  c1 = (head[5:4] == 1) && (head_in[5:4] == 2);
+   //wire  c2 = (head[5:4] == 2) && (head_in[5:4] == 3);
+   //wire  c3 = (head[5:4] == 3) && (head_in[5:4] == 0);
      
    and2$ c0_and(clear0,out_accept,c0);
    and2$ c1_and(clear1,out_accept,c1);
@@ -117,20 +141,73 @@ module instruction_queue (
 
    // clk, reset, din, q, q_bar, en
    // The head and tail pointers
+   wire 	  accept_or_load;
+   or2$ (accept_or_load, out_accept, load);
+     
    register #(.WIDTH(4)) tail_r (clk, int_reset, tail_p1, tail, tail_b, in_accept);
-   register #(.WIDTH(7)) head_r (clk, reset, head_in, head, head_b, (out_accept | load));
+   register #(.WIDTH(7)) head_r (clk, reset, head_in, head, head_b, accept_or_load);
 
    // Registers to hold each entries data
+
+   // Generate F4 Mask to Mask Bad Data to 00
+   /* wire [15:0] 	  f4_detect;
+   wire [15:0] 	  f4_ffo;
+   wire [15:0] 	  f4_mask;
+   wire [15:0] 	  inv_f4_mask;
+   wire [127:0]   full_inv_f4_mask;
+
+   genvar 	  i;
+   generate
+   for ( i = 0; i < 16; i=i+1) begin
+      compare #(.WIDTH(8)) (data_i[((i+1)*8)-1:i*8], 8'hF4, f4_detect[i]);
+      inv1$ (inv_f4_mask[i], f4_mask[i]);    
+   end
+   endgenerate
+
+    find_first #(.WIDTH(16)) (f4_detect, f4_ffo);
+   
+    subtract #(.WIDTH(16),.OPERATION(1)) (
+	f4_ffo,
+        16'd1,
+        f4_mask	 
+    );
+
+   assign full_inv_f4_mask = {{8{inv_f4_mask[15]}}, {8{inv_f4_mask[14]}}, {8{inv_f4_mask[13]}}, {8{inv_f4_mask[12]}},
+                              {8{inv_f4_mask[11]}}, {8{inv_f4_mask[10]}}, {8{inv_f4_mask[9]}} , {8{inv_f4_mask[8]}},
+                              {8{inv_f4_mask[7]}} , {8{inv_f4_mask[6]}} , {8{inv_f4_mask[5]}} , {8{inv_f4_mask[4]}},
+                              {8{inv_f4_mask[3]}} , {8{inv_f4_mask[2]}} , {8{inv_f4_mask[1]}} , {8{inv_f4_mask[0]}}};*/
+   
+   
    register #(.WIDTH(128)) entry_0_r (clk, int_reset, data_i, data0, data0_b, set0);
    register #(.WIDTH(128)) entry_1_r (clk, int_reset, data_i, data1, data1_b, set1);
    register #(.WIDTH(128)) entry_2_r (clk, int_reset, data_i, data2, data2_b, set2);
    register #(.WIDTH(128)) entry_3_r (clk, int_reset, data_i, data3, data3_b, set3);
    
    // Registers to hold each entries valid
-   register #(.WIDTH(1)) entry_0_v_r (clk, int_reset, ~clear0, valid0, invalid0, (set0 | clear0));
-   register #(.WIDTH(1)) entry_1_v_r (clk, int_reset, ~clear1, valid1, invalid1, (set1 | clear1));
-   register #(.WIDTH(1)) entry_2_v_r (clk, int_reset, ~clear2, valid2, invalid2, (set2 | clear2));
-   register #(.WIDTH(1)) entry_3_v_r (clk, int_reset, ~clear3, valid3, invalid3, (set3 | clear3));
+   wire 	  nclear0;
+   wire 	  nclear1;
+   wire 	  nclear2;
+   wire 	  nclear3;
+
+   wire 	  sclear0;
+   wire 	  sclear1;
+   wire 	  sclear2;
+   wire 	  sclear3;
+
+   inv1$ (   nclear0, clear0);
+   inv1$ (   nclear1, clear1);
+   inv1$ (   nclear2, clear2);
+   inv1$ (   nclear3, clear3);
+
+   or2$ ( sclear0, set0, clear0);
+   or2$ ( sclear1, set1, clear1);  
+   or2$ ( sclear2, set2, clear2);
+   or2$ ( sclear3, set3, clear3);
+   
+   register #(.WIDTH(1)) entry_0_v_r (clk, int_reset, nclear0, valid0, invalid0, sclear0);
+   register #(.WIDTH(1)) entry_1_v_r (clk, int_reset, nclear1, valid1, invalid1, sclear1);
+   register #(.WIDTH(1)) entry_2_v_r (clk, int_reset, nclear2, valid2, invalid2, sclear2);
+   register #(.WIDTH(1)) entry_3_v_r (clk, int_reset, nclear3, valid3, invalid3, sclear3);
 
    // Compare to select which entry to set.
    compare #(.WIDTH(2)) set_0_comp (2'd0,tail[1:0],eq_i0);
@@ -184,8 +261,28 @@ module instruction_queue (
 
    wire [6:0] true_tail = {tail[2:0],4'b0};
    
-   wire [6:0] behv_a = true_tail - head[6:0];
-   wire [6:0] behv_b = 64 - head[6:0] - true_tail;
+   wire [6:0] behv_a;
+   //wire [6:0] test_a = true_tail - head[6:0];
+   subtract #(.WIDTH(7)) (
+	true_tail,
+        head[6:0],
+        behv_a	 
+   );   
+
+   wire [6:0] behv_b;
+   wire [6:0] behv_b_64;   
+   //wire [6:0] test_b = 64 - head[6:0] - true_tail;
+   subtract #(.WIDTH(7)) (
+	7'd64,
+        head[6:0],
+        behv_b_64	 
+   );
+
+   subtract #(.WIDTH(7)) (
+	behv_b_64,
+        true_tail,
+        behv_b	 
+   );
    
    mux #(.INPUTS(2),.WIDTH(7))   valid_bytes_mux ({behv_b,behv_a},valid_bytes_o,vb_select);
    

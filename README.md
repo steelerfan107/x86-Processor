@@ -64,6 +64,11 @@ The lst file is in the format:
 - Inputs : in[4:0]
 - Outputs : out[31:0]
 
+### decoder6_64.v
+- 6-to-64 decoder
+- Inputs : in[5:0]
+- Outputs : out[63:0]
+
 ### mux.v
 - A mux of arbitrary width for 2, 3, or 4 inputs.
 - Inputs : in[WIDTH*INPUTS], sel[log2(INPUTS)-1:0]

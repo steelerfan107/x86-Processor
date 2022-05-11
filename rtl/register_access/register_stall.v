@@ -259,7 +259,11 @@ module register_stall_modify_table (
 
     // add 1
     wire [3:0] reg_plus_one;
-    slow_addr #(.WIDTH(4)) plus_one (reg_out, 4'd1, reg_plus_one, );
+    wire        p1;
+
+    mux2$ (p1, 1'b0, 1'b1, next_stage_ready);
+   
+    slow_addr #(.WIDTH(4)) plus_one (reg_out, {3'b0,p1}, reg_plus_one, );
 
     // sub 1
     wire [3:0] reg_minus_one;
@@ -302,10 +306,11 @@ module register_stall_modify_table (
 
     // determine if we writing
     // write if mux control is 01 or 10, but not 11
-
-    xor2$ xor0 (write_enable, mux_control[0], mux_control[1]);
-
-    // i think thats it
+  
+    wire modifies_table;
+    xor2$ xor0 (modifies_table, mux_control[0], mux_control[1]);
+   
+    and2$ and_out (write_enable, modifies_table, next_stage_ready);
 
 endmodule
 
@@ -368,16 +373,6 @@ module register_stall_table (
 
 
     input next_stage_ready;
-   
-    wire  is_stall_table, is_stall_stack, non_zero_r6;
-
-    or4$ (non_zero_r6 , r6_out[3],r6_out[2],r6_out[1],r6_out[0] );
-    and2$ (is_stall_stack, non_zero_r6, stack_op);
-   
-    or2$ (is_stall, is_stall_table, is_stall_stack);
-   
-    // 8 registers to hold counter values
-    // Each with 4 bits (chosen arbitrarily lol)
 
     // from register_file.v since this can be set to 0 at reset
     wire [3:0] 
@@ -389,6 +384,18 @@ module register_stall_table (
     r5_out,
     r6_out,
     r7_out;
+   
+    wire  is_stall_table, is_stall_stack, non_zero_r4;
+
+    or4$ (non_zero_r4 , r4_out[3],r4_out[2],r4_out[1],r4_out[0] );
+    and2$ (is_stall_stack, non_zero_r4, stack_op);
+   
+    or2$ (is_stall, is_stall_table, is_stall_stack);
+   
+    // 8 registers to hold counter values
+    // Each with 4 bits (chosen arbitrarily lol)
+
+    // from register_file.v since this can be set to 0 at reset
 
     wire [3:0] 
     r0_in,
@@ -440,15 +447,25 @@ module register_stall_table (
     // assign r6_out_32[31:4] = 28'd0;
     // assign r7_out_32[31:4] = 28'd0;
 
-    register_32_reset 
-    r0 (r0_out_32, {28'd0, r0_in}, 0, r0_en, clk, reset), 
-    r1 (r1_out_32, {28'd0, r1_in}, 0, r1_en, clk, reset), 
-    r2 (r2_out_32, {28'd0, r2_in}, 0, r2_en, clk, reset), 
-    r3 (r3_out_32, {28'd0, r3_in}, 0, r3_en, clk, reset), 
-    r4 (r4_out_32, {28'd0, r4_in}, 0, r4_en, clk, reset), 
-    r5 (r5_out_32, {28'd0, r5_in}, 0, r5_en, clk, reset), 
-    r6 (r6_out_32, {28'd0, r6_in}, 0, r6_en, clk, reset), 
-    r7 (r7_out_32, {28'd0, r7_in}, 0, r7_en, clk, reset);
+    //register_32_reset 
+    //r0 (r0_out_32, {28'd0, r0_in}, 0, r0_en, clk, reset), 
+    //r1 (r1_out_32, {28'd0, r1_in}, 0, r1_en, clk, reset), 
+    //r2 (r2_out_32, {28'd0, r2_in}, 0, r2_en, clk, reset), 
+    //r3 (r3_out_32, {28'd0, r3_in}, 0, r3_en, clk, reset), 
+    //r4 (r4_out_32, {28'd0, r4_in}, 0, r4_en, clk, reset), 
+    //r5 (r5_out_32, {28'd0, r5_in}, 0, r5_en, clk, reset), 
+    //r6 (r6_out_32, {28'd0, r6_in}, 0, r6_en, clk, reset), 
+    //r7 (r7_out_32, {28'd0, r7_in}, 0, r7_en, clk, reset);
+
+    register #(.WIDTH(32)) r0 (clk,reset,{28'd0, r0_in},r0_out_32,n_pc_out,r0_en);
+    register #(.WIDTH(32)) r1 (clk,reset,{28'd0, r1_in},r1_out_32,n_pc_out,r1_en);
+    register #(.WIDTH(32)) r2 (clk,reset,{28'd0, r2_in},r2_out_32,n_pc_out,r2_en);
+    register #(.WIDTH(32)) r3 (clk,reset,{28'd0, r3_in},r3_out_32,n_pc_out,r3_en);
+    register #(.WIDTH(32)) r4 (clk,reset,{28'd0, r4_in},r4_out_32,n_pc_out,r4_en);
+    register #(.WIDTH(32)) r5 (clk,reset,{28'd0, r5_in},r5_out_32,n_pc_out,r5_en);
+    register #(.WIDTH(32)) r6 (clk,reset,{28'd0, r6_in},r6_out_32,n_pc_out,r6_en);
+    register #(.WIDTH(32)) r7 (clk,reset,{28'd0, r7_in},r7_out_32,n_pc_out,r7_en);
+
 
     // decide if they should be written
     register_stall_modify_table 

@@ -128,6 +128,16 @@ module TOP;
    wire                dmem_w_dp_ready;     // unused
    wire  [IDATAW-1:0] dmem_w_dp_read_data; // unused
 
+   wire                  test_emem_valid;
+   wire   	         test_emem_ready = 1'b1;
+   wire    [IADDRW-1:0]  test_emem_address;
+   wire    	         test_emem_wr_en;
+   wire    [32-1:0]	 test_emem_wr_data;
+   wire    [ISIZEW-1:0]  test_emem_wr_size;
+   wire                  test_emem_dp_valid = 1'b1;
+   wire                  test_emem_dp_ready;
+   wire    [32-1:0] 	 test_emem_dp_read_data = 32'h40;    
+
    // System Controller Read Interface
    wire  sys_r_valid = 'h0 ;
    wire  sys_r_ready;
@@ -175,8 +185,10 @@ module TOP;
     .tlb_contents           (contents_concat)
    );                                        
                              
-
-   top_pipeline uut_pipeline(
+   reg 		r_emem_valid;
+   reg 		r_r_emem_valid;
+   
+   top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
       reset,
 		     
@@ -193,14 +205,14 @@ module TOP;
       imem_dp_read_data,
 
       emem_valid,
-      emem_ready,
+      1'b1, //emem_ready,
       emem_address,
       emem_wr_en,
       emem_wr_data,
       emem_wr_size,
-      emem_dp_valid,
+      r_emem_valid, //emem_dp_valid,
       emem_dp_ready,
-      emem_dp_read_data, 
+      (r_r_emem_valid ? (32'h00000000) : (32'h52000000)), //emem_dp_read_data, 
 
       rmem_valid,
       rmem_ready,
@@ -223,6 +235,11 @@ module TOP;
       wmem_dp_read_data  		     
   );
 
+  always @ (posedge clk) begin
+     r_emem_valid <=  emem_valid;
+     r_r_emem_valid <=  r_emem_valid;     
+  end
+   
   initial begin
         $readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.genblk1[0].sram32x32$.mem);
         //$readmemh("rom/rom_control_0_1", uut_memory.main_memory_top..mem);
@@ -232,6 +249,8 @@ module TOP;
         $readmemb("rom/dec_rom_program_0_0", uut_pipeline.uut_decode.ds1.rom_block.b0.mem);
         $readmemb("rom/dec_rom_program_0_1", uut_pipeline.uut_decode.ds1.rom_block.b1.mem);
 
+        $readmemb("rom/dcache_interface_rom.bit", uut_pipeline.uut_memory_read.dcache_interface0.rom.mem);
+     
         contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
         contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
@@ -258,7 +277,7 @@ module TOP;
         //clk = 0;
         //reset = 1;
         interrupt = 'h0;   
-     
+
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;

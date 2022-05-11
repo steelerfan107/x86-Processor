@@ -93,7 +93,6 @@ module dcache(
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
-    assign mem_en = bus_busy_out;
     //tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
 
     wire ctrl_write_cnt_z;

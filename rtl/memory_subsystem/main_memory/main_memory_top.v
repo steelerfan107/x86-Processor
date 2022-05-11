@@ -1,4 +1,3 @@
-
 module main_memory_top(
     clk,
     reset,
@@ -131,3 +130,4 @@ module main_memory_top(
     tristate_bus_driver16$ wr_driver1(ctrl_wr_n, aligned_wr_data[31:16], dio_internal[31:16]);
 
 endmodule
+

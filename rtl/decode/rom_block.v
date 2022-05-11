@@ -143,7 +143,7 @@ module rom_block (
    // Int Program Done
    compare #(.WIDTH(4)) control_compare (rom_control, 4'd6, rom_control_is_six); 
 
-   and2$ int_done_and (handle_int_done, rom_control_is_six, rom_ready);
+   and3$ int_done_and (handle_int_done, rom_control_is_six, rom_ready, out_accept);
 
    // Accept Signaling
    and3$ inaa (in_accept,  s0_ready, s0_valid, rom_in_control);

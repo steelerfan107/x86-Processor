@@ -57,6 +57,8 @@ module top_pipeline (
 
     // Bus Parameters   
     parameter BUSDATAW = 32;
+
+    parameter SINGLE_TXN = 1'b0;   
   
    input                   clk;
    input                   reset;
@@ -146,6 +148,9 @@ module top_pipeline (
    wire [255:0]            f_instruction;
    wire [IADDRW-1:0]       f_pc;
    wire                    f_branch_taken;
+
+   wire [31:0] 		   f_set_eip;
+   wire                    f_eip;
 
    // Pipestage Interface
    wire  		   d_valid;   
@@ -261,6 +266,9 @@ module top_pipeline (
    wire [2:0]              a_op0_reg;
    wire [2:0]              a_op1_reg;
    wire                    a_op0_is_address;
+   wire                    a_op0_is_reg;
+   wire                    a_op0_is_segment;
+   wire                    a_op0_is_mmx;
    wire                    a_op1_is_address;
    wire [47:0]             a_imm;
    wire [3:0]              a_alu_op;
@@ -283,7 +291,10 @@ module top_pipeline (
    wire   [63:0]           e_op_b;           // value for operand b
    wire   [2:0]            e_op_a_reg;        // register number for operand a
    wire   [31:0]           e_op_a_address;    // address for operand a
-   wire                    e_op_a_is_address;       
+   wire                    e_op_a_is_address;
+   wire                    e_op_a_is_segment;
+   wire                    e_op_a_is_reg;
+   wire                    e_op_a_is_mmx;                   
    wire  [31:0]            e_stack_ptr;      // stack pointer address
    wire   [47:0]           e_imm;            // immediate
    wire   [3:0]            e_alu_op;          // alu operation defined in #decode channel
@@ -296,12 +307,16 @@ module top_pipeline (
    wire [15:0] 		   e_opcode;
    
    // Writeback Interfacre
-   wire                    wb_ready = 1'b1;
+   wire                    wb_ready;
    wire  [31:0]            wb_dest_address;
    wire  [31:0]            wb_dest_reg;
    wire  [63:0]            wb_result;
    wire  [1:0]             wb_opsize;
    wire                    wb_mem_or_reg;
+   wire                    wb_op_a_is_address;
+   wire                    wb_op_a_is_reg;
+   wire                    wb_op_a_is_segment;
+   wire                    wb_op_a_is_mmx;
    wire                    wb_valid;
    wire                    wb_branch_taken;
    wire                    wb_to_sys_controller;
@@ -312,6 +327,8 @@ module top_pipeline (
    wire  [31:0]            wb_cs_out;
    wire                    wb_br_misprediction;
    wire                    wb_stack;
+   wire  [1:0]             wb_stack_op;
+   wire [15:0] 		   wb_opcode;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -321,13 +338,31 @@ module top_pipeline (
    wire 	           busy_ahead_of_decode;  
    wire 	           wb_accept;
 
+   wire                  test_rmem_valid;
+   wire   	           test_rmem_ready;
+   wire    [DADDRW-1:0]  test_rmem_address;
+   wire    	           test_rmem_wr_en;
+   wire   [DDATAW-1:0]   test_rmem_wr_data;
+   wire   [DSIZEW-1:0]   test_rmem_wr_size;
+   wire                   test_rmem_dp_valid;
+   wire                  test_rmem_dp_ready;
+   wire    [DDATAW-1:0]   test_rmem_dp_read_data;
+
+   wire [31:0] 		  curr_pc;
+
+   wire 		  test_valid_pipe;
+   wire                   segment_limit_int;
+  
+
    fetch_top uut_fetch (
       clk,
       reset,
       fetch_flush,
       load_address,
       load,
-      r_cs_bypass,		  
+      r_cs_bypass,
+      f_eip,		
+      f_set_eip,		  
       imem_valid,
       imem_ready,
       imem_address,
@@ -351,7 +386,13 @@ module top_pipeline (
       f_branch_taken	  		  		  
    );
 
-   decode_top uut_decode (
+   wire decode_set_eip;
+   wire [31:0] decode_eip;
+
+   or2$ (decode_set_eip, wb_accept, f_set_eip);
+   ao_mux #(.WIDTH(32), .NINPUTS(2)) ( {f_eip,wb_pc}, decode_eip, {f_eip,wb_accept});
+     
+   decode_top #(.SINGLE_TXN(SINGLE_TXN)) uut_decode (
       clk,
       reset,
       decode_0_flush,
@@ -364,6 +405,7 @@ module top_pipeline (
       halt,
       wb_accept,
       wb_pc,
+      curr_pc,
       r_ecx,
       dec_wb_valid,
       dec_wb_reg,
@@ -409,11 +451,20 @@ module top_pipeline (
    );
 
    and2$ wb_and ( wb_accept, wb_valid, wb_ready );
+   
+   wire        wb_reg_qual, wb_seg_qual, wb_mmx_qual, wb_stack_qual;
 
+   and2$ (wb_reg_qual, wb_valid, wb_op_a_is_reg );
+   and2$ (wb_seg_qual, wb_valid, wb_op_a_is_segment );
+   and2$ (wb_mmx_qual, wb_valid, wb_op_a_is_mmx );
+   and3$ (wb_stack_qual, wb_valid, wb_ready, wb_stack );
+   
    register_access_top uut_register_access (
       clk,
       reset,
       reg_flush,
+      reg_cs,
+      reg_load_cs,					    
       d_valid,
       d_ready,
       d_size,
@@ -481,19 +532,23 @@ module top_pipeline (
       r_mm7,
       r_pc,
       r_branch_taken,
-      r_opcode,					    
+      r_opcode,	
+      eflags_reg[10],				    
       wb_reg_number,
-      wb_reg_en,
+      wb_reg_qual, //(wb_op_a_is_reg & wb_valid),
       wb_stack,
-      wb_reg_size,
+      wb_opsize,
+      wb_reg_data[31:0],
+      wb_reg_number,
+      wb_seg_qual, //(wb_op_a_is_segment & wb_valid),
+      wb_reg_data[15:0],
+      wb_reg_number,
+      wb_mmx_qual, //(wb_op_a_is_mmx & wb_valid),
       wb_reg_data,
-      wb_seg_number,
-      wb_seg_en,
-      wb_seg_data,
-      wb_mmx_number,
-      wb_mmx_en,
-      wb_mmx_data
-  );
+      wb_stack_qual, //(wb_valid & wb_valid & wb_stack),
+      wb_opsize,
+      wb_stack_op
+  );  
 
   address_generation_top uut_address_gen(
       clk,
@@ -554,6 +609,9 @@ module top_pipeline (
       a_op0_reg,
       a_op1_reg,
       a_op0_is_address,
+      a_op0_is_reg,
+      a_op0_is_segment,
+      a_op0_is_mmx,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -564,7 +622,8 @@ module top_pipeline (
       a_pc,
       a_branch_taken,
       a_to_sys_controller,
-      a_opcode
+      a_opcode,
+      segment_limit_int
   );  
 
   memory_read_top uut_memory_read (
@@ -578,7 +637,7 @@ module top_pipeline (
       // Write Back Interface (To Pop Addr Dependency)
       wb_valid,
       wb_ready,
-      wb_to_memory, 			
+      wb_op_a_is_address, 			
 
       // Memory Read Interface
       a_valid,
@@ -591,6 +650,9 @@ module top_pipeline (
       a_op0_reg,
       a_op1_reg,
       a_op0_is_address,
+      a_op0_is_reg,
+      a_op0_is_segment,
+      a_op0_is_mmx,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -614,6 +676,9 @@ module top_pipeline (
       e_op_a_reg,
       e_op_a_address,
       e_op_a_is_address,
+      e_op_a_is_reg,
+      e_op_a_is_segment,
+      e_op_a_is_mmx,				   				   
       e_stack_ptr,
       e_stack_op,
       e_imm,
@@ -633,7 +698,7 @@ module top_pipeline (
       rmem_wr_size,
       rmem_dp_valid,
       rmem_dp_ready,
-      rmem_dp_read_data	
+      rmem_dp_read_data
   );
    
   execute_top uut_execute(
@@ -642,7 +707,12 @@ module top_pipeline (
     exe_flush,
     e_valid,
     e_ready,
-    e_op_a_reg, 
+    e_op_a_reg,
+    e_op_a_address,			  
+    e_op_a_is_address,
+    e_op_a_is_reg,
+    e_op_a_is_segment,
+    e_op_a_is_mmx,
     1'b0,
     e_op_a,
     e_op_b,
@@ -666,7 +736,13 @@ module top_pipeline (
     wb_dest_reg,
     wb_result,
     wb_opsize,
+    wb_opcode,			  
     wb_mem_or_reg,
+    wb_op_a_is_address,
+    wb_op_a_is_reg,
+    wb_op_a_is_segment,
+    wb_op_a_is_mmx,
+    wb_stack_op,			  
     wb_stack,
     wb_valid,
     wb_branch_taken,
@@ -679,10 +755,24 @@ module top_pipeline (
     wb_br_misprediction		       
   );
 
+   assign  wb_ready = 1'b1;
+ //wmem_ready;
+  //assign  wmem_valid = (wb_valid & wb_op_a_is_address);
+   
+  and2$ (wmem_valid, wb_valid, wb_op_a_is_address);
+   
+  assign  wmem_address = wb_dest_address;
+  assign  wmem_wr_en = wb_op_a_is_address;
+  assign  wmem_wr_data = wb_result;
+  assign  wmem_wr_size = wb_opsize;    
+
+  wire        sys_cont_val;
+  and2$ (sys_cont_val, wb_to_sys_controller, wb_valid);
+      
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     interrupt[3:0],
+     {3'b0, segment_limit_int, 12'b0},
      r_cs,		     
      emem_valid,
      emem_ready,
@@ -710,7 +800,7 @@ module top_pipeline (
      ret_far,			     
      iretd,
      iretd_halt,
-     (wb_to_sys_controller & wb_valid), //iretd_pop_valid,
+     sys_cont_val, //iretd_pop_valid,
      wb_result, //iretd_pop_data,
      reg_load_eflags,
      reg_eflags,
@@ -722,9 +812,10 @@ module top_pipeline (
      wb_jump_address,   
      wb_jump_load_cs[15:0],
      wb_cs_out  
-  );   
+  );
 
-  assign busy_ahead_of_decode = wb_valid | a_valid | r_valid;
+
+  or4$ ( busy_ahead_of_decode, wb_valid, a_valid, r_valid , e_valid);
    
   or2$ (wb_reg_en, wb_valid, dec_wb_valid);
 
@@ -740,6 +831,83 @@ module top_pipeline (
   assign wb_seg_data = 'h0;
   assign wb_mmx_number = 'h0;
   assign wb_mmx_en = 'h0;
-  assign wb_mmx_data = 'h0;  
+  assign wb_mmx_data = 'h0;
+
+  // Display Debug Items
+  wire 		  wb_accept = wb_ready & wb_ready;
+
+  reg 		  wb_accept0;
+  reg [31:0] 	  curr_pc0,  wb_pc0;
+  reg [15:0] 	  wb_opcode0;
+  reg 		  wb_op_a_is_address0,  wb_op_a_is_reg0, wb_op_a_is_segment0, wb_op_a_is_mmx0;
+  reg [31:0] 	  r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi;
+  reg [15:0] 	  r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss;
+  reg [63:0] 	  r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7;
+   reg 		  wb_to_sys_controller0;
+   
+  always @ (posedge clk) begin
+     begin    
+	wb_accept0 <= wb_accept;
+	curr_pc0 <= curr_pc;
+	wb_pc0  <= wb_pc;
+	wb_opcode0 <= wb_opcode;
+	wb_op_a_is_address0 <= wb_op_a_is_address;
+	wb_op_a_is_reg0 <= wb_op_a_is_reg;
+	wb_op_a_is_segment0 <= wb_op_a_is_segment;
+	wb_op_a_is_mmx0 <= wb_op_a_is_mmx;
+	r0_eax <= r_eax;
+	r0_ecx <= r_ecx;
+	r0_edx <= r_edx;
+	r0_ebx <= r_ebx;
+	r0_esp <= r_esp; 
+	r0_ebp <= r_ebp;
+	r0_esi <= r_esi;
+	r0_edi <= r_edi;	
+	r0_cs <= r_cs;
+	r0_ds <= r_ds;
+	r0_es <= r_es;
+	r0_fs <= r_fs;
+	r0_gs <= r_gs;
+	r0_ss <= r_ss ;
+	r0_mm0 <= r_mm0;
+	r0_mm1 <=r_mm1 ;
+	r0_mm2 <= r_mm2;
+	r0_mm3 <= r_mm3;
+	r0_mm4 <= r_mm4;
+	r0_mm5 <= r_mm5;
+	r0_mm6 <= r_mm6;
+	r0_mm7 <= r_mm7;
+	wb_to_sys_controller0 <= wb_to_sys_controller;	
+     end
+  end   
+  
+  always @ (posedge clk) begin
+     if(wb_accept0) begin
+	$display("");	
+	$display("================ TRANSACTION COMMITED ================ ");
+	$display(" Opcode  : 0x%h", wb_opcode0);
+	$display(" Previous EIP : 0x%h", curr_pc0);			
+	$display(" Next EIP : 0x%h", wb_pc0);	
+	$display(" Operation to Memory : %b, Operation to Reg : %b, Operation to Seg : %b, Operation to MMX : %b", 
+                 wb_op_a_is_address0, wb_op_a_is_reg0, wb_op_a_is_segment0, wb_op_a_is_mmx0);
+	$display(" Going to Sys Controller : %b", wb_to_sys_controller);
+	$display(" Next ---------------------------");
+	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
+		 r_eax, r_ecx, r_edx, r_ebx, r_esp, r_ebp, r_esi, r_edi);
+	$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
+		 r_cs, r_ds, r_es, r_fs, r_gs, r_ss);
+	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
+                 r_mm0, r_mm1, r_mm2, r_mm3, r_mm4, r_mm5, r_mm6, r_mm7);
+	$display(" Previous   ---------------------------");
+	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
+		 r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi);
+	$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
+		 r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss);
+	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
+                 r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7);     	 
+	$display("====================================================== ");
+	$display("");
+     end
+  end
      
 endmodule   

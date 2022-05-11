@@ -97,8 +97,13 @@ module decode_stage_0 (
 
    // Halt Logic
    or2$ halt_or (halt, halt_capture, halt_detect);
+
+   wire 		reset_or_flush;
+   or2$(reset_or_flush, reset, flush);
+
+   wire detected_f4_op, detected_f4_prefix, detected_f4_prefix;
    
-   register halt_reg (clk, (reset | flush), halt_detect, halt_capture, halt_capture_n, 1'b1);
+   register halt_reg (clk, reset_or_flush, halt_detect, halt_capture, halt_capture_n, 1'b1);
 
    compare #(.WIDTH(8)) halt_comp  (8'hF4, opcode_aligned[63:56], halt_detect);
    compare #(.WIDTH(8)) iretd_comp (8'hCF, opcode_aligned[63:56], iretd_detect);
@@ -119,7 +124,7 @@ module decode_stage_0 (
    assign s0_prefix = f_instruction[127:104];
    assign s0_size_override = size_prefix;
    
-   prefix_size_detect psd (f_instruction[127:104], s0_prefix_bytes, size_prefix);
+   prefix_size_detect psd (f_instruction[127:104], s0_prefix_bytes, size_prefix, detected_f4_prefix);
 
    // Adds - Can make these faster by doing one hot adds. or lookahead carry ads. Probable Long Path
    slow_addr  #(.WIDTH(2))            po_addr  (s0_prefix_bytes, s0_opcode_bytes, po_bytes[1:0], po_bytes[2]);
@@ -130,9 +135,12 @@ module decode_stage_0 (
    mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {2'b0,f_valid_bytes}, vr_gate_byte, nc1);
 
    or2$ gate (vr_gate, vr_gate_byte, halt);
+
+   wire 		not_vr_gate;
+   inv1$ (not_vr_gate,vr_gate);
    
-   and2$ ready_and (f_ready,~vr_gate,s0_ready);
-   and2$ valid_and (s0_valid,~vr_gate,f_valid);
+   and2$ ready_and (f_ready,not_vr_gate,s0_ready);
+   and2$ valid_and (s0_valid,not_vr_gate,f_valid);
 
    assign s0_pc           = f_pc;
    assign s0_branch_taken = f_branch_taken;
