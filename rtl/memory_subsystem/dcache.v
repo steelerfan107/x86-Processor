@@ -183,7 +183,9 @@ module dcache(
     wire wr_done;
 
     wire read_num;
-
+    wire  mem_rd_wr_comb;
+   
+   
     dcache_controller control(
         .clk(clk),
         .reset(reset),
@@ -215,7 +217,7 @@ module dcache(
         .TLB_rd_wr(tlb_rd_wr),
         .TLB_pcd(tlb_pcd),
         .mem_ready(mem_data_valid),
-        .mem_rd_wr(mem_rd_wr),
+        .mem_rd_wr(mem_rd_wr_comb),
         .mem_req(mem_req),
         .bus_grant(grant_in),
         .grant_pass(ctrl_grant_pass),
@@ -224,6 +226,9 @@ module dcache(
         .page_fault(page_fault)
     );
 
+   
+    //assign mem_rd_wr = 1'b0;
+    tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
 
     assign ctrl_staging_wr_en = ctrl_write & ~read_num;
 

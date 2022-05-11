@@ -76,7 +76,8 @@ module icache(
     output bus_busy_out;
     input bus_busy_in;
 
-    assign mem_rd_wr = 1'b0;
+    //assign mem_rd_wr = 1'b0;
+    tristate_bus_driver1$(~bus_busy_out, 1'b0, mem_rd_wr);
 
     wire [31:0] req_pending_addr;
     wire req_addr_en;

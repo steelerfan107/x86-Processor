@@ -152,6 +152,9 @@ module memory_subsystem_top (
     wire dec_dma_en;
     wire dec_mem_en;
     wire dec_io_en;
+   wire  test_bus;
+   
+   
     arb_decoder dec(
         .bus_addr(bus_addr),
         .rd_wr_in(bus_rd_wr),
@@ -229,7 +232,7 @@ module memory_subsystem_top (
         .mem_req(bus_req_dcache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
-        .mem_rd_wr(bus_rd_wr),
+               .mem_rd_wr(bus_rd_wr),
         .mem_en(d_bus_en),
         .mem_wr_size(mem_wr_size),
 
