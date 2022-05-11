@@ -307,10 +307,10 @@ module register_stall_modify_table (
     // determine if we writing
     // write if mux control is 01 or 10, but not 11
   
-    xor2$ xor0 (write_enable, mux_control[0], mux_control[1]);
+    wire modifies_table;
+    xor2$ xor0 (modifies_table, mux_control[0], mux_control[1]);
    
-
-    // i think thats it
+    and2$ and_out (write_enable, modifies_table, next_stage_ready);
 
 endmodule
 

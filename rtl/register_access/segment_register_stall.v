@@ -18,7 +18,9 @@ module segment_register_stall (
     op0_reg,
 
     op1,
-    op1_reg
+    op1_reg,
+
+    next_stage_ready
 );
 
     input clk;
@@ -34,6 +36,8 @@ module segment_register_stall (
 
     input [2:0] op1;
     input [2:0] op1_reg;
+
+    input next_stage_ready;
 
 
     // first determine if segment register is being used
@@ -85,12 +89,12 @@ module segment_register_stall (
    
     // see if the value of the regs is going to be changed
     segment_stall_modify_table
-    es_mod (es_in, es_out, es_en, 3'd0, op0_reg, op0_is_segment, write_select, write_enable),
-    cs_mod (cs_in, cs_out, cs_en, 3'd1, op0_reg, op0_is_segment, write_select, write_enable),
-    ss_mod (ss_in, ss_out, ss_en, 3'd2, op0_reg, op0_is_segment, write_select, write_enable),
-    ds_mod (ds_in, ds_out, ds_en, 3'd3, op0_reg, op0_is_segment, write_select, write_enable),
-    fs_mod (fs_in, fs_out, fs_en, 3'd4, op0_reg, op0_is_segment, write_select, write_enable),
-    gs_mod (gs_in, gs_out, gs_en, 3'd5, op0_reg, op0_is_segment, write_select, write_enable);
+    es_mod (es_in, es_out, es_en, 3'd0, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
+    cs_mod (cs_in, cs_out, cs_en, 3'd1, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
+    ss_mod (ss_in, ss_out, ss_en, 3'd2, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
+    ds_mod (ds_in, ds_out, ds_en, 3'd3, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
+    fs_mod (fs_in, fs_out, fs_en, 3'd4, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
+    gs_mod (gs_in, gs_out, gs_en, 3'd5, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready);
 
     // see if there should be a stall
     // use mux to pic which table op1 needs
@@ -158,7 +162,9 @@ module segment_stall_modify_table (
     op0_is_valid,
 
     wb_reg,
-    wb_is_valid
+    wb_is_valid,
+
+    next_stage_ready
 );
 
     output [31:0] reg_in;
@@ -174,6 +180,8 @@ module segment_stall_modify_table (
 
     input [2:0] wb_reg;
     input wb_is_valid;
+
+    input next_stage_ready;
 
     // increment reg if (op0_reg == reg_number) && op0_is_valid
     // decrement reg if (wb_reg == reg_number) && wb_is_valid
@@ -217,7 +225,11 @@ module segment_stall_modify_table (
     );
 
     // set write enable only if we are adding or subtracting
-    xor2$ we_xor (reg_we, increment, decrement);
+    wire add_or_sub;
+    xor2$ we_xor (add_or_sub, increment, decrement);
+
+    // only write if next stage is ready
+    and2$ next_stage_and (reg_we, add_or_sub, next_stage_ready);
 
 endmodule
 

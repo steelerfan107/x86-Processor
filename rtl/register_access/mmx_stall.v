@@ -22,7 +22,9 @@ module mmx_stall (
     op0_reg,
 
     op1,
-    op1_reg
+    op1_reg,
+
+    next_stage_ready
 );
 
     input clk;
@@ -42,6 +44,8 @@ module mmx_stall (
 
     input [2:0] op1;
     input [2:0] op1_reg;
+
+    input next_stage_ready;
 
     // first see if op0 and op1 are mmx
     // wire is_mmx;
@@ -109,14 +113,14 @@ module mmx_stall (
 
     // determine when it be modified
     mmx_stall_modify_table 
-    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg, op0_is_mmx, write_select, write_enable),
-    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg, op0_is_mmx, write_select, write_enable);
+    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
+    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready);
 
     // see if there is a stall
     wire [31:0] op0_table_data;
@@ -200,7 +204,9 @@ module mmx_stall_modify_table (
     op0_is_valid,
 
     wb_reg,
-    wb_is_valid
+    wb_is_valid,
+
+    next_stage_ready
 );
 
     output [31:0] reg_in;
@@ -216,6 +222,8 @@ module mmx_stall_modify_table (
 
     input [2:0] wb_reg;
     input wb_is_valid;
+
+    input next_stage_ready;
 
     // increment reg if (op0_reg == reg_number) && op0_is_valid
     // decrement reg if (wb_reg == reg_number) && wb_is_valid
@@ -259,7 +267,11 @@ module mmx_stall_modify_table (
     );
 
     // set write enable only if we are adding or subtracting
-    xor2$ we_xor (reg_we, increment, decrement);
+    wire add_or_sub;
+    xor2$ we_xor (add_or_sub, increment, decrement);
+
+    // only write if next stage is ready
+    and2$ next_stage_and (reg_we, add_or_sub, next_stage_ready);
 
 endmodule
 

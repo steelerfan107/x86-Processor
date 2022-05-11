@@ -18,4 +18,5 @@
 ../../../rtl/register_access/register_access_top.v
 ../../../rtl/register_access/register_stall.v
 ../../../rtl/register_access/segment_register_stall.v
+../../../rtl/register_access/mmx_stall.v
 tb_register_access_top.v

@@ -23,6 +23,8 @@ module TOP;
     reg [2:0] op1;
     reg [2:0] op1_reg;
 
+    reg next_stage_ready;
+
     mmx_stall uut (
         clk,
         reset,
@@ -40,7 +42,9 @@ module TOP;
         op0_reg,
 
         op1,
-        op1_reg
+        op1_reg,
+
+        next_stage_ready
     );
 
     initial begin
@@ -62,6 +66,8 @@ module TOP;
 
         op1 = 0;
         op1_reg = 0;
+
+        next_stage_ready = 1;
 
         #10
 

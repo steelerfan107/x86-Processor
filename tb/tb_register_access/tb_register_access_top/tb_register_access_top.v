@@ -109,6 +109,9 @@ module TOP;
     reg [63:0] wb_mmx_data;
 
     reg flag_df;
+    reg 	 wb_stack_en;
+    reg [2:0] 	 wb_stack_size;
+    reg [1:0]	 wb_stack_op; 
 
     register_access_top uut (
         // Clock Interface
@@ -194,6 +197,8 @@ module TOP;
         r_branch_taken,
         r_opcode,
 
+        flag_df,
+
         wb_reg_number,
         wb_reg_en,
         wb_stack,
@@ -208,7 +213,9 @@ module TOP;
         wb_mmx_en,
         wb_mmx_data,
 
-        flag_df
+        wb_stack_en,
+        wb_stack_size,
+        wb_stack_op
 
     );
 
@@ -249,6 +256,9 @@ module TOP;
         d_branch_taken = 0;
         d_opcode = 0;
         flag_df = 0;
+        wb_stack_en = 0;
+        wb_stack_size = 0;
+        wb_stack_op = 0; 
 
         // Address Generation Inferface
         r_ready = 1;
@@ -260,6 +270,7 @@ module TOP;
         // register file writeback
         wb_reg_number = 0;
         wb_reg_en = 0;
+        wb_stack = 0;
         wb_reg_size = 0;
         wb_reg_data = 0;
 
