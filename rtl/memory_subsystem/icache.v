@@ -172,7 +172,10 @@ module icache(
 
     idataRAM dataram(clk, reset, index, ctrl_write, accum_out, dp_read_data);
 
+    //tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
+    tristate_bus_driver16$(~bus_busy_out, pa_out[15:0],  mem_addr[15:0]);
+    tristate_bus_driver16$(~bus_busy_out, pa_out[31:16], mem_addr[31:16]);   
     assign mem_en = bus_busy_out;
-    assign mem_addr = pa_out;
+    //assign mem_addr = pa_out;
 
 endmodule

@@ -43,8 +43,8 @@ module segment_register_stall (
     // first determine if segment register is being used
     wire op0_is_segment, op1_is_segment;
     segment_stall_op_is_segment 
-    op0_is_segment_check (op0_is_segment, op0_reg),
-    op1_is_segment_check (op1_is_segment, op1_reg);
+    op0_is_segment_check (op0_is_segment, op0),
+    op1_is_segment_check (op1_is_segment, op1);
 
     // never a case where they're both a segment
 

@@ -310,7 +310,7 @@ module register_stall_modify_table (
     wire modifies_table;
     xor2$ xor0 (modifies_table, mux_control[0], mux_control[1]);
    
-    and2$ and_out (write_enable, modifies_table, next_stage_ready);
+    and2$ and_out (write_enable, modifies_table, (next_stage_ready | wb_reg_is_valid));
 
 endmodule
 
