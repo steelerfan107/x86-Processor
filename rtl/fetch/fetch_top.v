@@ -99,6 +99,13 @@ module fetch_top (
    output [IADDRW-1:0]   f_pc;
    output                f_branch_taken;
 
+   wire [127:0] 	 imem_dp_read_data_endian_corrected;
+
+   assign imem_dp_read_data_endian_corrected = {imem_dp_read_data[31:0],
+                                                imem_dp_read_data[63:32],
+                                                imem_dp_read_data[95:64],
+                                                imem_dp_read_data[127:96]};
+
    wire 		 internal_reset;
 
    wire 		 iq_valid, nc0;
@@ -192,7 +199,7 @@ module fetch_top (
       .flush(flush),			 
       .valid_i(masked_dp_valid),
       .ready_i(imem_dp_ready),		  
-      .data_i(imem_dp_read_data),
+      .data_i(imem_dp_read_data_endian_corrected),
       .valid_o(f_valid),
       .ready_o(f_ready),
       .bytes_read_o(f_bytes_read[3:0]),
