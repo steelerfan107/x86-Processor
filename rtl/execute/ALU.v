@@ -66,9 +66,9 @@ CMPXCHG8 cmpxchg8(.rm8(a[7:0]), .r8(b[7:0]), .al_in(eax[7:0]), .dest(cmpxchg8_de
 CMPXCHG16 cmpxchg16(.rm16(a[15:0]), .r16(b[15:0]), .ax_in(eax[15:0]), .dest(cmpxchg16_dest), .ax_out(cmpxchg16_ax_out), .eflags(cmpxchg16_eflags));
 CMPXCHG32 cmpxchg32(.rm32(a[31:0]), .r32(b[31:0]), .eax_in(eax[31:0]), .dest(cmpxchg32_dest), .eax_out(cmpxchg32_eax_out), .eflags(cmpxchg32_eflags));
 
-mux #(.WIDTH(32), .INPUTS(6)) mux_cmpxchg_dest(.in({32'hz, 32'hz, cmpxchg32_dest, {16'h0000, cmpxchg16_dest}, {24'h000000, cmpxchg8_dest}, 32'hz}), .out(cmpxchg_dest), .select(opsize));
-mux #(.WIDTH(32), .INPUTS(6)) mux_cmpxchg_eax_out(.in({32'hz, 32'hz, cmpxchg32_eax_out, {16'h0000, cmpxchg16_ax_out}, {24'h000000, cmpxchg8_al_out}, 32'hz}), .out(cmpxchg_eax_out), .select(opsize));
-mux #(.WIDTH(6), .INPUTS(6)) mux_cmpxchg_eflags(.in({6'hz, 6'hz, cmpxchg32_eflags, cmpxchg16_eflags, cmpxchg8_eflags, 32'hz}), .out(cmpxchg_eflags), .select(opsize));
+mux #(.WIDTH(32), .INPUTS(8)) mux_cmpxchg_dest(.in({32'hz,32'hz,32'hz, 32'hz, cmpxchg32_dest, {16'h0000, cmpxchg16_dest}, {24'h000000, cmpxchg8_dest}, 32'hz}), .out(cmpxchg_dest), .select(opsize));
+mux #(.WIDTH(32), .INPUTS(8)) mux_cmpxchg_eax_out(.in({32'hz,32'hz,32'hz, 32'hz, cmpxchg32_eax_out, {16'h0000, cmpxchg16_ax_out}, {24'h000000, cmpxchg8_al_out}, 32'hz}), .out(cmpxchg_eax_out), .select(opsize));
+mux #(.WIDTH(6), .INPUTS(8)) mux_cmpxchg_eflags(.in({6'hz,6'hz, 6'hz, 6'hz, cmpxchg32_eflags, cmpxchg16_eflags, cmpxchg8_eflags, 32'hz}), .out(cmpxchg_eflags), .select(opsize));
 
 mux #(.WIDTH(64), .INPUTS(2)) mux_mov_pass_out(.in({{pass_mov_eax_out, cmpxchg_dest}, pass_out}), .out(pass_mov_out), .select(cmp));
 mux #(.WIDTH(32), .INPUTS(2)) mux_mov_pass_eax_out(.in({cmpxchg_eax_out, eax}), .out(pass_mov_eax_out), .select(cmp));
@@ -95,12 +95,12 @@ ucomp8 zf_add8b(.a(add8b_out[7:0]), .b(8'h00), .eq(add8b_zf));
 ucomp16 zf_add16b(.a(add16b_out[15:0]), .b(16'h0000), .eq(add16b_zf));
 ucomp32 zf_add32b(.a(add32b_out), .b(32'h00000000), .eq(add32b_zf));
 assign add_set_eflags = 6'b111111;
-mux #(.WIDTH(32), .INPUTS(6)) add_mux(.in({32'hz, 32'hz, add32b_out, add16b_out, add8b_out, 32'hz}), .out(add_out), .select(opsize));
-mux #(.WIDTH(1), .INPUTS(6)) add_of_mux(.in({1'bz, 1'bz, add32b_overflow, add16b_overflow, add8b_overflow, 1'bz}), .out(add_eflags_out[5]), .select(opsize));
-mux #(.WIDTH(1), .INPUTS(6)) add_sf_mux(.in({1'bz, 1'bz, add32b_out[31], add16b_out[15], add8b_out[7], 1'bz}), .out(add_eflags_out[4]), .select(opsize));
-mux #(.WIDTH(1), .INPUTS(6)) add_zf_mux(.in({1'bz, 1'bz, add32b_zf, add16b_zf, add8b_zf, 1'bz}), .out(add_eflags_out[3]), .select(opsize));
+mux #(.WIDTH(32), .INPUTS(8)) add_mux(.in({32'h0,32'h0,32'h0, 32'h0, add32b_out, add16b_out, add8b_out, 32'h0}), .out(add_out), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) add_of_mux(.in({1'bz, 1'bz,1'bz, 1'bz, add32b_overflow, add16b_overflow, add8b_overflow, 1'bz}), .out(add_eflags_out[5]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) add_sf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, add32b_out[31], add16b_out[15], add8b_out[7], 1'bz}), .out(add_eflags_out[4]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) add_zf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, add32b_zf, add16b_zf, add8b_zf, 1'bz}), .out(add_eflags_out[3]), .select(opsize));
 CLA4 af_add(.a(a[3:0]), .b(b[3:0]), .Cin(1'b0), .Cout(add_eflags_out[2]));
-mux #(.WIDTH(1), .INPUTS(6)) add_cf_mux(.in({1'bz, 1'bz, add32b_carry, add16b_carry, add8b_carry, 1'bz}), .out(add_eflags_out[1]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) add_cf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, add32b_carry, add16b_carry, add8b_carry, 1'bz}), .out(add_eflags_out[1]), .select(opsize));
 
 /*AND -alu_op 2
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
