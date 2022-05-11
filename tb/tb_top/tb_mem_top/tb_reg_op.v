@@ -232,10 +232,10 @@ module TOP;
   );
 
   initial begin
-        $readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.test_rom_0.mem);
-        $readmemh("rom/rom_control_0_1", uut_memory.main_memory_top.test_rom_1.mem);
-        $readmemh("rom/rom_control_0_2", uut_memory.main_memory_top.test_rom_2.mem);
-        $readmemh("rom/rom_control_0_3", uut_memory.main_memory_top.test_rom_3.mem);
+        //$readmemh("rom/rom_control_0_0", uut_memory.main_memory_top.test_rom_0.mem);
+        //$readmemh("rom/rom_control_0_1", uut_memory.main_memory_top.test_rom_1.mem);
+        //$readmemh("rom/rom_control_0_2", uut_memory.main_memory_top.test_rom_2.mem);
+        //$readmemh("rom/rom_control_0_3", uut_memory.main_memory_top.test_rom_3.mem);
 
         $readmemb("rom/dec_rom_program_0_0", uut_pipeline.uut_decode.ds1.rom_block.b0.mem);
         $readmemb("rom/dec_rom_program_0_1", uut_pipeline.uut_decode.ds1.rom_block.b1.mem);

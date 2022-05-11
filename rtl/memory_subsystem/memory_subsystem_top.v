@@ -129,6 +129,7 @@ module memory_subsystem_top (
 
     or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
 
+    or4$ _or_en(bus_en, d_bus_en, i_bus_en, 1'b0, 1'b0);
 
     //or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
     //or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
@@ -151,8 +152,6 @@ module memory_subsystem_top (
     wire dec_mem_en;
     wire dec_io_en;
     arb_decoder dec(
-        .clk(clk),
-        .reset(reset),
         .bus_addr(bus_addr),
         .rd_wr_in(bus_rd_wr),
         .rd_wr_out(dec_rd_wr),
@@ -189,8 +188,52 @@ module memory_subsystem_top (
         .d_pa_out(tlb_d_pa),
         .d_PCD_out(tlb_d_pcd)
     );
-    
+
+
+    wire [1:0] mem_wr_size;   
     //dcache dcache();
+    dcache uut(
+        .clk(clk),
+        .reset(reset),
+    
+        // read interface 
+        .rd_req_valid(dmem_r_valid),
+        .rd_req_ready(dmem_r_ready),
+        .rd_req_address(dmem_r_address),
+        .rd_dp_valid(dmem_r_dp_valid),
+        .rd_dp_ready(dmem_r_dp_ready),
+        .rd_dp_read_data(dmem_r_dp_read_data),
+
+        //  TLB
+        .virt_addr(d_virt_addr),
+        .phys_addr(tlb_d_pa),
+        .tlb_hit(tlb_d_hit),
+        .tlb_pcd(tlb_d_pcd),
+        .tlb_rd_wr(tlb_d_rd_wr),
+
+        // write interface
+        // TODO ...
+        .wr_req_valid(dmem_w_valid),
+        .wr_req_ready(dmem_w_ready),
+        .wr_req_address(dmem_w_address),
+        .wr_req_data(dmem_w_wr_data),
+        .wr_size_in(dmem_w_wr_size),
+
+        // interrupt
+        .page_fault(page_fault),
+
+        // interface to interconnect
+        .mem_addr(bus_addr),
+        .mem_req(bus_req_dcache),
+        .mem_data_valid(bus_data_valid),
+        .mem_data(bus_data),
+        .mem_rd_wr(bus_rd_wr),
+        .mem_en(d_bus_en),
+        .mem_wr_size(mem_wr_size),
+
+        // Arbiter Interface
+        .grant_in(arb_grant),
+        .grant_out(dcache_grant),
 
     // system controller interface 
     // make lower priority than dcache so that writes complete
@@ -240,7 +283,7 @@ module memory_subsystem_top (
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
-        .mem_en(bus_en),
+        .mem_en(i_bus_en),
         .grant_in(sys_grant),
         .grant_out(icache_grant),
         .bus_busy_out(bus_busy_icache),
@@ -252,11 +295,12 @@ module memory_subsystem_top (
     main_memory_top main_memory_top(
         .clk(clk),
         .reset(reset),
-        .en(1'b1), //dec_mem_en),
+        .en(dec_mem_en),
         .rd_wr(dec_rd_wr),
         .addr(bus_addr),
         .data(bus_data),
-        .valid(bus_data_valid)
+        .ready(bus_data_valid),
+        .wr_size(mem_wr_size)
     );
 
     //io_device_top io_device();

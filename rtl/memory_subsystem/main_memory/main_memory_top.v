@@ -42,7 +42,7 @@ module main_memory_top(
 
     genvar i;
     generate
-        for (i =0; i < 32; i++) begin
+        for (i =0; i < 32; i=i+1) begin
             wire ce;
             wire oe;
             wire wr;
@@ -76,7 +76,7 @@ module main_memory_top(
     mem_align al(reg_out, wr_size, data, addr[1:0], aligned_wr_data);
 
     wire ctrl_wr_n;
-    inv1$ crn(ctrl_wr_n, ctrl_wr);
+    inv1$ cren(ctrl_wr_n, ctrl_wr);
     tristate_bus_driver16$ wr_driver0(ctrl_wr_n, aligned_wr_data[15:0], dio_internal[15:0]);
     tristate_bus_driver16$ wr_driver1(ctrl_wr_n, aligned_wr_data[31:16], dio_internal[31:16]);
 
