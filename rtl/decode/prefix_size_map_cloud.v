@@ -72,8 +72,24 @@ pre_detect (
 	    );   
 	    
    or3$ ( size_prefix, size0, size1, size2);
-   slow_addr #(.WIDTH(2)) ({1'b0,det0}, {1'b0,det1}, sum0, );
-   slow_addr #(.WIDTH(2)) (sum0       , {1'b0,det2}, {s1, s0}, );
+
+   mux #(.WIDTH(2), .INPUTS(8)) (
+	 {
+	     2'b11, // 111
+	     2'b10, // 110
+	     2'b00, // 101
+	     2'b01, // 100
+	     2'b00, // 011
+	     2'b00, // 010
+	     2'b00, // 001
+	     2'b00  // 000
+	 },
+	 {s1, s0},
+	 {size0, size1, size2}
+   );
+
+   //slow_addr #(.WIDTH(2)) ({1'b0,det0}, {1'b0,det1}, sum0, );
+   //slow_addr #(.WIDTH(2)) (sum0       , {1'b0,det2}, {s1, s0}, );
    
  
 endmodule
