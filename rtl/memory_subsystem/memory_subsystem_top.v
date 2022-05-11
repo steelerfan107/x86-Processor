@@ -263,7 +263,7 @@ module memory_subsystem_top (
         .mem_rd_wr(),
         .mem_en(),
 
-        .grant_in(arb_grant),
+        .grant_in(dcache_grant),
         .grant_out(sys_grant),
 
         .bus_busy_out(bus_busy_sys_controller_nc),
@@ -281,7 +281,7 @@ module memory_subsystem_top (
         .dp_ready(imem_dp_ready),
         .dp_read_data(imem_dp_read_data),
         .phys_addr(tlb_i_pa),   // from TLB
-	      .virt_addr(tlb_va),  	  
+	    .virt_addr(tlb_va),  	  
         .tlb_hit(tlb_i_hit),     // from TLB
         .mem_addr(bus_addr),
         .mem_req(bus_req_icache),

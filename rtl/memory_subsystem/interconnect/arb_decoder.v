@@ -30,7 +30,7 @@ module arb_decoder(
     wire disk_sel;
     wire mem_sel;
 
-    wire [19:0] phys_frame;
+    wire [19:0] phys_frame = bus_addr[19:0];
 
     compare #(.WIDTH(20)) (phys_frame, DMA_FRAME, dma_sel );
     compare #(.WIDTH(20)) (phys_frame, DISK_FRAME, disk_sel );

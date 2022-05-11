@@ -37,7 +37,7 @@ module main_memory_top(
     wire ctrl_drive_rd_tri;
 
     wire ctrl_rd_n;
-    inv1$ crn(sram_rd, ctrl_drive_rd_tri);
+    inv1$ crn(ctrl_rd_n, ctrl_drive_rd_tri);
     tristate_bus_driver16$ rd_driver0(ctrl_rd_n, dio_internal[15:0], data[15:0]);
     tristate_bus_driver16$ rd_driver1(ctrl_rd_n, dio_internal[31:16], data[31:16]);
    
