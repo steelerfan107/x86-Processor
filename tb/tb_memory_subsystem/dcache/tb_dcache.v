@@ -23,7 +23,7 @@ module TOP;
     wire wr_req_ready;
     reg [31:0] wr_req_address;
     reg [63:0] wr_req_data;
-    reg wr_size_in;
+    reg [1:0] wr_size_in;
 
     // interrupt
     wire page_fault;
@@ -476,7 +476,6 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
         //rd_req_address = 32'h02000003;
 
         wr_req_address = 32'h0b0000ff;
-
         #20
         grant_in = 1;
 
