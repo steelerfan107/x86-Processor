@@ -72,6 +72,7 @@ module TOP;
    wire    	         wmem_wr_en;
    wire    [32-1:0]	 wmem_wr_data;
    wire    [ISIZEW-1:0]  wmem_wr_size;
+   wire    [ISIZEW-1:0]  wmem_wr_size_nc;   
    wire                  wmem_dp_valid;
    wire                  wmem_dp_ready;
    wire    [64-1:0] 	 wmem_dp_read_data;   
@@ -188,7 +189,7 @@ module TOP;
    reg 		r_emem_valid;
    reg 		r_r_emem_valid;
   
-    assign wmem_wr_size = 1'b0; 
+   assign wmem_wr_size = wmem_wr_size_nc - 1; 
    top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
       reset,
