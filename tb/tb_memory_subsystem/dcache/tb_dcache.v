@@ -23,7 +23,7 @@ module TOP;
     wire wr_req_ready;
     reg [31:0] wr_req_address;
     reg [63:0] wr_req_data;
-    reg wr_size_in;
+    reg [1:0] wr_size_in;
 
     // interrupt
     wire page_fault;
@@ -214,11 +214,11 @@ module TOP;
 
         #20
         #20
-        wr_size_in = 1;
+        wr_size_in = 3;
         rd_req_valid = 0;
-        rd_req_address = 32'h02000003;
+        rd_req_address = 32'h02000000;
 
-        wr_req_address = 32'h02000003;
+        wr_req_address = 32'h02000000;
 
         #20
 
