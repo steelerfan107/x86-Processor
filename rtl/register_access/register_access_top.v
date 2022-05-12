@@ -95,6 +95,10 @@ module register_access_top (
     wb_stack,
     wb_reg_size,
     wb_reg_data,
+    
+    wb_reg_number_2,
+    wb_reg_en_2,
+    wb_reg_data_2,
 
     wb_seg_number,
     wb_seg_en,
@@ -203,6 +207,12 @@ module register_access_top (
     input wb_stack;   
     input [2:0] wb_reg_size;
     input [31:0] wb_reg_data;
+
+    // second writeback
+    input [2:0] wb_reg_number_2;
+    input wb_reg_en_2;
+    input [31:0] wb_reg_data_2;
+
 
     // segment register writeback
     input [2:0] wb_seg_number;
@@ -660,6 +670,10 @@ module register_access_top (
         .writeback_en(wb_reg_en),
         .writeback_size(wb_reg_size[1:0]),
         .writeback_data(wb_reg_data),
+
+        .writeback_2_reg(wb_reg_number_2),
+        .writeback_2_en(wb_reg_en_2),
+        .writeback_2_data(wb_reg_data_2),
 
         .esi_data(write_esi_data),
         .esi_en(esi_edi_en),

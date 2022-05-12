@@ -243,6 +243,9 @@ module top_pipeline (
    wire                    wb_reg_en;
    wire   [2:0]            wb_reg_size;
    wire   [31:0]           wb_reg_data;
+   wire   [2:0]            wb_reg_number_2;
+   wire                    wb_reg_qual_2;
+   wire   [31:0]           wb_reg_data_2;
    wire   [2:0]            wb_seg_number;
    wire                    wb_seg_en;
    wire   [15:0]           wb_seg_data;
@@ -269,6 +272,7 @@ module top_pipeline (
    wire                    a_op0_is_reg;
    wire                    a_op0_is_segment;
    wire                    a_op0_is_mmx;
+   wire                    a_op1_is_reg;
    wire                    a_op1_is_address;
    wire [47:0]             a_imm;
    wire [3:0]              a_alu_op;
@@ -295,6 +299,10 @@ module top_pipeline (
    wire                    e_op_a_is_segment;
    wire                    e_op_a_is_reg;
    wire                    e_op_a_is_mmx;                   
+   wire   [2:0]            e_op_b_reg;
+   wire   [31:0]           e_op_b_address;
+   wire                    e_op_b_is_reg;
+   wire                    e_op_b_is_address;
    wire  [31:0]            e_stack_ptr;      // stack pointer address
    wire   [47:0]           e_imm;            // immediate
    wire   [3:0]            e_alu_op;          // alu operation defined in #decode channel
@@ -317,6 +325,10 @@ module top_pipeline (
    wire                    wb_op_a_is_reg;
    wire                    wb_op_a_is_segment;
    wire                    wb_op_a_is_mmx;
+   wire  [2:0]             wb_op_b_reg;
+   wire  [31:0]            wb_op_b_address;
+   wire                    wb_op_b_is_reg;
+   wire                    wb_op_b_is_address;
    wire                    wb_valid;
    wire                    wb_branch_taken;
    wire                    wb_to_sys_controller;
@@ -328,7 +340,8 @@ module top_pipeline (
    wire                    wb_br_misprediction;
    wire                    wb_stack;
    wire  [1:0]             wb_stack_op;
-   wire [15:0] 		   wb_opcode;
+   wire  [15:0] 	   	   wb_opcode;
+   wire  [3:0]             wb_alu_op;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -458,97 +471,120 @@ module top_pipeline (
    and2$ (wb_seg_qual, wb_valid, wb_op_a_is_segment );
    and2$ (wb_mmx_qual, wb_valid, wb_op_a_is_mmx );
    and3$ (wb_stack_qual, wb_valid, wb_ready, wb_stack );
-   
+   // see if it is xchg
+   wire is_xchg;
+   compare #(.WIDTH(4)) is_xchg_cmp (wb_alu_op, 4'd14, is_xchg);
+   and3$ (wb_reg_qual_2, wb_valid, wb_op_b_is_reg, is_xchg);   // valid, is reg, and is xchg
+
    register_access_top uut_register_access (
-      clk,
-      reset,
-      reg_flush,
-      reg_cs,
-      reg_load_cs,					    
-      d_valid,
-      d_ready,
-      d_size,
-      d_set_d_flag,
-      d_clear_d_flag,
-      d_op0,
-      d_op1,
-      d_op0_reg,
-      d_op1_reg,
-      d_modrm,
-      d_sib,
-      d_imm,
-      d_disp,
-      d_alu_op,
-      d_flag_0,
-      d_flag_1,
-      d_stack_op,
-      d_seg_override,
-      d_seg_override_valid,
-      d_movs,
-      d_pc,
-      d_branch_taken,
-      d_opcode,					    
-      r_valid,
-      r_ready,
-      r_size,
-      r_set_d_flag,
-      r_clear_d_flag,
-      r_op0,
-      r_op1,
-      r_op0_reg,
-      r_op1_reg,
-      r_modrm,
-      r_sib,
-      r_imm,
-      r_disp,
-      r_alu_op,
-      r_flag_0,
-      r_flag_1,
-      r_stack_op,
-      r_stack_address,
-      r_seg_override,
-      r_seg_override_valid,
-      r_eax,
-      r_ecx,
-      r_edx,
-      r_ebx,
-      r_esp,
-      r_ebp,
-      r_esi,
-      r_edi,
-      r_cs,
-      r_ds,
-      r_es,
-      r_fs,
-      r_gs,
-      r_ss,
-      r_mm0,
-      r_mm1,
-      r_mm2,
-      r_mm3,
-      r_mm4,
-      r_mm5,
-      r_mm6,
-      r_mm7,
-      r_pc,
-      r_branch_taken,
-      r_opcode,	
-      eflags_reg[10],				    
-      wb_reg_number,
-      wb_reg_qual, //(wb_op_a_is_reg & wb_valid),
-      wb_stack,
-      wb_opsize,
-      wb_reg_data[31:0],
-      wb_reg_number,
-      wb_seg_qual, //(wb_op_a_is_segment & wb_valid),
-      wb_reg_data[15:0],
-      wb_reg_number,
-      wb_mmx_qual, //(wb_op_a_is_mmx & wb_valid),
-      wb_reg_data,
-      wb_stack_qual, //(wb_valid & wb_valid & wb_stack),
-      wb_opsize,
-      wb_stack_op
-  );  
+      // Clock Interface
+      .clk(clk),
+      .reset(reset),
+
+      // Control Interface
+      .flush(reg_flush),
+
+      // Direct Segment Write
+      .write_cs(reg_cs),
+      .write_cs_enable(reg_load_cs),
+               
+      // Decode Interface
+      .d_valid(d_valid),
+      .d_ready(d_ready),
+      .d_size(d_size),
+      .d_set_d_flag(d_set_d_flag),
+      .d_clear_d_flag(d_clear_d_flag),
+      .d_op0(d_op0),
+      .d_op1(d_op1),
+      .d_op0_reg(d_op0_reg),
+      .d_op1_reg(d_op1_reg),
+      .d_modrm(d_modrm),
+      .d_sib(d_sib),
+      .d_imm(d_imm),
+      .d_disp(d_disp),
+      .d_alu_op(d_alu_op),
+      .d_flag_0(d_flag_0),
+      .d_flag_1(d_flag_1),
+      .d_stack_op(d_stack_op),
+      .d_seg_override(d_seg_override),
+      .d_seg_override_valid(d_seg_override_valid),
+      .d_movs(d_movs),
+      .d_pc(d_pc),
+      .d_branch_taken(d_branch_taken),
+      .d_opcode(d_opcode),
+
+      // Address Generation Inferface
+      .r_valid(r_valid),
+      .r_ready(r_ready),
+      .r_size(r_size),
+      .r_set_d_flag(r_set_d_flag),
+      .r_clear_d_flag(r_clear_d_flag),
+      .r_op0(r_op0),
+      .r_op1(r_op1),
+      .r_op0_reg(r_op0_reg),
+      .r_op1_reg(r_op1_reg),
+      .r_modrm(r_modrm),
+      .r_sib(r_sib),
+      .r_imm(r_imm),
+      .r_disp(r_disp),
+      .r_alu_op(r_alu_op),
+      .r_flag_0(r_flag_0),
+      .r_flag_1(r_flag_1),
+      .r_stack_op(r_stack_op),
+      .r_stack_address(r_stack_address),
+      .r_seg_override(r_seg_override),
+      .r_seg_override_valid(r_seg_override_valid),
+      .r_eax(r_eax),
+      .r_ecx(r_ecx),
+      .r_edx(r_edx),
+      .r_ebx(r_ebx),
+      .r_esp(r_esp),
+      .r_ebp(r_ebp),
+      .r_esi(r_esi),
+      .r_edi(r_edi),
+      .r_cs(r_cs),
+      .r_ds(r_ds),
+      .r_es(r_es),
+      .r_fs(r_fs),
+      .r_gs(r_gs),
+      .r_ss(r_ss),
+      .r_mm0(r_mm0),
+      .r_mm1(r_mm1),
+      .r_mm2(r_mm2),
+      .r_mm3(r_mm3),
+      .r_mm4(r_mm4),
+      .r_mm5(r_mm5),
+      .r_mm6(r_mm6),
+      .r_mm7(r_mm7),
+      .r_pc(r_pc),
+      .r_branch_taken(r_branch_taken),
+      .r_opcode(r_opcode),
+
+      .flag_df(eflags_reg[10]),
+               
+      .wb_reg_number(wb_reg_number),
+      .wb_reg_en(wb_reg_qual),   //(wb_op_a_is_reg & wb_valid),
+      .wb_stack(wb_stack),
+      .wb_reg_size(wb_opsize),
+      .wb_reg_data(wb_reg_data[31:0]),
+      
+      .wb_reg_number_2(wb_reg_number_2),
+      .wb_reg_en_2(wb_reg_qual_2),
+      .wb_reg_data_2(wb_reg_data_2),
+
+      .wb_seg_number(wb_reg_number),
+      .wb_seg_en(wb_seg_qual),   //(wb_op_a_is_segment & wb_valid),
+      .wb_seg_data(wb_reg_data[15:0]),
+
+      .wb_mmx_number(wb_reg_number),
+      .wb_mmx_en(wb_mmx_qual),   //(wb_op_a_is_mmx & wb_valid),
+      .wb_mmx_data(wb_reg_data),
+
+      // Stack Commit Interface
+      .wb_stack_en(wb_stack_qual),  //(wb_valid & wb_valid & wb_stack),
+      .wb_stack_size(wb_opsize),
+      .wb_stack_op(wb_stack_op)
+   );
 
   address_generation_top uut_address_gen(
       clk,
@@ -612,6 +648,7 @@ module top_pipeline (
       a_op0_is_reg,
       a_op0_is_segment,
       a_op0_is_mmx,
+      a_op1_is_reg,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -653,6 +690,7 @@ module top_pipeline (
       a_op0_is_reg,
       a_op0_is_segment,
       a_op0_is_mmx,
+      a_op1_is_reg,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -679,6 +717,10 @@ module top_pipeline (
       e_op_a_is_reg,
       e_op_a_is_segment,
       e_op_a_is_mmx,				   				   
+      e_op_b_reg,
+      e_op_b_address,
+      e_op_b_is_reg,
+      e_op_b_is_address,
       e_stack_ptr,
       e_stack_op,
       e_imm,
@@ -713,6 +755,10 @@ module top_pipeline (
     e_op_a_is_reg,
     e_op_a_is_segment,
     e_op_a_is_mmx,
+    e_op_b_reg,
+    e_op_b_address,
+    e_op_b_is_reg,
+    e_op_b_is_address,
     1'b0,
     e_op_a,
     e_op_b,
@@ -742,6 +788,10 @@ module top_pipeline (
     wb_op_a_is_reg,
     wb_op_a_is_segment,
     wb_op_a_is_mmx,
+    wb_op_b_reg,
+    wb_op_b_address,
+    wb_op_b_is_reg,
+    wb_op_b_is_address,
     wb_stack_op,			  
     wb_stack,
     wb_valid,
@@ -752,18 +802,50 @@ module top_pipeline (
     wb_jump_address,
     wb_jump_load_cs,
     wb_cs_out,
-    wb_br_misprediction		       
+    wb_br_misprediction,		       
+    wb_alu_op
   );
 
-   assign  wb_ready = (wb_op_a_is_address) ? wmem_ready : 1'b1;
+   // --------- //
+   // writeback //
+   // --------- //
+
+   assign wb_reg_data_2[31:0] = wb_result[63:32];
+   assign wb_reg_number_2 = wb_op_b_reg;
+
+   // decide what address to use
+   // if op_b is address and this is exchange, use that as wb address
+   // is_xchg defined earlier
+   wire wb_address_mux_sel;
+   and2$ wb_address_mux_sel_and (wb_address_mux_sel, wb_op_b_is_address, is_xchg);
+
+   // wire [31:0] wb_address_mux_out;
+   mux #(.WIDTH(32), .INPUTS(2)) (
+      {wb_op_b_address, wb_dest_address},
+      wmem_address,
+      wb_address_mux_sel
+   );
+
+   // see if we should do a write to mem
+   wire wb_is_address;
+   or2$ (wb_is_address, wb_address_mux_sel, wb_op_a_is_address);
+
+   // determine what data to write
+   mux #(.WIDTH(64), .INPUTS(2)) wr_data_mux (
+      {{32'h0, wb_result[63:32]}, wb_result},   
+      wmem_wr_data,
+      wb_address_mux_sel
+   );
+
+   assign  wb_ready = (wb_is_address) ? wmem_ready : 1'b1;
  //wmem_ready;
-  //assign  wmem_valid = (wb_valid & wb_op_a_is_address);
+  // assign  wmem_valid = (wb_valid & wb_op_a_is_address);
    
-  and3$ (wmem_valid, wb_valid, wmem_ready, wb_op_a_is_address);
+  and3$ (wmem_valid, wb_valid, wmem_ready, wb_is_address);
    
-  assign  wmem_address = wb_dest_address;
-  assign  wmem_wr_en = wb_op_a_is_address;
-  assign  wmem_wr_data = wb_result;
+  // assign  wmem_address = wb_dest_address;
+  assign  wmem_wr_en = wb_is_address;
+  // assign  wmem_wr_data = wb_result;
   assign  wmem_wr_size = wb_opsize;    
 
   wire        sys_cont_val;

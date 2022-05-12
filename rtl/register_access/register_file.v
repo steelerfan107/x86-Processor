@@ -5,7 +5,7 @@
 //
 //  Holds components for register file
 
-module register_file (
+module register_file (      // fanout good
     clk,
     reset,
 
@@ -26,6 +26,10 @@ module register_file (
     writeback_en,
     writeback_size,
     writeback_data,
+
+    writeback_2_reg,
+    writeback_2_en,
+    writeback_2_data,
 
     esi_data,
     esi_en,
@@ -66,6 +70,10 @@ module register_file (
     input [1:0] writeback_size;
     input [31:0] writeback_data;
 
+    input [2:0] writeback_2_reg;
+    input writeback_2_en;
+    input [31:0] writeback_2_data;
+
     // for movs
     input [31:0] esi_data;
     input esi_en;
@@ -83,6 +91,31 @@ module register_file (
     output [31:0] ebp_out;
     output [31:0] esi_out;
     output [31:0] edi_out;
+
+    wire [31:0] eax_out_weak;
+    wire [31:0] ecx_out_weak;
+    wire [31:0] edx_out_weak;
+    wire [31:0] ebx_out_weak;
+    wire [31:0] esp_out_weak;
+    wire [31:0] ebp_out_weak;
+    wire [31:0] esi_out_weak;
+    wire [31:0] edi_out_weak;
+
+    bufferH16 #(.WIDTH(32))
+    eax_out_16 (eax_out, eax_out_weak),
+    ecx_out_16 (ecx_out, ecx_out_weak),
+    edx_out_16 (edx_out, edx_out_weak),
+    ebx_out_16 (ebx_out, ebx_out_weak),
+    esp_out_16 (esp_out, esp_out_weak),
+    ebp_out_16 (ebp_out, ebp_out_weak),
+    esi_out_16 (esi_out, esi_out_weak),
+    edi_out_16 (edi_out, edi_out_weak);
+
+    wire writeback_en_buf;
+    bufferH16$ writeback_en_16 (writeback_en_buf, writeback_en);
+
+    wire writeback_2_en_buf;
+    bufferH16$ writeback_2_en_16 (writeback_2_en_buf, writeback_2_en);
 
     
 
@@ -146,9 +179,9 @@ module register_file (
     sib_index_reg_mux (sib_index_value, eax_out, ecx_out, edx_out, ebx_out, esp_out, ebp_out, esi_out, edi_out, sib_index_reg);
 
     // Set register inputs
-    wire [31:0] reg_inputs;
+    wire [31:0] reg_inputs_weak;
     register_input_size_selector reg_size_sel (
-        reg_inputs,
+        reg_inputs_weak,
 
         writeback_reg, 
         writeback_size,
@@ -164,6 +197,44 @@ module register_file (
         edi_out
     );
 
+    wire [31:0] reg_inputs;
+
+    genvar i;
+    generate
+        for (i = 0; i < 32; i = i + 1) begin
+            bufferH16$ reg_inputs_16 (reg_inputs[i], reg_inputs_weak[i]);
+        end
+    endgenerate
+
+    // Set register inputs
+    wire [31:0] reg_inputs_weak_2;
+    register_input_size_selector reg_size_sel_2 (
+        reg_inputs_weak_2,
+
+        writeback_2_reg, 
+        writeback_size,
+        writeback_2_data,
+
+        eax_out,
+        ecx_out,
+        edx_out,
+        ebx_out,
+        esp_out,
+        ebp_out,
+        esi_out,
+        edi_out
+    );
+
+    wire [31:0] reg_inputs_2;
+
+    // genvar i;
+    generate
+        for (i = 0; i < 32; i = i + 1) begin
+            bufferH16$ reg_inputs_2_16 (reg_inputs_2[i], reg_inputs_weak_2[i]);
+        end
+    endgenerate
+    
+
     // set writeback for reg
 
     // i made the writeback en logic block work by outputting a reg number rather than being one hot
@@ -173,8 +244,13 @@ module register_file (
     wire [2:0] selected_reg;
     register_writeback_select wb_sel (selected_reg, writeback_reg, writeback_size);
 
+    wire [2:0] selected_reg_2;
+    register_writeback_select wb_sel_2 (selected_reg_2, writeback_2_reg, writeback_size);
+
     // decode the selected reg signal into something useful
     wire [7:0] wb_en;
+
+    wire [7:0] wb_2_en;
 
     wire ld_eax;
     wire ld_ecx;
@@ -185,18 +261,66 @@ module register_file (
     wire ld_esi;
     wire ld_edi;
 
+    wire [7:0] ld_reg_1;
+    wire [7:0] ld_reg_2;
+
     decoder3_8$ wb_decoder (selected_reg, wb_en, );
+
+    decoder3_8$ wb_2_decoder (selected_reg_2, wb_2_en, );
+
 
     // and gate to enable load only when we actually want to load
     and2$ 
-    and_ld_eax (ld_eax, wb_en[0], writeback_en),
-    and_ld_ecx (ld_ecx, wb_en[1], writeback_en),
-    and_ld_edx (ld_edx, wb_en[2], writeback_en),
-    and_ld_ebx (ld_ebx, wb_en[3], writeback_en),
-    and_ld_esp (ld_esp, wb_en[4], writeback_en),
-    and_ld_ebp (ld_ebp, wb_en[5], writeback_en),
-    and_ld_esi (ld_esi, wb_en[6], writeback_en),
-    and_ld_edi (ld_edi, wb_en[7], writeback_en);
+    and_ld_eax (ld_reg_1[0], wb_en[0], writeback_en_buf),
+    and_ld_ecx (ld_reg_1[1], wb_en[1], writeback_en_buf),
+    and_ld_edx (ld_reg_1[2], wb_en[2], writeback_en_buf),
+    and_ld_ebx (ld_reg_1[3], wb_en[3], writeback_en_buf),
+    and_ld_esp (ld_reg_1[4], wb_en[4], writeback_en_buf),
+    and_ld_ebp (ld_reg_1[5], wb_en[5], writeback_en_buf),
+    and_ld_esi (ld_reg_1[6], wb_en[6], writeback_en_buf),
+    and_ld_edi (ld_reg_1[7], wb_en[7], writeback_en_buf);
+
+    and2$ 
+    and_ld_reg_2_0 (ld_reg_2[0], wb_2_en[0], writeback_2_en_buf),
+    and_ld_reg_2_1 (ld_reg_2[1], wb_2_en[1], writeback_2_en_buf),
+    and_ld_reg_2_2 (ld_reg_2[2], wb_2_en[2], writeback_2_en_buf),
+    and_ld_reg_2_3 (ld_reg_2[3], wb_2_en[3], writeback_2_en_buf),
+    and_ld_reg_2_4 (ld_reg_2[4], wb_2_en[4], writeback_2_en_buf),
+    and_ld_reg_2_5 (ld_reg_2[5], wb_2_en[5], writeback_2_en_buf),
+    and_ld_reg_2_6 (ld_reg_2[6], wb_2_en[6], writeback_2_en_buf),
+    and_ld_reg_2_7 (ld_reg_2[7], wb_2_en[7], writeback_2_en_buf);
+
+    // load both regs
+    or2$ 
+    or_ld_0 (ld_eax, ld_reg_1[0], ld_reg_2[0]),
+    or_ld_1 (ld_ecx, ld_reg_1[1], ld_reg_2[1]),
+    or_ld_2 (ld_edx, ld_reg_1[2], ld_reg_2[2]),
+    or_ld_3 (ld_ebx, ld_reg_1[3], ld_reg_2[3]),
+    or_ld_4 (ld_esp, ld_reg_1[4], ld_reg_2[4]),
+    or_ld_5 (ld_ebp, ld_reg_1[5], ld_reg_2[5]),
+    or_ld_6 (ld_esi, ld_reg_1[6], ld_reg_2[6]),
+    or_ld_7 (ld_edi, ld_reg_1[7], ld_reg_2[7]);
+
+    // determine what is being loaded into which
+    // one hot mux with input {ld_reg_2, ld_reg_1} for each reg
+    wire [31:0] eax_in;
+    wire [31:0] ecx_in;
+    wire [31:0] edx_in;
+    wire [31:0] ebx_in;
+    wire [31:0] esp_in;
+    wire [31:0] ebp_in;
+    wire [31:0] esi_in;
+    wire [31:0] edi_in;
+
+    ao_mux #(.WIDTH(32), .NINPUTS(2)) 
+    eax_in_mux ({reg_inputs_2, reg_inputs}, eax_in, {ld_reg_2[0], ld_reg_1[0]}),
+    ecx_in_mux ({reg_inputs_2, reg_inputs}, ecx_in, {ld_reg_2[1], ld_reg_1[1]}),
+    edx_in_mux ({reg_inputs_2, reg_inputs}, edx_in, {ld_reg_2[2], ld_reg_1[2]}),
+    ebx_in_mux ({reg_inputs_2, reg_inputs}, ebx_in, {ld_reg_2[3], ld_reg_1[3]}),
+    esp_in_mux ({reg_inputs_2, reg_inputs}, esp_in, {ld_reg_2[4], ld_reg_1[4]}),
+    ebp_in_mux ({reg_inputs_2, reg_inputs}, ebp_in, {ld_reg_2[5], ld_reg_1[5]}),
+    esi_in_mux ({reg_inputs_2, reg_inputs}, esi_in, {ld_reg_2[6], ld_reg_1[6]}),
+    edi_in_mux ({reg_inputs_2, reg_inputs}, edi_in, {ld_reg_2[7], ld_reg_1[7]});
 
     // direct esi and edi loads
     // if directly load, set ld to 1 and data to esi/edi data
@@ -205,13 +329,13 @@ module register_file (
     wire [31:0] esi_mux_data_out, edi_mux_data_out;
 
     mux #(.WIDTH(32), .INPUTS(2)) esi_mux_data (
-        {esi_data, reg_inputs},
+        {esi_data, esi_in},
         esi_mux_data_out,
         esi_en
     );
 
     mux #(.WIDTH(32), .INPUTS(2)) edi_mux_data (
-        {edi_data, reg_inputs},
+        {edi_data, edi_in},
         edi_mux_data_out,
         edi_en
     );
@@ -234,28 +358,28 @@ module register_file (
     or2$ (ld_esp_comb, ld_esp, write_esp_enable);
 
     mux #(.WIDTH(32), .INPUTS(2)) esb_mux (
-        {reg_inputs,write_esp},
+        {esp_in,write_esp},
         esp_data,
         ld_esp
     );
    
     // instantiate the registers
     register_32_reset 
-    eax (eax_out, reg_inputs, eax_reset_in, ld_eax, clk, reset),
-    ecx (ecx_out, reg_inputs, ecx_reset_in, ld_ecx, clk, reset),
-    edx (edx_out, reg_inputs, edx_reset_in, ld_edx, clk, reset),
-    ebx (ebx_out, reg_inputs, ebx_reset_in, ld_ebx, clk, reset),
-    esp (esp_out,   esp_data, esp_reset_in, ld_esp_comb, clk, reset),
-    ebp (ebp_out, reg_inputs, ebp_reset_in, ld_ebp, clk, reset),
-    esi (esi_out, esi_mux_data_out, esi_reset_in, esi_mux_ld_out, clk, reset),
-    edi (edi_out, edi_mux_data_out, edi_reset_in, edi_mux_ld_out, clk, reset);
+    eax (eax_out_weak, eax_in, eax_reset_in, ld_eax, clk, reset),
+    ecx (ecx_out_weak, ecx_in, ecx_reset_in, ld_ecx, clk, reset),
+    edx (edx_out_weak, edx_in, edx_reset_in, ld_edx, clk, reset),
+    ebx (ebx_out_weak, ebx_in, ebx_reset_in, ld_ebx, clk, reset),
+    esp (esp_out_weak,   esp_data, esp_reset_in, ld_esp_comb, clk, reset),
+    ebp (ebp_out_weak, reg_inputs, ebp_reset_in, ld_ebp, clk, reset),
+    esi (esi_out_weak, esi_mux_data_out, esi_reset_in, esi_mux_ld_out, clk, reset),
+    edi (edi_out_weak, edi_mux_data_out, edi_reset_in, edi_mux_ld_out, clk, reset);
 
 endmodule
 
 // ---------------- //
 // Writeback Select //
 // ---------------- //
-module register_writeback_select(
+module register_writeback_select(       // fanout good
     selected_reg,
 
     reg_num, 
@@ -306,7 +430,7 @@ endmodule
 // Sets the register inputs based on register number, register contents, and size
 // Does not do load enable. 
 // This logic could probably be better. hope this isn't the critical path...
-module register_input_size_selector (
+module register_input_size_selector (   
     out,
 
     reg_select,
@@ -338,6 +462,20 @@ module register_input_size_selector (
     input [31:0] esi;
     input [31:0] edi;
 
+    genvar i;
+
+    wire [31:0] data_buf;
+    generate 
+        for (i = 0; i < 32; i = i + 1) begin
+            bufferH64$ data_64 (data_buf[i], data[i]);
+        end
+    endgenerate
+
+    wire [1:0] size_buf;
+    bufferH16$ 
+    size_16_0 (size_buf[0], size[0]),
+    size_16_1 (size_buf[1], size[1]);
+
     wire [31:0] reg_mux_out0;
     wire [31:0] reg_mux_out1;
     wire [31:0] reg_mux_out2;
@@ -358,14 +496,14 @@ module register_input_size_selector (
     wire [31:0] di;
 
     register_16_bit_input_mask 
-    ax_mask(ax, data, eax),
-    cx_mask(cx, data, ecx),
-    dx_mask(dx, data, edx),
-    bx_mask(bx, data, ebx),
-    sp_mask(sp, data, esp),
-    bp_mask(bp, data, ebp),
-    si_mask(si, data, esi),
-    di_mask(di, data, edi);
+    ax_mask(ax, data_buf, eax),
+    cx_mask(cx, data_buf, ecx),
+    dx_mask(dx, data_buf, edx),
+    bx_mask(bx, data_buf, ebx),
+    sp_mask(sp, data_buf, esp),
+    bp_mask(bp, data_buf, ebp),
+    si_mask(si, data_buf, esi),
+    di_mask(di, data_buf, edi);
 
     // 8 bit registers
     wire [31:0] al;
@@ -378,28 +516,28 @@ module register_input_size_selector (
     wire [31:0] bh;
 
     register_low_byte_input_mask 
-    al_mask(al, data, eax),
-    cl_mask(cl, data, ecx),
-    dl_mask(dl, data, edx),
-    bl_mask(bl, data, ebx);
+    al_mask(al, data_buf, eax),
+    cl_mask(cl, data_buf, ecx),
+    dl_mask(dl, data_buf, edx),
+    bl_mask(bl, data_buf, ebx);
 
     register_high_byte_input_mask 
-    ah_mask(ah, data, eax),
-    ch_mask(ch, data, ecx),
-    dh_mask(dh, data, edx),
-    bh_mask(bh, data, ebx);
+    ah_mask(ah, data_buf, eax),
+    ch_mask(ch, data_buf, ecx),
+    dh_mask(dh, data_buf, edx),
+    bh_mask(bh, data_buf, ebx);
 
 
     // 8 muxes, one for each reg
     reg_mux4_32 
-    reg_mux0 (reg_mux_out0, ,al, ax, data, size),
-    reg_mux1 (reg_mux_out1, ,cl, cx, data, size),
-    reg_mux2 (reg_mux_out2, ,dl, dx, data, size),
-    reg_mux3 (reg_mux_out3, ,bl, bx, data, size),
-    reg_mux4 (reg_mux_out4, ,ah, sp, data, size),
-    reg_mux5 (reg_mux_out5, ,ch, bp, data, size),
-    reg_mux6 (reg_mux_out6, ,dh, si, data, size),
-    reg_mux7 (reg_mux_out7, ,bh, di, data, size);
+    reg_mux0 (reg_mux_out0, ,al, ax, data_buf, size_buf),
+    reg_mux1 (reg_mux_out1, ,cl, cx, data_buf, size_buf),
+    reg_mux2 (reg_mux_out2, ,dl, dx, data_buf, size_buf),
+    reg_mux3 (reg_mux_out3, ,bl, bx, data_buf, size_buf),
+    reg_mux4 (reg_mux_out4, ,ah, sp, data_buf, size_buf),
+    reg_mux5 (reg_mux_out5, ,ch, bp, data_buf, size_buf),
+    reg_mux6 (reg_mux_out6, ,dh, si, data_buf, size_buf),
+    reg_mux7 (reg_mux_out7, ,bh, di, data_buf, size_buf);
 
     // mux these outputs to the final output
     reg_mux8_32 mux_final (
@@ -525,6 +663,10 @@ module register_output_size_selector (
     input [31:0] ebp;
     input [31:0] esi;
     input [31:0] edi;
+
+    wire [1:0] size_buf;
+    bufferH16$ size_16_0 (size_buf[0], size[0]);
+    bufferH16$ size_16_1 (size_buf[1], size[1]);
 
     // wire [31:0] unused; // useless wire for parameters that aren't used
 
