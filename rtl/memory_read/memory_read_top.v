@@ -172,7 +172,8 @@ module memory_read_top (
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+1+1+1+3+32+1+1+32+2+48+4+3+3+32+1+1;
+    // localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+1+1+1+3+32+1+1+32+2+48+4+3+3+32+1+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16+2+3+3+32+1+1;
 
     // Pipestage interface
     wire p_valid;

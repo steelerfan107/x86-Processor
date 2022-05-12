@@ -177,7 +177,8 @@ module address_generation_top (
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+1+1+1+1+48+4+3+3+2+32+32+1+1+16;
+    // localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+1+1+1+1+48+4+3+3+2+32+32+1+1+16;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3+1+1;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
