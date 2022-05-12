@@ -122,7 +122,7 @@ module register_access_stall (
         register_size,
 
         op0,
-        op0_reg,
+        op0_reg_corrected,
         mod_rm
     );
 
@@ -136,7 +136,7 @@ module register_access_stall (
 
 	stack_op,			 
 
-        wb_reg,
+        wb_reg_corrected,
         wb_enable,
 
         op0_reg_write,
@@ -284,8 +284,8 @@ module register_stall_modify_table (
     xnor1 (add_and_result[1], assigned_reg[1], op0_reg[1]), 
     xnor2 (add_and_result[2], assigned_reg[2], op0_reg[2]);
 
-    // see if match
-    and4$ and3 (mux_control[0], add_and_result[0], add_and_result[1], add_and_result[2], op0_reg_is_valid);
+    // see if match // Only incr when next stage is ready
+    and5$ and3 (mux_control[0], add_and_result[0], add_and_result[1], add_and_result[2], op0_reg_is_valid, next_stage_ready);
 
     // mux_control[1] = 1 if assigned_reg == wb_reg and wb_reg is valid
     wire [2:0] sub_and_result;
@@ -306,9 +306,10 @@ module register_stall_modify_table (
 
     // determine if we writing
     // write if mux control is 01 or 10, but not 11
-  
+
+    // Only incr when txn is acceoted, but need to decr when wb_reg_en comes in. If they happen at the same time dont modify
     wire modifies_table;
-    xor2$ xor0 (modifies_table, mux_control[0], mux_control[1]);
+    xor2$ xor0 (modifies_table, mux_control[0] , mux_control[1]);
    
     and2$ and_out (write_enable, modifies_table, (next_stage_ready | wb_reg_is_valid));
 

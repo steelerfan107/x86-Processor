@@ -18,7 +18,7 @@ module segment_register_stall (
     op0_reg,
 
     op1,
-    op1_reg,
+    op1_reg,			       
 
     next_stage_ready
 );
@@ -229,7 +229,7 @@ module segment_stall_modify_table (
     xor2$ we_xor (add_or_sub, increment, decrement);
 
     // only write if next stage is ready
-    and2$ next_stage_and (reg_we, add_or_sub, next_stage_ready);
+    and2$ next_stage_and (reg_we, add_or_sub, (next_stage_ready | decrement));
 
 endmodule
 

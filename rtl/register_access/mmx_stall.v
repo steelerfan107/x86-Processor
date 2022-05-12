@@ -16,6 +16,7 @@ module mmx_stall (
     write_select,
     write_enable,
 
+    size,
     mod_rm,
 
     op0,
@@ -37,6 +38,7 @@ module mmx_stall (
     input [2:0] write_select;
     input write_enable;
 
+    input [2:0] size;
     input [7:0] mod_rm;
 
     input [2:0] op0;
@@ -113,14 +115,14 @@ module mmx_stall (
 
     // determine when it be modified
     mmx_stall_modify_table 
-    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready),
-    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg, op0_is_mmx, write_select, write_enable, next_stage_ready);
+    mm0_modify (mm0_in, mm0_out, mm0_en, 3'd0, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm1_modify (mm1_in, mm1_out, mm1_en, 3'd1, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm2_modify (mm2_in, mm2_out, mm2_en, 3'd2, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm3_modify (mm3_in, mm3_out, mm3_en, 3'd3, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm4_modify (mm4_in, mm4_out, mm4_en, 3'd4, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm5_modify (mm5_in, mm5_out, mm5_en, 3'd5, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm6_modify (mm6_in, mm6_out, mm6_en, 3'd6, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready),
+    mm7_modify (mm7_in, mm7_out, mm7_en, 3'd7, op0_mmx_reg, (op0_is_mmx && (size == 5)), write_select, write_enable, next_stage_ready);
 
     // see if there is a stall
     wire [31:0] op0_table_data;
