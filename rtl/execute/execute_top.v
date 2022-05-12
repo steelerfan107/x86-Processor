@@ -157,8 +157,8 @@ module execute_top (
     // -------   //
     // Some Temp Logic
    
-    localparam PIPEWIDTH = 32+32+64+3+1+1+1+32+1+1+1+1+3+32+1+1+4;
-    // localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16+3+32+1+1+4;
+    // localparam PIPEWIDTH = 32+32+64+3+1+1+1+32+1+2+1+1+1+1+3+32+1+1+4;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16+3+32+1+1+4;
 
     wire [31:0]  p_dest_address = e_op_a_address;
     wire  [31:0] p_dest_reg = e_dest_reg;
@@ -169,6 +169,7 @@ module execute_top (
     wire         p_to_sys_controller = e_to_sys_controller;
     wire  [31:0] p_pc = e_pc;
     // wire p_stack;
+    // wire [1:0] e_stack_op
     wire p_op_a_is_address = e_op_a_is_address;
     wire p_op_a_is_reg = e_op_a_is_reg;
     wire p_op_a_is_segment = e_op_a_is_segment;
