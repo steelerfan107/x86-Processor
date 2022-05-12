@@ -232,7 +232,7 @@ module memory_subsystem_top (
         .mem_req(bus_req_dcache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
-               .mem_rd_wr(bus_rd_wr),
+        .mem_rd_wr(bus_rd_wr),
         .mem_en(d_bus_en),
         .mem_wr_size(mem_wr_size),
 

@@ -228,6 +228,12 @@ module decode_stage_1 (
       end      
    end
 
+   // Force SHift to be 1 for D0,D1
+   wire force_1_d0, force_1_d1, force_1;
+   
+   compare #(.WIDTH(8))  (8'hD0, s0_opcode[15:8], force_1_d0);
+   compare #(.WIDTH(8))  (8'hD1, s0_opcode[15:8], force_1_d1);
+   or2$ (force_1, force_1_d0, force_1_d1);
    
    and2$ (in_accept, s0_valid, s0_ready);
   
@@ -324,14 +330,21 @@ module decode_stage_1 (
    wire 		ret_near0, ret_near1, ret_far0, ret_far1;
    
    compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
-   compare #(.WIDTH(8)) ret_n_comp (7'hC3, s0_opcode[15:8], ret_near0);
-   compare #(.WIDTH(8)) ret_n0_comp (7'hC2, s0_opcode[15:8], ret_near1);
+   compare #(.WIDTH(8)) ret_n_comp (8'hC3, s0_opcode[15:8], ret_near0);
+   compare #(.WIDTH(8)) ret_n0_comp (8'hC2, s0_opcode[15:8], ret_near1);
 
-   compare #(.WIDTH(8)) ret_f_comp (7'hCB, s0_opcode[15:8], ret_far0);
-   compare #(.WIDTH(8)) ret_f0_comp (7'hCA, s0_opcode[15:8], ret_far1);
+   compare #(.WIDTH(8)) ret_f_comp (8'hCB, s0_opcode[15:8], ret_far0);
+   compare #(.WIDTH(8)) ret_f0_comp (8'hCA, s0_opcode[15:8], ret_far1);
 
-   or2$ (ret_near,ret_near0, ret_near1);
-   or2$ (ret_far,ret_far0, ret_far1);   
+   wire 		ret_near_non_mask;
+   wire 		ret_far_non_mask;
+   
+   
+   or2$ (ret_near_non_mask,ret_near0, ret_near1);
+   or2$ (ret_far_non_mask,ret_far0, ret_far1);
+
+   and2$ (ret_near, ret_near_non_mask, s0_valid);
+   and2$ (ret_far, ret_far_non_mask, s0_valid);
 
    wire 		rom_in_control_mask;
    and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
@@ -418,7 +431,7 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(3))  op1_reg_mux({rom_op1_reg,dec_op1_reg},s1_op1_reg, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({dec_modrm,dec_modrm},s1_modrm, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(8))  sib_mux({dec_sib,dec_sib},s1_sib, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(32)) imm_mux({rom_imm,dec_imm},s1_imm, rom_in_control);   
+   mux #(.INPUTS(4),.WIDTH(48)) imm_mux({48'd1,48'd1, rom_imm,dec_imm},s1_imm, {force_1,rom_in_control});   
    mux #(.INPUTS(2),.WIDTH(32)) disp_mux({rom_disp,dec_disp},s1_disp, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(4))  alu_op_mux({rom_alu_op,dec_alu_op},s1_alu_op, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(3))  flag_0_mux({rom_flag_0,dec_flag_0},s1_flag_0, rom_in_control);   
@@ -469,7 +482,7 @@ module decode_stage_1 (
       rom_in_control,
       rom_control,
       eflags_reg,
-      eip_reg,	
+      s0_pc,	
       dec_imm,
       handle_int_done	
    );
