@@ -31,6 +31,7 @@ module memory_read_top (
     a_op0_is_reg,
     a_op0_is_segment,
     a_op0_is_mmx,
+    a_op1_is_reg,
     a_op1_is_address,
     a_imm,
     a_alu_op,
@@ -57,6 +58,10 @@ module memory_read_top (
     e_op_a_is_reg,
     e_op_a_is_segment,
     e_op_a_is_mmx,
+    e_op_b_reg,
+    e_op_b_address,
+    e_op_b_is_reg,
+    e_op_b_is_address,
     e_stack_ptr,
     e_stack_op,
     e_imm,
@@ -111,6 +116,7 @@ module memory_read_top (
     input a_op0_is_reg;   
     input a_op0_is_segment;  
     input a_op0_is_mmx;
+    input a_op1_is_reg;
     input a_op1_is_address;
     input [47:0] a_imm;
     input [3:0] a_alu_op;
@@ -137,6 +143,10 @@ module memory_read_top (
     output e_op_a_is_reg;   
     output e_op_a_is_segment;  
     output e_op_a_is_mmx;   
+    output [2:0] e_op_b_reg;
+    output [31:0] e_op_b_address;
+    output e_op_b_is_reg;
+    output e_op_b_is_address;
     output [31:0] e_stack_ptr;      // stack pointer address
     output [1:0]   e_stack_op;
     output [47:0] e_imm;            // immediate
@@ -162,7 +172,7 @@ module memory_read_top (
     // Pipestage //
     // --------- //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+32+48+4+3+3+32+1+1+16+2+3;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+32+1+1+1+1+3+32+1+1+32+2+48+4+3+3+32+1+1;
 
     // Pipestage interface
     wire p_valid;
@@ -178,6 +188,10 @@ module memory_read_top (
     wire p_op_a_is_reg;   
     wire p_op_a_is_segment;  
     wire p_op_a_is_mmx;   
+    wire [2:0] p_op_b_reg;
+    wire [31:0] p_op_b_address;
+    wire p_op_b_is_reg;
+    wire p_op_b_is_address;
     wire [31:0] p_stack_ptr;      // stack pointer address
     wire [1:0] 	p_stack_op;
     wire [47:0] p_imm;            // immediate
@@ -202,6 +216,10 @@ module memory_read_top (
        e_op_a_is_reg,   
        e_op_a_is_segment,  
        e_op_a_is_mmx,
+       e_op_b_reg,
+       e_op_b_address,
+       e_op_b_is_reg,
+       e_op_b_is_address,
        e_stack_ptr,
        e_stack_op,
        e_imm,
@@ -226,6 +244,10 @@ module memory_read_top (
        p_op_a_is_reg,   
        p_op_a_is_segment,  
        p_op_a_is_mmx,
+       p_op_b_reg,
+       p_op_b_address,
+       p_op_b_is_reg,
+       p_op_b_is_address,
        p_stack_ptr,
        p_stack_op,
        p_imm,

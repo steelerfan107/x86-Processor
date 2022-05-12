@@ -47,7 +47,7 @@ module mmx_register_file (      // fanout good
     
     generate
         for (i = 0; i < 64; i = i + 1) begin
-            bufferH16$ wb_data_16 (writeback_data_buf[i], wb_data[i]);
+            bufferH16$ wb_data_16 (writeback_data_buf[i], writeback_data[i]);
         end
     endgenerate
 

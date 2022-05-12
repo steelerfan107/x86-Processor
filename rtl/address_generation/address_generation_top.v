@@ -73,6 +73,7 @@ module address_generation_top (
     a_op0_is_reg,
     a_op0_is_segment,
     a_op0_is_mmx,
+    a_op1_is_reg,
     a_op1_is_address,
     a_imm,
     a_alu_op,
@@ -156,6 +157,7 @@ module address_generation_top (
     output a_op0_is_reg;
     output a_op0_is_segment;
     output a_op0_is_mmx;
+    output a_op1_is_reg;
     output a_op1_is_address;
     output [47:0] a_imm;
     output [3:0] a_alu_op;
@@ -175,7 +177,7 @@ module address_generation_top (
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3+1;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+1+1+1+1+48+4+3+3+2+32+32+1+1+16;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -191,6 +193,7 @@ module address_generation_top (
     wire  p_op0_is_reg;
     wire  p_op0_is_segment;
     wire  p_op0_is_mmx;
+    wire  p_op1_is_reg;
     wire  p_op1_is_address;
     wire  gen_op1_is_address;   
     wire  [47:0] p_imm;
@@ -215,6 +218,7 @@ module address_generation_top (
       a_op0_is_reg,
       a_op0_is_segment,
       a_op0_is_mmx,
+      a_op1_is_reg,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -240,6 +244,7 @@ module address_generation_top (
       p_op0_is_reg,
       p_op0_is_segment,
       p_op0_is_mmx,
+      p_op1_is_reg,
       p_op1_is_address,
       r_imm,
       r_alu_op,

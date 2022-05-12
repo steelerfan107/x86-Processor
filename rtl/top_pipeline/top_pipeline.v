@@ -272,6 +272,7 @@ module top_pipeline (
    wire                    a_op0_is_reg;
    wire                    a_op0_is_segment;
    wire                    a_op0_is_mmx;
+   wire                    a_op1_is_reg;
    wire                    a_op1_is_address;
    wire [47:0]             a_imm;
    wire [3:0]              a_alu_op;
@@ -298,6 +299,10 @@ module top_pipeline (
    wire                    e_op_a_is_segment;
    wire                    e_op_a_is_reg;
    wire                    e_op_a_is_mmx;                   
+   wire   [2:0]            e_op_b_reg;
+   wire   [31:0]           e_op_b_address;
+   wire                    e_op_b_is_reg;
+   wire                    e_op_b_is_address;
    wire  [31:0]            e_stack_ptr;      // stack pointer address
    wire   [47:0]           e_imm;            // immediate
    wire   [3:0]            e_alu_op;          // alu operation defined in #decode channel
@@ -320,6 +325,10 @@ module top_pipeline (
    wire                    wb_op_a_is_reg;
    wire                    wb_op_a_is_segment;
    wire                    wb_op_a_is_mmx;
+   wire  [2:0]             wb_op_b_reg;
+   wire  [31:0]            wb_op_b_address;
+   wire                    wb_op_b_is_reg;
+   wire                    wb_op_b_is_address;
    wire                    wb_valid;
    wire                    wb_branch_taken;
    wire                    wb_to_sys_controller;
@@ -729,6 +738,7 @@ module top_pipeline (
       a_op0_is_reg,
       a_op0_is_segment,
       a_op0_is_mmx,
+      a_op1_is_reg,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -770,6 +780,7 @@ module top_pipeline (
       a_op0_is_reg,
       a_op0_is_segment,
       a_op0_is_mmx,
+      a_op1_is_reg,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -796,6 +807,10 @@ module top_pipeline (
       e_op_a_is_reg,
       e_op_a_is_segment,
       e_op_a_is_mmx,				   				   
+      e_op_b_reg,
+      e_op_b_address,
+      e_op_b_is_reg,
+      e_op_b_is_address,
       e_stack_ptr,
       e_stack_op,
       e_imm,
@@ -830,6 +845,10 @@ module top_pipeline (
     e_op_a_is_reg,
     e_op_a_is_segment,
     e_op_a_is_mmx,
+    e_op_b_reg,
+    e_op_b_address,
+    e_op_b_is_reg,
+    e_op_b_is_address,
     1'b0,
     e_op_a,
     e_op_b,
@@ -859,6 +878,10 @@ module top_pipeline (
     wb_op_a_is_reg,
     wb_op_a_is_segment,
     wb_op_a_is_mmx,
+    wb_op_b_reg,
+    wb_op_b_address,
+    wb_op_b_is_reg,
+    wb_op_b_is_address,
     wb_stack_op,			  
     wb_stack,
     wb_valid,
