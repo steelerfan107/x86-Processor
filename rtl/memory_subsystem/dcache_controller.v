@@ -32,6 +32,8 @@ module dcache_controller(
     output addr2_mux,
     output wr_cnt_z,
     output wr_cnt_en,
+    
+    output wr,
 
     // TLB
     input TLB_hit,
@@ -49,8 +51,8 @@ module dcache_controller(
     input bus_busy,
     output busy_out,
 
-    output page_fault
-    
+    output page_fault,
+    output stage 
 );
     
     wire [2:0] state;
@@ -93,6 +95,7 @@ module dcache_controller(
         .wr_cnt_en          (wr_cnt_en),
         .read_num_sel       (read_num_sel),
         .read_num_wr_en     (read_num_wr_en),
+        .wr                 (wr),
         .dp_valid           (dp_valid),
         .busy_out           (busy_out),
         .write              (write), 
@@ -105,7 +108,8 @@ module dcache_controller(
         .pa_wr_en           (pa_wr_en),
         .new_state2         (new_state[2]),
         .new_state1         (new_state[1]),
-        .new_state0         (new_state[0])
+        .new_state0         (new_state[0]),
+        .stage              (stage)
     );
 
     dff$ 

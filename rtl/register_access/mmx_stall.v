@@ -16,6 +16,7 @@ module mmx_stall (  // fanout good
     write_select,
     write_enable,
 
+    size,
     mod_rm,
 
     op0,
@@ -37,6 +38,7 @@ module mmx_stall (  // fanout good
     input [2:0] write_select;
     input write_enable;
 
+    input [2:0] size;
     input [7:0] mod_rm;
 
     input [2:0] op0;
@@ -48,20 +50,25 @@ module mmx_stall (  // fanout good
     input next_stage_ready;
 
     // first see if op0 and op1 are mmx
-    // wire is_mmx;
-    // compare (.WIDTH(3)) is_mmx_cmp (size, 3'd5, is_mmx);
+    wire is_mmx_size;
+    compare (.WIDTH(3)) is_mmx_cmp (size, 3'd5, is_mmx);
+
+
 
     // value can come from either mm register or modr/m
-    wire op0_is_mmx;
+    wire op0_is_mmx_reg;
     wire [2:0] op0_mmx_reg;
     mmx_stall_is_reg op0_mmx_is_reg (
-        op0_is_mmx, 
+        op0_is_mmx_reg, 
         op0_mmx_reg,
 
         op0,
         op0_reg,
         mod_rm
     );
+
+    wire op0_is_mmx;
+    or2$ is_mmx_or (op0_is_mmx, op0_is_mmx_reg, is_mmx_size);
 
     wire op1_is_mmx;
     wire [2:0] op1_mmx_reg;

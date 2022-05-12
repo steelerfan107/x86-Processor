@@ -19,11 +19,6 @@ module main_memory_top(
     input rd_wr;
     input [1:0] wr_size;
 
-
-    wire [31:0] dec_out;
-    decoder5_32$ dec(addr[11:7], dec_out);
-
-
     wire [31:0] dio_internal;
 
     wire ctrl_we;
@@ -76,41 +71,47 @@ module main_memory_top(
 
 
     genvar i;
+    genvar j;
+
+    wire [7:0] dec8_out;
+    decoder3_8$ dec8(addr[14:12], dec8_out);
+
     generate
-        for (i =0; i < 32; i=i+1) begin
-            wire ce;
-            wire oe;
-            wire wr;
+    for (j = 0; j < 8; j=j+1) begin
+        wire [31:0] dec32_out;
+        decoder5_32$ dec(addr[11:7], dec32_out);
+            for (i =0; i < 32; i=i+1) begin
+                wire decode_res;
+                and2$ dec_and(decode_res, dec32_out[i], dec8_out[j]);
+                wire ce;
+                wire oe;
+                wire wr;
 
-            
-            wire ce_n;
-            wire oe_n;
-            wire wr_n;
+                inv1$ cein(ctrl_ce_n, ctrl_ce);
+                inv1$ oein(ctrl_oe_n, ctrl_oe);
+                inv1$ wrin(ctrl_wr_n, ctrl_we);
 
-            inv1$ cein(ctrl_ce_n, ctrl_ce);
-            inv1$ oein(ctrl_oe_n, ctrl_oe);
-            inv1$ wrin(ctrl_wr_n, ctrl_we);
+                and2$ ceand(ce, decode_res, ctrl_ce_n);
+                and2$ oeand(oe, decode_res, ctrl_oe_n);
+                and2$ wrand(wr, decode_res, ctrl_wr_n);
 
-            and2$ ceand(ce, dec_out[i], ctrl_ce_n);
-            and2$ oeand(oe, dec_out[i], ctrl_oe_n);
-            and2$ wrand(wr, dec_out[i], ctrl_wr_n);
+                wire ce_n;
+                wire oe_n;
+                wire wr_n;
 
-            wire ce_n;
-            wire oe_n;
-            wire wr_n;
+                inv1$ ceinv(ce_n, ce);
+                inv1$ oeinv(oe_n, oe);
+                inv1$ wrinv(wr_n, wr);
 
-            inv1$ ceinv(ce_n, ce);
-            inv1$ oeinv(oe_n, oe);
-            inv1$ wrinv(wr_n, wr);
-
-            sram32x32$ (
-                .A(addr[6:2]),
-                .DIO(dio_internal),
-                .OE(oe_n),
-                .WR(wr_n),
-                .CE(ce_n)
-            );
-        end
+                sram32x32$ (
+                    .A(addr[6:2]),
+                    .DIO(dio_internal),
+                    .OE(oe_n),
+                    .WR(wr_n),
+                    .CE(ce_n)
+                );
+            end
+    end
     endgenerate
 
 

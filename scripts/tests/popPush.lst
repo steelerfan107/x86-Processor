@@ -2,8 +2,8 @@
 // Eric T.
 
 0x0: B8 11 11 00 00 // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
-0x5: B9 09 00 00 00 // Move 0x0000_0009 to ECX (Move imm to r32) - Row 61
-0xa: BA 40 00 00 00 // Move 0x0000_0400 to EDX (Move imm to r32) - Row 61
+0x5: B9 09 00 00 00 // Move 0x0000_0004 to ECX (Move imm to r32) - Row 61
+0xa: BA 00 01 00 0B // Move 0x0000_B400 to EDX (Move imm to r32) - Row 61
 0xf: BB 88 00 00 00 // Move 0x0000_0088 to EBX (Move imm to r32) - Row 61
 0x14: 89 D4 // Move EDX to ESP (Move R/M32 to r32) - Row 69
 0x16: 66 68 10 10 // Push imm16 - 113

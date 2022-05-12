@@ -929,11 +929,11 @@ module top_pipeline (
       wb_address_mux_sel
    );
 
-   assign  wb_ready = 1'b1;
+   assign  wb_ready = (wb_op_a_is_address) ? wmem_ready : 1'b1;
  //wmem_ready;
   // assign  wmem_valid = (wb_valid & wb_op_a_is_address);
    
-  and2$ (wmem_valid, wb_valid, wb_is_address);
+  and3$ (wmem_valid, wb_valid, wmem_ready, wb_is_address);
    
   // assign  wmem_address = wb_dest_address;
   assign  wmem_wr_en = wb_is_address;

@@ -411,9 +411,11 @@ module register_access_top (
         wb_reg_size[1:0],
         wb_reg_en,
 
-        in_accept     
+        (in_accept  &  (d_alu_op != 6))   
     );
+    // JMPS dont actually Write to OP0
 
+   
     // Segment Register Stall
     segment_register_stall segment_register_stall0 (
         clk,
@@ -428,7 +430,7 @@ module register_access_top (
         d_op0_reg,
 
         d_op1,
-        d_op1_reg,
+        d_op1_reg,						    
 
         in_accept
     );
@@ -442,6 +444,7 @@ module register_access_top (
         wb_mmx_number,
         wb_mmx_en,
 
+	d_size,
         d_modrm,
 
         d_op0,
