@@ -350,6 +350,7 @@ wire and3;
 wire and4;
 wire and5;
 wire and6;
+wire and7;
 wire or0;
 
 inv1$ wr_cnt0_inv (.out(wr_cnt0_not), .in(wr_cnt0));
@@ -362,12 +363,13 @@ inv1$ wr_size1_inv (.out(wr_size1_not), .in(wr_size1));
 and4$ and_gate0(.out(and0), .in0(wr_cnt0_not), .in1(off1_not), .in2(off0_not), .in3(wr_size0_not));
 and5$ and_gate1(.out(and1), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(off1), .in3(off0), .in4(wr_size1));
 and5$ and_gate2(.out(and2), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(off1_not), .in3(off0_not), .in4(wr_size1_not));
-and3$ and_gate3(.out(and3), .in0(wr_cnt0_not), .in1(off1_not), .in2(wr_size1));
-and3$ and_gate4(.out(and4), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(wr_size0_not));
-and2$ and_gate5(.out(and5), .in0(wr_cnt1), .in1(wr_cnt0_not));
-and2$ and_gate6(.out(and6), .in0(wr_size1), .in1(wr_size0_not));
+and3$ and_gate3(.out(and3), .in0(wr_cnt0_not), .in1(off0_not), .in2(wr_size1));
+and3$ and_gate4(.out(and4), .in0(wr_cnt0_not), .in1(off1_not), .in2(wr_size1));
+and3$ and_gate5(.out(and5), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(wr_size0_not));
+and2$ and_gate6(.out(and6), .in0(wr_cnt1), .in1(wr_cnt0_not));
+and2$ and_gate7(.out(and7), .in0(wr_size1), .in1(wr_size0_not));
 
-or7$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5), .in6(and6));
+or8$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5), .in6(and6), .in7(and7));
 
 assign wr_done = or0;
 endmodule

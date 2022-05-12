@@ -475,7 +475,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
         rd_req_valid = 0;
         //rd_req_address = 32'h02000003;
 
-        wr_req_address = 32'h0b0000ff;
+        wr_req_address = 32'h0b0000fe;
         #20
         grant_in = 1;
 
@@ -484,14 +484,14 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
         #20 
         wr_req_valid = 0;
         wr_req_data = 64'b0;
-        wr_req_address = 32'h0b0000fb;
+        wr_req_address = 32'h0b0000fa;
         #1300
         wr_req_valid = 1;
         wr_req_data = 64'h01010101;
         #20
         wr_req_valid = 0;
         wr_req_data = 64'b0;
-        wr_req_address = 32'h0b0000f7;
+        wr_req_address = 32'h0b0000f6;
         #1300
         wr_req_valid=1;
         wr_req_data = 64'h34345634;
@@ -499,15 +499,15 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
    
         #20
         wr_req_valid=0; 
-        rd_req_address = 32'h0b0000f7;
+        rd_req_address = 32'h0b0000f6;
         
         #1300
         rd_req_valid = 1;
 
         #1300
-        rd_req_address = 32'h0b0000fb;
+        rd_req_address = 32'h0b0000fa;
         #1300
-        rd_req_address = 32'h0b0000ff;
+        rd_req_address = 32'h0b0000fe;
         
         
 
