@@ -1,0 +1,31 @@
+// Call Ret Sanity Test
+// Eric T.
+
+0x0: B8 00 01 00 0B // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
+0x5: B9 00 00 00 01 // Move 0x1111_1111 to ECX (Move imm to r32) - Row 61
+0xa: BA 00 00 00 02 // Move 0x1111_1111 to EDX (Move imm to r32) - Row 61
+0xf: BB 00 00 00 03 // Move 0x1111_1111 to EBX (Move imm to r32) - Row 61
+0x14: 89 C4 // Move EAX to ESP (Move R/M32 to r32) - Row 69
+0x16: 89 CD // Move ECX to EBP (Move R/M32 to r32) - Row 69
+0x18: 89 D6 // Move EDX to ESI (Move R/M32 to r32) - Row 69
+0x1a: 89 DF // Move EBX to EDI (Move R/M32 to r32) - Row 69
+0x1c: E8 15 00 00 00// Call Near Row 32
+0x21: 66 E8 1C 00 // Call Near Row 33
+0x25: EB 25 // Jump + 25
+0x27: 00 00 00 00 00
+0x2c: 00 00 00 00 00
+0x31: 00 00 00 00 00
+0x36 : B8 11 11 11 11 // Move 0x1111_1111 to EAX (Move imm to r32) - Row 61
+0x3b : B9 11 11 11 11 // Move 0x1111_1111 to ECX (Move imm to r32) - Row 61
+0x40 : C3
+0x41 : BA 22 22 22 22 // Move 0x1111_1111 to EDX (Move imm to r32) - Row 61
+0x46 : BB 22 22 22 22 // Move 0x1111_1111 to EBX (Move imm to r32) - Row 61
+0x4b : C3 
+0x4c : 9A 00 00 00 10 00 00
+0x53 : BA DE AD BE EF // Move 0x1111_1111 to EDX (Move imm to r32) - Row 61
+0x58 : BB DE AD BE EF // Move 0x1111_1111 to EBX (Move imm to r32) - Row 61
+0x5d : F4 // Halt
+0x100 : B8 DE AD BE EF // Move ...   to EAX (Move imm to r32) - Row 61
+0x105 : B9 DE AD BE EF // Move ...  to ECX (Move imm to r32) - Row 61
+0x10a : CB // Halt
+0x10b : F4 // Halt
