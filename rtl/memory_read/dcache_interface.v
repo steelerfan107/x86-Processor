@@ -111,7 +111,7 @@ module dcache_interface (
         rd_dp_read_data,
         data_out,
         ,
-        ld_mdr
+        (rd_dp_valid & rd_dp_ready) //ld_mdr. Just blindly load valid data. State machine takes care of other control
     );
 
 

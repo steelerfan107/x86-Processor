@@ -110,7 +110,7 @@ compare #(.WIDTH(4)) (4'd1, s0_displacement_bytes,  disp_byte_one);
 
 logic_tree_bus #(.WIDTH(3),.NINPUTS(2))  ({{3{imm_byte_one}},dec_size},masked_size);
 
-mux #(.WIDTH(32),.INPUTS(2)) ({sign_extend_disp,32'b0}, sign_extend_disp, disp_byte_one);
+mux #(.WIDTH(32),.INPUTS(2)) ({sign_extend_4B_disp,32'b0}, sign_extend_disp, disp_byte_one);
 mux #(.WIDTH(48),.INPUTS(2)) ({sign_extend_4B_imm,sign_extend_2B_imm,32'b0,32'b0}, sign_extend_imm, masked_size);
 
 wire [31:0] dec_disp_extend;

@@ -253,7 +253,7 @@ module memory_read_top (
     wire 		 stack_select;
     and2$ ( stack_select, ~a_stack_op[1], a_stack_op[0]);
    
-    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , 32'b0} ,  p_op_a_address, stack_select);
+    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , a_op0[31:0]} ,  p_op_a_address, stack_select);
    
     //assign p_op_a_is_address = a_op0_is_address | (a_stack_op[0]);
    //   
@@ -297,7 +297,7 @@ module memory_read_top (
 
     wire  read_transaction = a_op0_is_address | a_op1_is_address;
 
-    wire  read_mask = (~read_transaction) | (rmem_dp_valid & rmem_dp_ready);
+   wire   read_mask = (~read_transaction) | (rmem_dp_valid & rmem_dp_ready);
    
     dcache_interface dcache_interface0 (
         clk,
@@ -329,7 +329,7 @@ module memory_read_top (
     memory_read_data_mask memory_read_data_mask0 (
         dcache_out_resized,
 
-        dcache_data_out,
+        rmem_dp_read_data, //dcache_data_out,
         a_size
     );
 
@@ -398,7 +398,7 @@ module memory_read_top (
    // ----- //
 
    // valid when address generation is valid and memory read is complete
-   and2$ valid_and (p_valid, a_valid, dcache_valid);
+   and2$ valid_and (p_valid, a_valid, read_mask);
 
    // ----- //
    // Stall //
