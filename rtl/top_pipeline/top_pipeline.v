@@ -475,101 +475,6 @@ module top_pipeline (
    wire is_xchg;
    compare #(.WIDTH(4)) is_xchg_cmp (wb_alu_op, 4'd14, is_xchg);
    and3$ (wb_reg_qual_2, wb_valid, wb_op_b_is_reg, is_xchg);   // valid, is reg, and is xchg
-   
-//    register_access_top uut_register_access (
-//       clk,
-//       reset,
-//       reg_flush,
-//       reg_cs,
-//       reg_load_cs,					    
-
-//       d_valid,
-//       d_ready,
-//       d_size,
-//       d_set_d_flag,
-//       d_clear_d_flag,
-//       d_op0,
-//       d_op1,
-//       d_op0_reg,
-//       d_op1_reg,
-//       d_modrm,
-//       d_sib,
-//       d_imm,
-//       d_disp,
-//       d_alu_op,
-//       d_flag_0,
-//       d_flag_1,
-//       d_stack_op,
-//       d_seg_override,
-//       d_seg_override_valid,
-//       d_movs,
-//       d_pc,
-//       d_branch_taken,
-//       d_opcode,					    
-
-//       r_valid,
-//       r_ready,
-//       r_size,
-//       r_set_d_flag,
-//       r_clear_d_flag,
-//       r_op0,
-//       r_op1,
-//       r_op0_reg,
-//       r_op1_reg,
-//       r_modrm,
-//       r_sib,
-//       r_imm,
-//       r_disp,
-//       r_alu_op,
-//       r_flag_0,
-//       r_flag_1,
-//       r_stack_op,
-//       r_stack_address,
-//       r_seg_override,
-//       r_seg_override_valid,
-//       r_eax,
-//       r_ecx,
-//       r_edx,
-//       r_ebx,
-//       r_esp,
-//       r_ebp,
-//       r_esi,
-//       r_edi,
-//       r_cs,
-//       r_ds,
-//       r_es,
-//       r_fs,
-//       r_gs,
-//       r_ss,
-//       r_mm0,
-//       r_mm1,
-//       r_mm2,
-//       r_mm3,
-//       r_mm4,
-//       r_mm5,
-//       r_mm6,
-//       r_mm7,
-//       r_pc,
-//       r_branch_taken,
-//       r_opcode,	
-
-//       eflags_reg[10],			
-
-//       wb_reg_number,
-//       wb_reg_qual, //(wb_op_a_is_reg & wb_valid),
-//       wb_stack,
-//       wb_opsize,
-//       wb_reg_data[31:0],
-//       wb_reg_number,
-//       wb_seg_qual, //(wb_op_a_is_segment & wb_valid),
-//       wb_reg_data[15:0],
-//       wb_reg_number,
-//       wb_mmx_qual, //(wb_op_a_is_mmx & wb_valid),
-//       wb_reg_data,
-//       wb_stack_qual, //(wb_valid & wb_valid & wb_stack),
-//       wb_opsize,
-//       wb_stack_op
-//   );  
 
    register_access_top uut_register_access (
       // Clock Interface
@@ -904,6 +809,9 @@ module top_pipeline (
    // --------- //
    // writeback //
    // --------- //
+
+   assign wb_reg_data_2[31:0] = wb_result[63:32];
+   assign wb_reg_number_2 = wb_op_b_reg;
 
    // decide what address to use
    // if op_b is address and this is exchange, use that as wb address
