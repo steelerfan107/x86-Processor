@@ -112,12 +112,21 @@ module memory_subsystem_top (
 
     wire bus_req_icache;
     wire bus_req_dcache;   
+    wire bus_req_sys;
+    wire bus_req_dma;
     wire bus_req;
 
     //wire bus_done_icache;
     //wire bus_done;
 
-    wire bus_data_valid;
+    wire bus_data_valid
+    wire valid_mem;
+    wire valid_dma;
+    wire valid_disk;
+    assign bus_data_valid = valid_mem | valid_dma | valid_disk;
+
+    wire rd_wr_dcache;
+    wire rd_wr_dma;
 
     wire bus_rd_wr;
     wire bus_en;
@@ -131,6 +140,7 @@ module memory_subsystem_top (
     or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
 
     or4$ _or_en(bus_en, d_bus_en, i_bus_en, 1'b0, 1'b0);
+    or2$ _or_bus_rd_wr(bus_rd_wr, rd_wr_dcache, rd_wr_dma);
 
     //or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
     //or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
@@ -232,7 +242,7 @@ module memory_subsystem_top (
         .mem_req(bus_req_dcache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
-               .mem_rd_wr(bus_rd_wr),
+        .mem_rd_wr(bus_rd_wr),
         .mem_en(d_bus_en),
         .mem_wr_size(mem_wr_size),
 
@@ -260,10 +270,10 @@ module memory_subsystem_top (
         .dp_ready(sys_r_dp_ready),
         .dp_read_data(sys_r_dp_read_data),
 
-        .mem_addr(),
-        .mem_req(),
-        .mem_data_valid(),
-        .mem_data(),
+        .mem_addr(bus_addr),
+        .mem_req(bus_req_sys),
+        .mem_data_valid(bus_data_valid),
+        .mem_data(bus_data),
         .mem_rd_wr(),
         .mem_en(),
 
@@ -292,7 +302,7 @@ module memory_subsystem_top (
         .mem_req(bus_req_icache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
-        .mem_rd_wr(nc), //bus_rd_wr),
+        .mem_rd_wr(bus_rd_wr), //bus_rd_wr),
         .mem_en(i_bus_en),
         .grant_in(sys_grant),
         .grant_out(icache_grant),
@@ -300,16 +310,26 @@ module memory_subsystem_top (
         .bus_busy_in(bus_busy)
     );
 
-    //dma_top dma();
+    //dma_top dma(
+    //    .clk(clk),
+    //    .reset(reset),
+    //    .en(dec_dma_en),
+    //    .addr(bus_addr),
+    //    .data(bus_data),
+    //    .ready_in(bus_data_valid),
+    //    .ready_out(valid_dma),
+    //    .wr_size(mem_wr_size),
+    //    .rd_wr(bus_rd_wr)
+    //);
     
     main_memory_top main_memory_top(
         .clk(clk),
         .reset(reset),
         .en(dec_mem_en),
-        .rd_wr(dec_rd_wr),
+        .rd_wr(bus_rd_wr),
         .addr(bus_addr),
         .data(bus_data),
-        .ready(bus_data_valid),
+        .ready(valid_mem),
         .wr_size(mem_wr_size)
     );
 

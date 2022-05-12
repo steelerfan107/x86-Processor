@@ -225,7 +225,7 @@ module dcache(
         .TLB_rd_wr(tlb_rd_wr),
         .TLB_pcd(tlb_pcd),
         .mem_ready(mem_data_valid),
-        .mem_rd_wr(mem_rd_wr),
+        .mem_rd_wr(mem_rd_wr_comb),
         .mem_req(mem_req),
         .bus_grant(grant_in),
         .grant_pass(ctrl_grant_pass),
@@ -236,8 +236,9 @@ module dcache(
     );
 
    
+    wire n_drive_addr;
     //assign mem_rd_wr = 1'b0;
-    //tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
+    tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
 
     // TODO behavioral
     assign ctrl_staging_wr_en = (ctrl_write & ~read_num) | ctrl_stage;
@@ -301,20 +302,21 @@ module dcache(
     and2$ drive_bus_and(ctrl_drive_bus, mem_en, ctrl_rd_wr_addr);
     inv1$ drive_bus_inv(n_drive_data, ctrl_drive_bus);
 
-    wire n_drive_addr;
     inv1$ drive_bus_addr_inv(n_drive_addr, bus_busy_out);
 
     tristate_bus_driver16$ data_bus_driver1(n_drive_data, mem_data_driver[15:0], mem_data[15:0]);
     tristate_bus_driver16$ data_bus_driver2(n_drive_data, mem_data_driver[31:16], mem_data[31:16]);
 
-
     tristate_bus_driver16$(n_drive_addr, pa_out[15:0],  mem_addr[15:0]);
     tristate_bus_driver16$(n_drive_addr, pa_out[31:16], mem_addr[31:16]);
-   
  
     eval_wr_done ewd(wr_done, write_cnt, byte_offset, wr_size);
     
-    wr_size_select wss(write_cnt, byte_offset, wr_size, mem_wr_size);     
+    wire [1:0] mem_wr_size_out; 
+    wr_size_select wss(write_cnt, byte_offset, wr_size, mem_wr_size_out);     
+
+    tristate_bus_driver1$(n_drive_addr, mem_wr_size_out[0], mem_wr_size[0]);
+    tristate_bus_driver1$(n_drive_addr, mem_wr_size_out[1], mem_wr_size[1]);
 
 endmodule
 
