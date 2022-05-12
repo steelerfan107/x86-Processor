@@ -344,6 +344,12 @@ module address_generation_top (
     // only cause exception if the incoming data is valid
     and2$ except_and (segment_limit_exception, r_valid, maybe_segment_limit_exception);
 
+    // ---------------------------- //
+    // Determine if OP1 is Register //
+    // ---------------------------- //
+
+    // a register if op1 is reg or is mod rm with mod 11
+    is_op1_reg (a_op1_is_reg, r_op1, r_modrm);
 
     // ------- //
     // OP0 Mux //
@@ -439,6 +445,33 @@ module address_generation_top (
     r_mm7
 
 );
+
+
+endmodule
+
+module is_op1_reg (
+    out,
+
+    op1,
+    mod_rm
+);
+    output out;
+
+    input [2:0] op1;
+    input [7:0] mod_rm;
+
+    // reg if op1 == 1 or (op1 == 4 and mod == 11)
+
+    wire [1:0] mod = mod_rm[7:6];
+
+    wire op1_is_1;
+    compare #(.WIDTH(3)) op1_cmp (op1, 3'd1, op1_is_1);
+
+    wire mod_rm_reg;
+    compare #(.WIDTH(5)) mod_rm_cmp ({op1, mod}, 5'b10011, mod_rm_reg);
+
+    or2$ or_out (out, op1_is_1, mod_rm_reg);
+
 
 
 endmodule
