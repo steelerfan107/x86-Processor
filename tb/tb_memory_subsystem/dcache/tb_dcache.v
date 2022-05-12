@@ -459,7 +459,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
          wr_req_valid = 0;
          wr_req_address = 0;
          wr_req_data = 0;
-         wr_size_in = 1;
+         wr_size_in = 2;
 
         // Arbiter Interface
          grant_in = 0;
@@ -471,7 +471,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
 
         #20
         #20
-        wr_size_in = 0;
+        wr_size_in = 3;
         rd_req_valid = 0;
         //rd_req_address = 32'h02000003;
 
