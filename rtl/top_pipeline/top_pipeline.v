@@ -924,12 +924,12 @@ module top_pipeline (
 
    // determine what data to write
    mux #(.WIDTH(64), .INPUTS(2)) wr_data_mux (
-      {{32'h0, wb_result[31:0]}, wb_result},
+      {{32'h0, wb_result[63:32]}, wb_result},   
       wmem_wr_data,
       wb_address_mux_sel
    );
 
-   assign  wb_ready = (wb_op_a_is_address) ? wmem_ready : 1'b1;
+   assign  wb_ready = (wb_is_address) ? wmem_ready : 1'b1;
  //wmem_ready;
   // assign  wmem_valid = (wb_valid & wb_op_a_is_address);
    

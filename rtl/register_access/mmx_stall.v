@@ -51,7 +51,7 @@ module mmx_stall (  // fanout good
 
     // first see if op0 and op1 are mmx
     wire is_mmx_size;
-    compare #(.WIDTH(3)) is_mmx_cmp (size, 3'd5, is_mmx);
+    compare #(.WIDTH(3)) is_mmx_cmp (size, 3'd5, is_mmx_size);
 
 
 
