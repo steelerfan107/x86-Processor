@@ -837,7 +837,13 @@ module top_pipeline (
       wb_address_mux_sel
    );
 
-   assign  wb_ready = (wb_is_address) ? wmem_ready : 1'b1;
+   mux #(.WIDTH(1), .INPUTS(2)) wb_ready_mux (
+      {wmem_ready, 1'b1},
+      wb_ready,
+      wb_is_address
+   );
+
+   
  //wmem_ready;
   // assign  wmem_valid = (wb_valid & wb_op_a_is_address);
    
