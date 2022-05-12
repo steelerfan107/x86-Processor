@@ -308,7 +308,23 @@ module instruction_queue (
         behv_b	 
    );
    
-   mux #(.INPUTS(2),.WIDTH(7))   valid_bytes_mux ({behv_b,behv_a},valid_bytes_o,vb_select);
+   //mux #(.INPUTS(2),.WIDTH(7))   valid_bytes_mux ({behv_b,behv_a},valid_bytes_o,vb_select);
+ 
+   wire [6:0] valid_bytes_i;
+   wire [6:0] valid_bytes_p16;
+   wire [6:0] valid_bytes_p16_mBR;
+   wire [6:0] valid_bytes_mBR;
+
+   assign valid_bytes_p16 = valid_bytes_o + 16;
+   assign valid_bytes_p16_mBR = valid_bytes_o + 16 - bytes_read_o;
+   assign valid_bytes_mBR = valid_bytes_o - bytes_read_o;
+   
+   assign valid_bytes_i = (in_accept & out_accept) ? valid_bytes_p16_mBR :
+			  (in_accept)  ? valid_bytes_p16 :
+			  (out_accept) ? valid_bytes_mBR : valid_bytes_o;
+   
+   register #(.WIDTH(7)) vnc (clk, int_reset, valid_bytes_i, valid_bytes_o, , (in_accept | out_accept));
+
    
    // Head Ptr Plus 8
    slow_addr #(.WIDTH(7)) hp1 (7'd16,head,head_p16, nc0);

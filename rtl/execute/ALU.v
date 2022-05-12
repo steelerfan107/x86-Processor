@@ -121,10 +121,10 @@ ucomp8 zf_and8b(.a(and8b_out[7:0]), .b(8'h00), .eq(and8b_zf));
 ucomp16 zf_and16b(.a(and16b_out[15:0]), .b(16'h0000), .eq(and16b_zf));
 ucomp32 zf_and32b(.a(and32b_out), .b(32'h00000000), .eq(and32b_zf));
 assign and_set_eflags = 6'b111z11;
-mux #(.WIDTH(32), .INPUTS(6)) and_mux(.in({32'hz, 32'hz, and32b_out, and16b_out, and8b_out, 32'hz}), .out(and_out), .select(opsize));
+mux #(.WIDTH(32), .INPUTS(8)) and_mux(.in({32'hz,32'hz,32'hz, 32'hz, and32b_out, and16b_out, and8b_out, 32'hz}), .out(and_out), .select(opsize));
 assign and_eflags_out[5] = 1'b0;
-mux #(.WIDTH(1), .INPUTS(6)) and_sf_mux(.in({1'bz, 1'bz, and32b_out[31], and16b_out[15], and8b_out[7], 1'bz}), .out(and_eflags_out[4]), .select(opsize));
-mux #(.WIDTH(1), .INPUTS(6)) and_zf_mux(.in({1'bz, 1'bz, and32b_zf, and16b_zf, and8b_zf, 1'bz}), .out(and_eflags_out[3]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) and_sf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, and32b_out[31], and16b_out[15], and8b_out[7], 1'bz}), .out(and_eflags_out[4]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) and_zf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, and32b_zf, and16b_zf, and8b_zf, 1'bz}), .out(and_eflags_out[3]), .select(opsize));
 assign and_eflags_out[2] = 1'bz;
 assign and_eflags_out[1] = 1'b0;
 
@@ -139,7 +139,7 @@ wire [5:0] bsf_eflags_out;
 BSF16 bsf16(.in(b[15:0]), .out(bsf16b_out), .v(bsf_v));
 BSF32 bsf32(.in(b[31:0]), .out(bsf32b_out), .v(bsf_v));
 assign bsf_set_eflags = 6'bzz1zzz;
-mux #(.WIDTH(32), .INPUTS(6)) bsf_mux(.in({32'hz, 32'hz, bsf32b_out, bsf16b_out, 32'hz, 32'hz}), .out(bsf_out), .select(opsize[1]));
+mux #(.WIDTH(32), .INPUTS(8)) bsf_mux(.in({32'hz, 32'hz,32'hz, 32'hz, bsf32b_out, bsf16b_out, 32'hz, 32'hz}), .out(bsf_out), .select(opsize[1]));
 ucomp16 zf_bsf16b(.a(b[15:0]), .b(16'h0000), .eq(bsf_eflags_out[3]));
 ucomp32 zf_bsf32b(.a(b[31:0]), .b(32'h00000000), .eq(bsf_eflags_out[3]));
 
@@ -156,7 +156,7 @@ wire [31:0] jmp_out;
 wire [31:0] jmp_cs;
 wire zf_en, jmp_load_address, jmp_load_cs;
 and2$ and_zfen(.out(zf_en), .in0(flag_0_map[0]), .in1(flag_0_map[1]));
-JMP jmp(.EIP(eip), .CS(cs), .op0(a[31:0]), .opcode(opcode), .opsize(opsize), .ZF_en(zf_en), .CF_en(flag_1_map[0]), .eflags_in(eflags_in), .branch_taken(branch_taken), .br_misprediction(br_misprediction), .jump_load_address(jump_load_address), .jump_address(jump_address), .jump_load_cs(jmp_load_cs), .jump_cs(jmp_cs), .alu_op(alu_op));
+JMP jmp(.EIP(eip), .CS(cs), .op0(a[31:0]), .opcode(opcode), .opsize(opsize), .ZF_en(zf_en), .CF_en(flag_1_map[0]), .eflags_in(eflags_in), .branch_taken(branch_taken), .br_misprediction(br_misprediction), .jump_load_address(jmp_load_address), .jump_address(jump_address), .jump_load_cs(jmp_load_cs), .jump_cs(jmp_cs), .alu_op(alu_op));
 
 /*NOT -alu_op 7
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -172,7 +172,7 @@ NOTN #(.WIDTH(32)) not32b(.in(a[31:0]), .out(not32b_out));
 assign not8b_out [31:8] = 24'h000000;
 assign not16b_out [31:16] = 16'h0000;
 assign not_set_eflags = 6'b000000;
-mux #(.WIDTH(32), .INPUTS(6)) not_mux(.in({32'hz, 32'hz, not32b_out, not16b_out, not8b_out, 32'hz}), .out(not_out), .select(opsize));
+mux #(.WIDTH(32), .INPUTS(8)) not_mux(.in({32'hz, 32'hz,32'hz, 32'hz, not32b_out, not16b_out, not8b_out, 32'hz}), .out(not_out), .select(opsize));
 
 /*OP -alu_op 8
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -193,10 +193,10 @@ assign or_set_eflags = 6'b111z11;
 ucomp8 zf_or8b(.a(or8b_out[7:0]), .b(8'h00), .eq(or8b_zf));
 ucomp16 zf_or16b(.a(or16b_out[15:0]), .b(16'h0000), .eq(or16b_zf));
 ucomp32 zf_or32b(.a(or32b_out), .b(32'h00000000), .eq(or32b_zf));
-mux #(.WIDTH(32), .INPUTS(6)) or_mux(.in({32'hz, 32'hz, or32b_out, or16b_out, or8b_out, 32'hz}), .out(or_out), .select(opsize));
+mux #(.WIDTH(32), .INPUTS(8)) or_mux(.in({32'hz, 32'hz,32'hz, 32'hz, or32b_out, or16b_out, or8b_out, 32'hz}), .out(or_out), .select(opsize));
 assign or_eflags_out[5] = 1'b0;
-mux #(.WIDTH(1), .INPUTS(6)) or_sf_mux(.in({1'bz, 1'bz, or32b_out[31], or16b_out[15], or8b_out[7], 1'bz}), .out(or_eflags_out[4]), .select(opsize));
-mux #(.WIDTH(1), .INPUTS(6)) or_zf_mux(.in({1'bz, 1'bz, or32b_zf, or16b_zf, or8b_zf, 1'bz}), .out(or_eflags_out[3]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) or_sf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, or32b_out[31], or16b_out[15], or8b_out[7], 1'bz}), .out(or_eflags_out[4]), .select(opsize));
+mux #(.WIDTH(1), .INPUTS(8)) or_zf_mux(.in({1'bz, 1'bz,1'bz, 1'bz, or32b_zf, or16b_zf, or8b_zf, 1'bz}), .out(or_eflags_out[3]), .select(opsize));
 assign or_eflags_out[2] = 1'bz;
 assign or_eflags_out[1] = 1'b0;
 

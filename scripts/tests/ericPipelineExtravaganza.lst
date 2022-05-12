@@ -1,0 +1,79 @@
+// Erics Pipeline Extravaganza
+// Eric T.
+
+0x0: B8 11 11 00 00  // Move 0x0000_1111 to EAX (Move imm to r32) - Row 69
+0x5: B9 01 00 00 00  // Move 0x0000_0001 to ECX (Move imm to r32) - Row 69
+0xa: 66 BA 08 00     // Move 0x0008 to EDX (Move imm to r32) - Row 68
+0xe: B3 11           // Move 0x11 to EBX (Move imm to r32) - Row 67
+0x10: 89 C4          // Move EAX to ESP (Move R/M32 to r32) - Row 61
+0x12: 66 89 CD       // Move  CX to  BP (Move R/M32 to r32) - Row 60
+0x15: 88 D6          // Move DL to DH (Move R/M32 to r32) - Row 59
+0x17: B8 11 11 10 10 // Move 0x1010_1111 to EAX (Move imm to r32) - Row 69
+0x1c: B9 22 22 02 02 // Move 0x0202_2222 to ECX (Move imm to r32) - Row 69
+0x21: Ba 33 33 30 30 // Move 0x3030_3333 to EDX (Move imm to r32) - Row 69
+0x26: BB 44 44 04 04 // Move 0x0404_4444 to EBX (Move imm to r32) - Row 69
+0x2b: Bc 00 00 00 00 // Move 0x0000_0000 to ESP (Move imm to r32) - Row 69
+0x30: Bd 00 00 00 00 // Move 0x0000_0000 to EBP (Move imm to r32) - Row 69
+0x35: Be 00 00 00 00 // Move 0x0000_0000 to ESI (Move imm to r32) - Row 69
+0x3a: Bf 00 00 00 00 // Move 0x0000_0000 to EDI (Move imm to r32) - Row 69
+0x3f: 8A E5          // AH  to CH  - Row 62
+0x41: 8A EE          // CH  to DH  - Row 62
+0x43: 66 8B F0       // AX  to SI  - Row 63
+0x46: 8B F9          // ECX to EDI - Row 64
+0x48: 66 8E D2       // EDX to SS  - Row 66
+0x4b: 66 8C D3       // SS  to EBX - Row 65
+0x4e: B8 00 00 00 00 // Move 0x0000_0000 to EAX (Move imm to r32) - Row 69
+0x53: 04 05          // Add 05 to AL - Row 2
+0x55: 66 05 05 05    // Add 0505 to AX - Row 3
+0x59: 05 05 05 05 05 // Add 0505_0505 to EAX - Row 4
+0x5e: B9 00 00 00 00 // Move 0x0000_0000 to ECX (Move imm to r32) - Row 69
+0x63: 80 C1 05       // Add 05 to CL - Row 5
+0x66: 66 81 C1 05 05 // Add 0505 to CX - Row 6
+0x6b: 81 C1 05 05 05 
+      05             // Add 0505_0505 to CAX - Row 7
+0x71: BA 00 00 00 00 // Move 0x0000_0000 to EDX (Move imm to r32) - Row 69
+0x76: 66 83 C2 01    // Add 0001 to EDX - Row 8
+0x7a: 83 C2 F3       // Add 1111_1110 to EDX- Row 9 
+0x7d: B8 11 11 10 10 // Move 0x1010_1111 to EAX (Move imm to r32) - Row 69
+0x82: B9 22 22 02 02 // Move 0x0202_2222 to ECX (Move imm to r32) - Row 69
+0x87: Ba 33 33 30 30 // Move 0x3030_3333 to EDX (Move imm to r32) - Row 69
+0x8c: BB 44 44 04 04 // Move 0x0404_4444 to EBX (Move imm to r32) - Row 69
+0x91: Bc 01 00 00 00 // Move 0x0000_0000 to ESP (Move imm to r32) - Row 69
+0x96: Bd 01 00 00 00 // Move 0x0000_0000 to EBP (Move imm to r32) - Row 69
+0x9b: Be 00 00 00 00 // Move 0x0000_0000 to ESI (Move imm to r32) - Row 69
+0xa0: Bf 00 00 00 00 // Move 0x0000_0000 to EDI (Move imm to r32) - Row 69
+0xa5: 00 D8          // Add AL + BL -> AL - Row 10
+0xa7: 66 01 E3       // Add BX + SP -> BX - Row 10
+0xaa: 01 E3          // Add EBX + ESP -> EBX - Row 11
+0xac: 24 10          // AND AL with 10 - Row 16
+0xae: 66 25 00 11    // AND AX with 1100 - Row 17
+0xb2: 25 00 00 11 11 // AND EAX with 11110000 - Row 18 
+0xb7: EB 19          // JMP +25
+0xb9: 00 00 00 00 00
+0xbe: 00 00 00 00 00
+0xc3: 00 00 00 00 00
+0xc8: 00 00 00 00 00
+0xcd: 00 00 00 00 00
+0xd2: B8 00 00 11 11 // Move ... to EAX (Move imm to r32) - Row 69
+0xd7: B9 11 11 00 00 // Move ... to ECX (Move imm to r32) - Row 69
+0xdc: 66 E9 19 00 00 // JMP +25
+0xe0: 00 00 00 00 00
+0xe5: 00 00 00 00 00
+0xea: 00 00 00 00 00
+0xef: 00 00 00 00 00
+0xf4: 00 00 00 00 00
+0xf9: B8 00 00 22 22 // Move ... to EAX (Move imm to r32) - Row 69
+0xfe: B9 22 22 00 00 // Move ... to ECX (Move imm to r32) - Row 69
+0x103: E9 19 00 00 00 // JMP +25 - TESTED TO HERE
+0x108: 00 00 00 00 00
+0x10d: 00 00 00 00 00
+0x112: 00 00 00 00 00
+0x117: 00 00 00 00 00
+0x11c: 00 00 00 00 00
+0x121: B8 40 01 00 00 // Move ... to EAX (Move imm to r32) - Row 69
+0x126: B9 60 01 00 00 // Move ... to ECX (Move imm to r32) - Row 69
+0x12b: 66 FF E0 00 00 // JMP to EAX
+0x140: B8 77 77 77 77 // Move ... to EAX (Move imm to r32) - Row 69
+0x145: FF E1 F4 00 00 // JMP to ECX
+0x160: B9 66 66 66 66 // Move ... to EAX (Move imm to r32) - Row 69
+0x165: F4
