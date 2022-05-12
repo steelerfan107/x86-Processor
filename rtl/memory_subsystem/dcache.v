@@ -157,10 +157,17 @@ module dcache(
 
     assign ctrl_pa_src = write_num_n;
 
+    wire ctrl_wr;
+    wire [31:0] final_addr;
+    wire [2:0] byte_offset_out;
+    mux #(.WIDTH(3), .INPUTS(2)) remove_off({phys_addr[2:0], 3'h0}, byte_offset_out, ctrl_wr);
+
+    assign final_addr = {phys_addr[31:3], byte_offset_out};
+
     mux2_16$ 
         pa_mux0(pa_out[15:0], pa_reg_out[15:0], pa_p4[15:0], ctrl_pa_src),
         pa_mux1(pa_out[31:16], pa_reg_out[31:16], pa_p4[31:16], ctrl_pa_src);
-    register #(.WIDTH(32)) phys_addr_reg(clk, reset, phys_addr, pa_reg_out, , ctrl_pa_wr_en);
+    register #(.WIDTH(32)) phys_addr_reg(clk, reset, final_addr, pa_reg_out, , ctrl_pa_wr_en);
     slow_addr  #(.WIDTH(32)) phys_addr_adder(pa_reg_out, 32'd4, pa_p4, );
 
     dtagRAM tagram(clk, reset, index, ctrl_write, phys_tag, tag_out);
@@ -184,7 +191,7 @@ module dcache(
 
     wire read_num;
     wire  mem_rd_wr_comb;
-   
+    wire ctrl_stage; 
    
     dcache_controller control(
         .clk(clk),
@@ -213,6 +220,7 @@ module dcache(
         .wr_cnt_z(ctrl_write_cnt_z),
         .wr_cnt_en(ctrl_write_cnt_en),
         .valid_src(valid_in),
+        .wr(ctrl_wr),
         .TLB_hit(tlb_hit),
         .TLB_rd_wr(tlb_rd_wr),
         .TLB_pcd(tlb_pcd),
@@ -223,14 +231,16 @@ module dcache(
         .grant_pass(ctrl_grant_pass),
         .bus_busy(bus_busy_in),
         .busy_out(bus_busy_out),
-        .page_fault(page_fault)
+        .page_fault(page_fault),
+        .stage(ctrl_stage)
     );
 
    
     //assign mem_rd_wr = 1'b0;
     //tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
 
-    assign ctrl_staging_wr_en = ctrl_write & ~read_num;
+    // TODO behavioral
+    assign ctrl_staging_wr_en = (ctrl_write & ~read_num) | ctrl_stage;
 
     assign virt_addr_mux_sel = read_num;
     
@@ -238,11 +248,11 @@ module dcache(
     inv1$ read_num_inv(read_num_n, read_num);
     and2$ staging_and(staging_wr_en, read_num_n, ctrl_write);
 
-    wire is_aligned;
-    assign ctrl_read2 = is_aligned;
-    or3$ alignment_or(is_aligned, virt_addr[2], virt_addr[1], virt_addr[0]);
+    wire is_not_aligned;
+    assign ctrl_read2 = is_not_aligned;
+    or3$ alignment_or(is_not_aligned, virt_addr[2], virt_addr[1], virt_addr[0]);
     wire read_num_mux_out;
-    mux2$ read_num_mux(read_num_mux_out, 1'b0, is_aligned, ctrl_read_num_sel);
+    mux2$ read_num_mux(read_num_mux_out, 1'b0, is_not_aligned, ctrl_read_num_sel);
     register #(.WIDTH(1)) read_num_reg(clk, reset, read_num_mux_out, read_num, , ctrl_read_num_wr_en);
 
     // pass along grant signal?
@@ -263,12 +273,12 @@ module dcache(
     ddataRAM dataram(clk, reset, index, ctrl_write, dataram_in, dataram_out); 
 
     wire [63:0] staging_reg_out;
-    register #(.WIDTH(64)) staging_reg(clk, reset, dataram_in, staging_reg_out, , ctrl_staging_wr_en);
+    register #(.WIDTH(64)) staging_reg(clk, reset, dataram_out, staging_reg_out, , ctrl_staging_wr_en);
 
     d_align align_result(
         .in_high(dataram_out),
         .in_low(staging_reg_out),
-        .offset(byte_offset),
+        .offset(virt_addr[2:0]),
         .out(rd_dp_read_data)
     );
 
@@ -279,7 +289,7 @@ module dcache(
     and2$ wr_req_and(wr_req_en, ctrl_req_addr_en, a2m_n);
     register #(.WIDTH(64)) wr_data_reg(clk, reset, wr_req_data, wr_data_reg_out, , wr_req_en);
     register #(.WIDTH(1)) wr_size_reg(clk, reset, wr_size_in, wr_size, , wr_req_en);
- 
+
     register #(.WIDTH(2)) byte_offset_reg(clk, reset, byte_offset_in, byte_offset,, wr_req_en);
 
     wire [31:0] mem_data_driver; 
@@ -296,6 +306,7 @@ module dcache(
 
     tristate_bus_driver16$ data_bus_driver1(n_drive_data, mem_data_driver[15:0], mem_data[15:0]);
     tristate_bus_driver16$ data_bus_driver2(n_drive_data, mem_data_driver[31:16], mem_data[31:16]);
+
 
     tristate_bus_driver16$(n_drive_addr, pa_out[15:0],  mem_addr[15:0]);
     tristate_bus_driver16$(n_drive_addr, pa_out[31:16], mem_addr[31:16]);

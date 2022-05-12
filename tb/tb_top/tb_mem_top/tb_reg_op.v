@@ -187,7 +187,8 @@ module TOP;
                              
    reg 		r_emem_valid;
    reg 		r_r_emem_valid;
-   
+  
+    assign wmem_wr_size = 1'b0; 
    top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
       reset,
@@ -229,7 +230,7 @@ module TOP;
       wmem_address,
       wmem_wr_en,
       wmem_wr_data,
-      wmem_wr_size,
+      wmem_wr_size_nc,
       wmem_dp_valid,
       wmem_dp_ready,
       wmem_dp_read_data  		     
