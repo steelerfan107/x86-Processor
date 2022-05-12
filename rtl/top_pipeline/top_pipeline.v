@@ -578,7 +578,7 @@ module top_pipeline (
 
       .wb_mmx_number(wb_reg_number),
       .wb_mmx_en(wb_mmx_qual),   //(wb_op_a_is_mmx & wb_valid),
-      .wb_mmx_data(wb_reg_data),
+      .wb_mmx_data(wb_result),
 
       // Stack Commit Interface
       .wb_stack_en(wb_stack_qual),  //(wb_valid & wb_valid & wb_stack),
