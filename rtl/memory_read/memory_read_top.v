@@ -189,10 +189,10 @@ module memory_read_top (
     wire p_op_a_is_reg;   
     wire p_op_a_is_segment;  
     wire p_op_a_is_mmx;   
-    wire [2:0] p_op_b_reg;
-    wire [31:0] p_op_b_address;
-    wire p_op_b_is_reg;
-    wire p_op_b_is_address;
+    wire [2:0] p_op_b_reg = a_op1_reg;
+    wire [31:0] p_op_b_address = a_op1;
+    wire p_op_b_is_reg = a_op1_is_reg;
+    wire p_op_b_is_address = a_op1_is_address;
     wire [31:0] p_stack_ptr;      // stack pointer address
     wire [1:0] 	p_stack_op;
     wire [47:0] p_imm;            // immediate

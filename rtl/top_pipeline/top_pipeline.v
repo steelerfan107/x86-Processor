@@ -340,7 +340,8 @@ module top_pipeline (
    wire                    wb_br_misprediction;
    wire                    wb_stack;
    wire  [1:0]             wb_stack_op;
-   wire [15:0] 		   wb_opcode;
+   wire  [15:0] 	   	   wb_opcode;
+   wire  [3:0]             wb_alu_op;
  
    wire                    reg_load_cs;  
    wire     [15:0]         reg_cs;
@@ -470,6 +471,10 @@ module top_pipeline (
    and2$ (wb_seg_qual, wb_valid, wb_op_a_is_segment );
    and2$ (wb_mmx_qual, wb_valid, wb_op_a_is_mmx );
    and3$ (wb_stack_qual, wb_valid, wb_ready, wb_stack );
+   // see if it is xchg
+   wire is_xchg;
+   compare #(.WIDTH(4)) is_xchg_cmp (wb_alu_op, 4'd14, is_xchg);
+   and3$ (wb_reg_qual_2, wb_valid, wb_op_b_is_reg, is_xchg);   // valid, is reg, and is xchg
    
 //    register_access_top uut_register_access (
 //       clk,
@@ -892,18 +897,47 @@ module top_pipeline (
     wb_jump_address,
     wb_jump_load_cs,
     wb_cs_out,
-    wb_br_misprediction		       
+    wb_br_misprediction,		       
+    wb_alu_op
   );
+
+   // --------- //
+   // writeback //
+   // --------- //
+
+   // decide what address to use
+   // if op_b is address and this is exchange, use that as wb address
+   // is_xchg defined earlier
+   wire wb_address_mux_sel;
+   and2$ wb_address_mux_sel_and (wb_address_mux_sel, wb_op_b_is_address, is_xchg);
+
+   // wire [31:0] wb_address_mux_out;
+   mux #(.WIDTH(32), .INPUTS(2)) (
+      {wb_op_b_address, wb_dest_address},
+      wmem_address,
+      wb_address_mux_sel
+   );
+
+   // see if we should do a write to mem
+   wire wb_is_address;
+   or2$ (wb_is_address, wb_address_mux_sel, wb_op_a_is_address);
+
+   // determine what data to write
+   mux #(.WIDTH(64), .INPUTS(2)) wr_data_mux (
+      {{32'h0, wb_result[31:0]}, wb_result},
+      wmem_wr_data,
+      wb_address_mux_sel
+   );
 
    assign  wb_ready = 1'b1;
  //wmem_ready;
-  //assign  wmem_valid = (wb_valid & wb_op_a_is_address);
+  // assign  wmem_valid = (wb_valid & wb_op_a_is_address);
    
-  and2$ (wmem_valid, wb_valid, wb_op_a_is_address);
+  and2$ (wmem_valid, wb_valid, wb_is_address);
    
-  assign  wmem_address = wb_dest_address;
-  assign  wmem_wr_en = wb_op_a_is_address;
-  assign  wmem_wr_data = wb_result;
+  // assign  wmem_address = wb_dest_address;
+  assign  wmem_wr_en = wb_is_address;
+  // assign  wmem_wr_data = wb_result;
   assign  wmem_wr_size = wb_opsize;    
 
   wire        sys_cont_val;

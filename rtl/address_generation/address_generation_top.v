@@ -349,7 +349,7 @@ module address_generation_top (
     // ---------------------------- //
 
     // a register if op1 is reg or is mod rm with mod 11
-    is_op1_reg (a_op1_is_reg, r_op1, r_modrm);
+    is_op1_reg (p_op1_is_reg, r_op1, r_modrm);
 
     // ------- //
     // OP0 Mux //
