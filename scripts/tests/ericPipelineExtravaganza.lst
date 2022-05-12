@@ -64,7 +64,7 @@
 0xf4: 00 00 00 00 00
 0xf9: B8 00 00 22 22 // Move ... to EAX (Move imm to r32) - Row 69
 0xfe: B9 22 22 00 00 // Move ... to ECX (Move imm to r32) - Row 69
-0x103: E9 19 00 00 00 // JMP +25 - TESTED TO HERE
+0x103: E9 19 00 00 00 // JMP +25 
 0x108: 00 00 00 00 00
 0x10d: 00 00 00 00 00
 0x112: 00 00 00 00 00
@@ -75,5 +75,5 @@
 0x12b: 66 FF E0 00 00 // JMP to EAX
 0x140: B8 77 77 77 77 // Move ... to EAX (Move imm to r32) - Row 69
 0x145: FF E1 F4 00 00 // JMP to ECX
-0x160: B9 66 66 66 66 // Move ... to EAX (Move imm to r32) - Row 69
-0x165: F4
+0x160: B9 66 66 66 66 // Move ... to EAX (Move imm to r32) - Row 69 - TESTED TO HERE
+0x165: F4 
