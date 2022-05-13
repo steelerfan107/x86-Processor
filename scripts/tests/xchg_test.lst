@@ -1,0 +1,9 @@
+// xchg Test
+// Brandon
+
+0x0: B8 11 11 00 00 // Move 0x0000_1111 to EAX (Move imm to r32) - Row 61
+0x5: B9 09 00 00 00 // Move 0x0000_0004 to ECX (Move imm to r32) - Row 61
+// 0xa: BA 00 01 00 0B // Move 0x0000_B400 to EDX (Move imm to r32) - Row 61
+// 0xf: BB 88 00 00 00 // Move 0x0000_0088 to EBX (Move imm to r32) - Row 61
+0xa: 91    // xchg eax with ecx
+0xb: F4 00 00 00 00 00 // halt

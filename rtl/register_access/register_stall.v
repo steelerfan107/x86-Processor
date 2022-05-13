@@ -164,7 +164,7 @@ endmodule
 // reg write occurs when op0 is a reg, or modrm with mod 11
 // decides what the reg is
 
-module register_stall_is_op0_write (
+module register_stall_is_op0_write (    // fanout good
     is_reg,
     reg_num,
 
@@ -230,7 +230,7 @@ endmodule
 // decides if a register in reg table should be modified
 // +1 if op0 matches the register that the block modifies and the next segment is ready for new data
 // -1 if writeback matches the register that the block modifies
-module register_stall_modify_table (
+module register_stall_modify_table (    // fanout good
     write_enable,
     reg_in,
 
@@ -317,7 +317,7 @@ endmodule
 
 
 // table of regs
-module register_stall_table (
+module register_stall_table (   // fanout good
     clk,
     reset,
 
@@ -372,8 +372,29 @@ module register_stall_table (
     input [2:0] op1_r1;
     input op1_r1_is_valid;
 
-
     input next_stage_ready;
+
+    // buffers
+    wire [2:0] wb_reg_buf;
+    bufferH16$ 
+    wb_reg_16_0 (wb_reg_buf[0], wb_reg[0]),
+    wb_reg_16_1 (wb_reg_buf[1], wb_reg[1]),
+    wb_reg_16_2 (wb_reg_buf[2], wb_reg[2]);
+
+    wire wb_is_valid_buf;
+    bufferH16$ wb_is_valid_16 (wb_is_valid_buf, wb_is_valid);
+
+    wire [2:0] op0_reg_buf;
+    bufferH16$ 
+    op0_reg_16_0 (op0_reg_buf[0], op0_reg[0]),
+    op0_reg_16_1 (op0_reg_buf[1], op0_reg[1]),
+    op0_reg_16_2 (op0_reg_buf[2], op0_reg[2]);
+
+    wire op0_reg_is_valid_buf;
+    bufferH16$ op0_reg_is_valid_16 (op0_reg_is_valid_buf, op0_reg_is_valid);
+
+    wire next_stage_ready_buf;
+    bufferH16$ next_stage_ready_16 (next_stage_ready_buf, next_stage_ready);
 
     // from register_file.v since this can be set to 0 at reset
     wire [3:0] 
@@ -470,14 +491,14 @@ module register_stall_table (
 
     // decide if they should be written
     register_stall_modify_table 
-    r0_modifier (r0_en, r0_in, 3'd0, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r0_out), 
-    r1_modifier (r1_en, r1_in, 3'd1, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r1_out), 
-    r2_modifier (r2_en, r2_in, 3'd2, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r2_out), 
-    r3_modifier (r3_en, r3_in, 3'd3, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r3_out), 
-    r4_modifier (r4_en, r4_in, 3'd4, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r4_out), 
-    r5_modifier (r5_en, r5_in, 3'd5, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r5_out), 
-    r6_modifier (r6_en, r6_in, 3'd6, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r6_out), 
-    r7_modifier (r7_en, r7_in, 3'd7, op0_reg, op0_reg_is_valid, wb_reg, wb_is_valid, next_stage_ready, r7_out);
+    r0_modifier (r0_en, r0_in, 3'd0, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r0_out), 
+    r1_modifier (r1_en, r1_in, 3'd1, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r1_out), 
+    r2_modifier (r2_en, r2_in, 3'd2, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r2_out), 
+    r3_modifier (r3_en, r3_in, 3'd3, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r3_out), 
+    r4_modifier (r4_en, r4_in, 3'd4, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r4_out), 
+    r5_modifier (r5_en, r5_in, 3'd5, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r5_out), 
+    r6_modifier (r6_en, r6_in, 3'd6, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r6_out), 
+    r7_modifier (r7_en, r7_in, 3'd7, op0_reg_buf, op0_reg_is_valid_buf, wb_reg_buf, wb_is_valid_buf, next_stage_ready_buf, r7_out);
 
     // check if there is a stall condition
     wire is_stall;
@@ -514,7 +535,7 @@ endmodule
 // Sees if a reg that is needed is currently in the table
 //
 // For each valid operand, select its corresponding register and set reg_in_table to 1 if the value is at least 1
-module register_stall_is_reg_in_table (
+module register_stall_is_reg_in_table (     // fanout good
     reg_in_table,
 
     r0,
@@ -624,7 +645,7 @@ module register_stall_is_reg_in_table (
 endmodule
 
 // sees if the register is not zero
-module register_stall_reg_not_empty (
+module register_stall_reg_not_empty (   // fanout good
     out,
     in
 );
@@ -642,7 +663,7 @@ endmodule
     // 0 registers if there's no op1
     // 1 register is op1 is a register only, or modrm with no SIB
     // 2 registers if op1 is modrm with SIB (MOD ==  00 | 01 | 10 and R/M == 100)
-module register_stall_access_calculator (
+module register_stall_access_calculator (   // fanout good
     op0_r0,
     op0_r0_is_valid,
 
@@ -773,7 +794,7 @@ endmodule
 
 // r0_is_valid if op1 is 1, and op1 is 4 and mod rm isn't 00 101
 // OUT = (OP! == 1) || (OP1 == 4 && MODRM != 00101) || (OP1 == 6)
-module register_stall_r0_is_valid (
+module register_stall_r0_is_valid (     // fanout good
     out,
     op1,
     modrm_byte
@@ -839,7 +860,7 @@ endmodule
 
 // Valid when there is a mod rm and that mod rm needs sib and the sib has an index
 // OUT = (OP1 == 4 && MOD != 11 && RM == 100 && INDEX != 100)
-module register_stall_r1_is_valid (
+module register_stall_r1_is_valid (     // fanout good
     out,
 
     op1,
@@ -902,7 +923,7 @@ module register_stall_r1_is_valid (
 endmodule
 
 // determines what registers are being accessed by mod rm
-module register_stall_mod_rm_registers (
+module register_stall_mod_rm_registers (       // fanout good
     r0,
     r1,
 
@@ -955,7 +976,7 @@ module register_stall_mod_rm_registers (
 
 endmodule
 
-module register_stall_is_r0_rm (
+module register_stall_is_r0_rm (    // fanout good
     is_rm,
     mod,
     rm

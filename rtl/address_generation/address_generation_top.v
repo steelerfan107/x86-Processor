@@ -73,6 +73,7 @@ module address_generation_top (
     a_op0_is_reg,
     a_op0_is_segment,
     a_op0_is_mmx,
+    a_op1_is_reg,
     a_op1_is_address,
     a_imm,
     a_alu_op,
@@ -156,6 +157,7 @@ module address_generation_top (
     output a_op0_is_reg;
     output a_op0_is_segment;
     output a_op0_is_mmx;
+    output a_op1_is_reg;
     output a_op1_is_address;
     output [47:0] a_imm;
     output [3:0] a_alu_op;
@@ -175,7 +177,8 @@ module address_generation_top (
     // Pipestage //
     // -------   //
 
-    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3+1;
+    // localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+1+1+1+1+48+4+3+3+2+32+32+1+1+16;
+    localparam PIPEWIDTH = 3+1+1+64+64+3+3+1+1+48+4+3+3+2+32+1+16+32+3+3+1+1;
    
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;
 
@@ -191,6 +194,7 @@ module address_generation_top (
     wire  p_op0_is_reg;
     wire  p_op0_is_segment;
     wire  p_op0_is_mmx;
+    wire  p_op1_is_reg;
     wire  p_op1_is_address;
     wire  gen_op1_is_address;   
     wire  [47:0] p_imm;
@@ -215,6 +219,7 @@ module address_generation_top (
       a_op0_is_reg,
       a_op0_is_segment,
       a_op0_is_mmx,
+      a_op1_is_reg,
       a_op1_is_address,
       a_imm,
       a_alu_op,
@@ -240,6 +245,7 @@ module address_generation_top (
       p_op0_is_reg,
       p_op0_is_segment,
       p_op0_is_mmx,
+      p_op1_is_reg,
       p_op1_is_address,
       r_imm,
       r_alu_op,
@@ -338,6 +344,12 @@ module address_generation_top (
     // only cause exception if the incoming data is valid
     and2$ except_and (segment_limit_exception, r_valid, maybe_segment_limit_exception);
 
+    // ---------------------------- //
+    // Determine if OP1 is Register //
+    // ---------------------------- //
+
+    // a register if op1 is reg or is mod rm with mod 11
+    is_op1_reg (p_op1_is_reg, r_op1, r_modrm);
 
     // ------- //
     // OP0 Mux //
@@ -433,6 +445,33 @@ module address_generation_top (
     r_mm7
 
 );
+
+
+endmodule
+
+module is_op1_reg (
+    out,
+
+    op1,
+    mod_rm
+);
+    output out;
+
+    input [2:0] op1;
+    input [7:0] mod_rm;
+
+    // reg if op1 == 1 or (op1 == 4 and mod == 11)
+
+    wire [1:0] mod = mod_rm[7:6];
+
+    wire op1_is_1;
+    compare #(.WIDTH(3)) op1_cmp (op1, 3'd1, op1_is_1);
+
+    wire mod_rm_reg;
+    compare #(.WIDTH(5)) mod_rm_cmp ({op1, mod}, 5'b10011, mod_rm_reg);
+
+    or2$ or_out (out, op1_is_1, mod_rm_reg);
+
 
 
 endmodule
