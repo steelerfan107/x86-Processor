@@ -642,10 +642,13 @@ module op0_generator (
     // calculate mod_rm
     wire [63:0] op0_mod_rm;
     wire op0_mod_rm_is_address;
+    wire [2:0] selected_seg_id;
     mod_rm op0_mod_rm_calculator(
         op0_mod_rm,
 
         op0_mod_rm_is_address,
+
+        selected_seg_id,
         
         r_modrm,
         r_sib,
@@ -744,7 +747,7 @@ module op0_generator (
             3'd0,
             3'd0,
             r_seg_override,
-            3'b011
+            selected_seg_id
         },
         op0_segment_num,
         {is_memory, r_seg_override_valid}
@@ -930,10 +933,13 @@ module op1_generator (
     // calculate mod_rm
     wire [63:0] op1_mod_rm;
     wire op1_mod_rm_is_address;
+    wire [2:0] selected_seg_id;
     mod_rm op1_mod_rm_calculator(
         op1_mod_rm,
 
         op1_mod_rm_is_address,
+
+        selected_seg_id,
         
         r_modrm,
         r_sib,
@@ -1030,7 +1036,7 @@ module op1_generator (
    // else use ds
 
    mux #(.WIDTH(3), .INPUTS(2)) op1_seg_mux (
-       {r_seg_override, 3'b100},
+       {r_seg_override, selected_seg_id},
        op1_segment_num,
        r_seg_override_valid
    );
