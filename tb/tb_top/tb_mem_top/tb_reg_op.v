@@ -189,7 +189,7 @@ module TOP;
    reg 		r_emem_valid;
    reg 		r_r_emem_valid;
   
-   assign wmem_wr_size = wmem_wr_size_nc - 1; 
+   assign wmem_wr_size = 'h0; //wmem_wr_size_nc - 1; 
    top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
       reset,
@@ -567,7 +567,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
   //     emem_ready        = ~ememory_valid;     
   //end
    
-  always #25  clk          = ~clk;
+  always #25 clk          = ~clk;
 
   initial begin
         $vcdplusfile("fsys_reg.dump.vpd");

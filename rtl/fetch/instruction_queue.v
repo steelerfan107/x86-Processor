@@ -319,11 +319,12 @@ module instruction_queue (
    assign valid_bytes_p16_mBR = valid_bytes_o + 16 - bytes_read_o;
    assign valid_bytes_mBR = valid_bytes_o - bytes_read_o;
    
-   assign valid_bytes_i = (in_accept & out_accept) ? valid_bytes_p16_mBR :
+   assign valid_bytes_i = (load) ? 0 - load_address[3:0] : 
+                          (in_accept & out_accept) ? valid_bytes_p16_mBR :
 			  (in_accept)  ? valid_bytes_p16 :
 			  (out_accept) ? valid_bytes_mBR : valid_bytes_o;
    
-   register #(.WIDTH(7)) vnc (clk, int_reset, valid_bytes_i, valid_bytes_o, , (in_accept | out_accept));
+   register #(.WIDTH(7)) vnc (clk, reset, valid_bytes_i, valid_bytes_o, , (in_accept | out_accept | load));
 
    
    // Head Ptr Plus 8

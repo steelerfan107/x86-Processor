@@ -54,17 +54,38 @@ STD: The DF flag is set. The CF, OF, ZF, SF, AF, and PF flags are unaffected.
 XCHG: None. 
 */
 `timescale 1ns / 1ps
-module eflags(eflags_in, set_eflags, eflags_out);
-input [6:0] eflags_in;
-input [6:0] set_eflags;
+module eflags(clk, reset, valid, eflags_in, set_eflags, eflags_out);
+input clk;
+input reset;
+
+input        valid;
+input [6:0]  eflags_in;
+input [6:0]  set_eflags;
 output [6:0] eflags_out;
 
-latch$ DF(.d(eflags_in[6]), .en(set_eflags[6]), .q(eflags_out[6]));
-latch$ OF(.d(eflags_in[5]), .en(set_eflags[5]), .q(eflags_out[5]));
-latch$ SF(.d(eflags_in[4]), .en(set_eflags[4]), .q(eflags_out[4]));
-latch$ ZF(.d(eflags_in[3]), .en(set_eflags[3]), .q(eflags_out[3]));
-latch$ AF(.d(eflags_in[2]), .en(set_eflags[2]), .q(eflags_out[2]));
-latch$ CF(.d(eflags_in[1]), .en(set_eflags[1]), .q(eflags_out[1]));
-latch$ PF(.d(eflags_in[0]), .en(set_eflags[0]), .q(eflags_out[0]));
+//latch$ DF(.d(eflags_in[6]), .en(set_eflags[6]), .q(eflags_out[6]));
+//latch$ OF(.d(eflags_in[5]), .en(set_eflags[5]), .q(eflags_out[5]));
+//latch$ SF(.d(eflags_in[4]), .en(set_eflags[4]), .q(eflags_out[4]));
+//latch$ ZF(.d(eflags_in[3]), .en(set_eflags[3]), .q(eflags_out[3]));
+//latch$ AF(.d(eflags_in[2]), .en(set_eflags[2]), .q(eflags_out[2]));
+//latch$ CF(.d(eflags_in[1]), .en(set_eflags[1]), .q(eflags_out[1]));
+//latch$ PF(.d(eflags_in[0]), .en(set_eflags[0]), .q(eflags_out[0]));
 
+genvar    i;
+generate 
+   for ( i = 0; i < 7; i=i+1) begin
+       wire nc;
+      
+       register #(.WIDTH(1))  (
+               clk,
+               reset,
+               eflags_in[i],
+               eflags_out[i],
+               nc,
+               set_eflags[i]
+           );
+   end
+endgenerate
+
+   
 endmodule
