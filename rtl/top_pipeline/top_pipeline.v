@@ -1028,7 +1028,7 @@ module wmem_size_mapper (
    wire and2_out;
    and3$ and2 (and2_out, in[2], in_not[1], in[0]);
    wire and3_out;
-   and3$ and3 (and_3_out, in_not[2], in[1], in_not[0]);
+   and3$ and3 (and3_out, in_not[2], in[1], in_not[0]);
 
    or2$ (out[1], and0_out, and1_out);
    or2$ (out[0], and2_out, and3_out);
