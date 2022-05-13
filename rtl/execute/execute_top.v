@@ -70,7 +70,9 @@ module execute_top (
     wb_jump_load_cs,
     wb_cs_out,
     wb_br_misprediction,
-    wb_alu_op
+    wb_alu_op,
+
+    eflags_out
 
 
 );
@@ -142,6 +144,8 @@ module execute_top (
     output wb_op_b_is_reg;
     output wb_op_b_is_address;
     output [3:0] wb_alu_op;
+
+    output [6:0] eflags_out;
 
    
     wire [63:0] a;

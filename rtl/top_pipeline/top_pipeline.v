@@ -180,7 +180,7 @@ module top_pipeline (
    wire                    handle_int_done;
    wire                    write_eip; // Connect
    wire [31:0]             eip; // Connect
-   wire [31:0]	           eflags_reg; // Connect
+   wire [6:0]	           eflags_reg;
 
    wire                    ret_near;
    wire                    ret_far;
@@ -560,7 +560,7 @@ module top_pipeline (
       .r_branch_taken(r_branch_taken),
       .r_opcode(r_opcode),
 
-      .flag_df(eflags_reg[10]),
+      .flag_df(eflags_reg[6]),
                
       .wb_reg_number(wb_reg_number),
       .wb_reg_en(wb_reg_qual),   //(wb_op_a_is_reg & wb_valid),
@@ -803,7 +803,9 @@ module top_pipeline (
     wb_jump_load_cs,
     wb_cs_out,
     wb_br_misprediction,		       
-    wb_alu_op
+    wb_alu_op,
+    
+    eflags_reg
   );
 
    // --------- //
