@@ -362,8 +362,8 @@ wire or8;
 wire and250;
 wire and251;
 wire and252;
-wire and253;
 wire or9;
+wire and253;
 wire and254;
 wire and255;
 wire and256;
@@ -378,20 +378,21 @@ wire and264;
 wire and265;
 wire and266;
 wire and267;
-wire and268;
 wire or10;
+wire and268;
 wire and269;
-wire and270;
 wire or11;
+wire and270;
 wire and271;
 wire and272;
-wire and273;
 wire or12;
+wire and273;
 wire and274;
 wire and275;
-wire and276;
 wire or13;
+wire and276;
 wire and277;
+wire or14;
 wire and278;
 wire and279;
 wire and280;
@@ -403,12 +404,12 @@ wire and285;
 wire and286;
 wire and287;
 wire and288;
-wire or14;
+wire or15;
 wire and289;
 wire and290;
 wire and291;
 wire and292;
-wire or15;
+wire or16;
 wire and293;
 wire and294;
 wire and295;
@@ -429,7 +430,7 @@ wire and309;
 wire and310;
 wire and311;
 wire and312;
-wire or16;
+wire or17;
 wire and313;
 wire and314;
 wire and315;
@@ -478,7 +479,7 @@ wire and357;
 wire and358;
 wire and359;
 wire and360;
-wire or17;
+wire or18;
 wire and361;
 wire and362;
 wire and363;
@@ -502,7 +503,7 @@ wire and380;
 wire and381;
 wire and382;
 wire and383;
-wire or18;
+wire or19;
 wire and384;
 wire and385;
 wire and386;
@@ -519,26 +520,26 @@ wire and396;
 wire and397;
 wire and398;
 wire and399;
-wire or19;
+wire or20;
 wire and400;
 wire and401;
 wire and402;
 wire and403;
-wire or20;
+wire or21;
 wire and404;
 wire and405;
 wire and406;
-wire or21;
+wire or22;
 wire and407;
 wire and408;
-wire or22;
+wire or23;
 wire and409;
 wire and410;
 wire and411;
 wire and412;
 wire and413;
 wire and414;
-wire or23;
+wire or24;
 wire and415;
 wire and416;
 wire and417;
@@ -546,7 +547,7 @@ wire and418;
 wire and419;
 wire and420;
 wire and421;
-wire or24;
+wire or25;
 
 inv1$ sizeov_inv (.out(sizeov_not), .in(sizeov));
 inv1$ op9_inv (.out(op9_not), .in(op9));
@@ -898,42 +899,41 @@ and5$ and_gate247(.out(and247), .in0(op15), .in1(op14_not), .in2(op13), .in3(op1
 and5$ and_gate248(.out(and248), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13), .in4(op12));
 and5$ and_gate249(.out(and249), .in0(op15), .in1(op14_not), .in2(op13_not), .in3(op12), .in4(op11_not));
 and5$ and_gate250(.out(and250), .in0(op15_not), .in1(op14), .in2(op13_not), .in3(op12), .in4(op11));
-and5$ and_gate251(.out(and251), .in0(op15_not), .in1(op14), .in2(op13_not), .in3(op12), .in4(op11_not));
-and5$ and_gate252(.out(and252), .in0(
-op15), .in1(op14_not), .in2(op13), .in3(op12), .in4(op11));
-and5$ and_gate253(.out(and253), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13), .in4(op12));
-and17$ and_gate254(.out(and254), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6
+and5$ and_gate251(.out(and251), .in0(op15), .in1(op14_not), .in2(op13), .in3(op12), .in4(op11));
+and5$ and_gate252(.out(and252), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13), .in4(op12));
+and17$ and_gate253(.out(and253), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6
 ), .in11(op5), .in12(op4), .in13(op3), .in14(op2), .in15(op1_not), .in16(op0));
-and17$ and_gate255(.out(and255), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11
+and17$ and_gate254(.out(and254), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11
 ), .in6(op10), .in7(op9), .in8(op8), .in9(op7_not), .in10(op6), .in11(op5), .in12(op4_not), .in13(op3), .in14(op2), .in15(op1), .in16(op0));
-and16$ and_gate256(.out(and256), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6), .in11(op5), .in12(op3), .in13(op2), .in14(op1), .in15(op0_not));
-and16$ and_gate257(.out(and257), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10), .in6(op9), .in7(op8), .in8(op7), .in9(op6_not), .in10(op5), .in11(op4), .in12(op3), .in13(op2
+and16$ and_gate255(.out(and255), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6), .in11(op5), .in12(op3), .in13(op2), .in14(op1), .in15(op0_not));
+and16$ and_gate256(.out(and256), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10), .in6(op9), .in7(op8), .in8(op7), .in9(op6_not), .in10(op5), .in11(op4), .in12(op3), .in13(op2
 ), .in14(op1_not), .in15(op0_not));
-and16$ and_gate258(.out(and258), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7
+and16$ and_gate257(.out(and257), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7
 ), .in10(op6), .in11(op5), .in12(op4_not), .in13(op3), .in14(op1), .in15(op0_not));
-and17$ and_gate259(.out(and259), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11
+and17$ and_gate258(.out(and258), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11
 ), .in6(op10), .in7(op9), .in8(op8_not), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
-and16$ and_gate260(.out(and260), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10), .in6(op9), .in7(op8), .in8(op7_not), .in9(op6), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1), .in15(op0_not));
-and15$ and_gate261(.out(and261), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10_not), .in6(op8), .in7(op7_not), .in8(op6_not), .in9(op5_not), .in10(op4_not), .in11(op3_not), .in12(op2_not), .in13(op1_not), .in14(op0_not));
-and16$ and_gate262(.out(and262), .in0(op15_not), .in1(op14_not), .in2(op13), .in3(op12_not), .in4(op11_not), .in5(op10_not), .in6(op9), .in7(op8), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and16$ and_gate263(.out(and263), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13), .in4(op12_not), .in5(op11_not), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and16$ and_gate264(.out(and264), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11_not), .in5(op10_not), .in6(op9), .in7(op8), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and16$ and_gate265(.out(and265), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11_not), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and16$ and_gate266(.out(and266), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and15$ and_gate267(.out(and267), .in0(
+and16$ and_gate259(.out(and259), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10), .in6(op9), .in7(op8), .in8(op7_not), .in9(op6), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1), .in15(op0_not));
+and15$ and_gate260(.out(and260), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10_not), .in6(op8), .in7(op7_not), .in8(op6_not), .in9(op5_not), .in10(op4_not), .in11(op3_not), .in12(op2_not), .in13(op1_not), .in14(op0_not));
+and16$ and_gate261(.out(and261), .in0(op15_not), .in1(op14_not), .in2(op13), .in3(op12_not), .in4(op11_not), .in5(op10_not), .in6(op9), .in7(op8), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
+and16$ and_gate262(.out(and262), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13), .in4(op12_not), .in5(op11_not), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
+and16$ and_gate263(.out(and263), .in0(op15_not), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11_not), .in5(op10_not), .in6(op9), .in7(op8), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
+and16$ and_gate264(.out(and264), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11_not), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
+and16$ and_gate265(.out(and265), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
+and15$ and_gate266(.out(and266), .in0(
 op15), .in1(op14_not), .in2(op13_not), .in3(op12_not), .in4(op11), .in5(op10_not), .in6(op8), .in7(op7_not), .in8(op6_not), .in9(op5_not), .in10(op4_not), .in11(op3_not), .in12(op2_not), .in13(op1_not), .in14(op0_not));
-and16$ and_gate268(.out(and268), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and16$ and_gate269(.out(and269), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6_not), .in11(op5), .in12(op4_not), .in13(op2_not), .in14(op1_not), .in15(op0));
-and16$ and_gate270(.out(and270), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10
+and16$ and_gate267(.out(and267), .in0(sizeov_not), .in1(op15), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10_not), .in7(op9), .in8(op7_not), .in9(op6_not), .in10(op5_not), .in11(op4_not), .in12(op3_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
+and16$ and_gate268(.out(and268), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6_not), .in11(op5), .in12(op4_not), .in13(op2_not), .in14(op1_not), .in15(op0));
+and16$ and_gate269(.out(and269), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10
 ), .in7(op9), .in8(op8), .in9(op7), .in10(op6_not), .in11(op5), .in12(op4_not), .in13(op2_not), .in14(op1_not), .in15(op0_not));
-and15$ and_gate271(.out(and271), .in0(sizeov_not), .in1(op15_not), .in2(op13_not), .in3(op12), .in4(op11_not), .in5(op10), .in6(op9), .in7(op7_not), .in8(op6_not), .in9(op5_not), .in10(op4_not), .in11(op3_not), .in12(op2_not), .in13(op1_not), .in14(op0_not));
-and17$ and_gate272(.out(and272), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10
+and15$ and_gate270(.out(and270), .in0(sizeov_not), .in1(op15_not), .in2(op13_not), .in3(op12), .in4(op11_not), .in5(op10), .in6(op9), .in7(op7_not), .in8(op6_not), .in9(op5_not), .in10(op4_not), .in11(op3_not), .in12(op2_not), .in13(op1_not), .in14(op0_not));
+and17$ and_gate271(.out(and271), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10
 ), .in7(op9), .in8(op8_not), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
-and17$ and_gate273(.out(and273), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
-and16$ and_gate274(.out(and274), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6_not), .in11(op5), .in12(op4_not), .in13(op3), .in14(op2_not), .in15(op1_not));
-and17$ and_gate275(.out(and275), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10
+and17$ and_gate272(.out(and272), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
+and16$ and_gate273(.out(and273), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7), .in10(op6_not), .in11(op5), .in12(op4_not), .in13(op3), .in14(op2_not), .in15(op1_not));
+and17$ and_gate274(.out(and274), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10
 ), .in7(op9), .in8(op8_not), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
-and17$ and_gate276(.out(and276), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
+and17$ and_gate275(.out(and275), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7_not), .in10(op6_not), .in11(op5_not), .in12(op4_not), .in13(op3_not), .in14(op2_not), .in15(op1_not), .in16(op0_not));
+and5$ and_gate276(.out(and276), .in0(op15_not), .in1(op14), .in2(op13_not), .in3(op12), .in4(op11_not));
 and5$ and_gate277(.out(and277), .in0(op15), .in1(op14_not), .in2(op13_not), .in3(op12), .in4(op11_not));
 and17$ and_gate278(.out(and278), .in0(sizeov_not), .in1(op15_not), .in2(op14_not), .in3(op13_not), .in4(op12_not), .in5(op11), .in6(op10), .in7(op9), .in8(op8), .in9(op7_not), .in10(op6
 ), .in11(op5), .in12(op4), .in13(op3), .in14(op2), .in15(op1), .in16(op0));
@@ -1143,22 +1143,23 @@ or28$ or_gate5(.out(or5), .in0(and143), .in1(and144), .in2(and145), .in3(and146)
 or37$ or_gate6(.out(or6), .in0(and171), .in1(and172), .in2(and173), .in3(and174), .in4(and175), .in5(and176), .in6(and177), .in7(and178), .in8(and179), .in9(and180), .in10(and181), .in11(and182), .in12(and183), .in13(and184), .in14(and185), .in15(and186), .in16(and187), .in17(and188), .in18(and189), .in19(and190), .in20(and191), .in21(and192), .in22(and193), .in23(and194), .in24(and195), .in25(and196), .in26(and197), .in27(and198), .in28(and199), .in29(and200), .in30(and201), .in31(and202), .in32(and203), .in33(and204), .in34(and205), .in35(and206), .in36(and207));
 or6$ or_gate7(.out(or7), .in0(and208), .in1(and209), .in2(and210), .in3(and211), .in4(and212), .in5(and213));
 or36$ or_gate8(.out(or8), .in0(and214), .in1(and215), .in2(and216), .in3(and217), .in4(and218), .in5(and219), .in6(and220), .in7(and221), .in8(and222), .in9(and223), .in10(and224), .in11(and225), .in12(and226), .in13(and227), .in14(and228), .in15(and229), .in16(and230), .in17(and231), .in18(and232), .in19(and233), .in20(and234), .in21(and235), .in22(and236), .in23(and237), .in24(and238), .in25(and239), .in26(and240), .in27(and241), .in28(and242), .in29(and243), .in30(and244), .in31(and245), .in32(and246), .in33(and247), .in34(and248), .in35(and249));
-or4$ or_gate9(.out(or9), .in0(and250), .in1(and251), .in2(and252), .in3(and253));
-or15$ or_gate10(.out(or10), .in0(and254), .in1(and255), .in2(and256), .in3(and257), .in4(and258), .in5(and259), .in6(and260), .in7(and261), .in8(and262), .in9(and263), .in10(and264), .in11(and265), .in12(and266), .in13(and267), .in14(and268));
-or2$ or_gate11(.out(or11), .in0(and269), .in1(and270));
-or3$ or_gate12(.out(or12), .in0(and271), .in1(and272), .in2(and273));
-or3$ or_gate13(.out(or13), .in0(and274), .in1(and275), .in2(and276));
-or11$ or_gate14(.out(or14), .in0(and278), .in1(and279), .in2(and280), .in3(and281), .in4(and282), .in5(and283), .in6(and284), .in7(and285), .in8(and286), .in9(and287), .in10(and288));
-or4$ or_gate15(.out(or15), .in0(and289), .in1(and290), .in2(and291), .in3(and292));
-or20$ or_gate16(.out(or16), .in0(and293), .in1(and294), .in2(and295), .in3(and296), .in4(and297), .in5(and298), .in6(and299), .in7(and300), .in8(and301), .in9(and302), .in10(and303), .in11(and304), .in12(and305), .in13(and306), .in14(and307), .in15(and308), .in16(and309), .in17(and310), .in18(and311), .in19(and312));
-or48$ or_gate17(.out(or17), .in0(and313), .in1(and314), .in2(and315), .in3(and316), .in4(and317), .in5(and318), .in6(and319), .in7(and320), .in8(and321), .in9(and322), .in10(and323), .in11(and324), .in12(and325), .in13(and326), .in14(and327), .in15(and328), .in16(and329), .in17(and330), .in18(and331), .in19(and332), .in20(and333), .in21(and334), .in22(and335), .in23(and336), .in24(and337), .in25(and338), .in26(and339), .in27(and340), .in28(and341), .in29(and342), .in30(and343), .in31(and344), .in32(and345), .in33(and346), .in34(and347), .in35(and348), .in36(and349), .in37(and350), .in38(and351), .in39(and352), .in40(and353), .in41(and354), .in42(and355), .in43(and356), .in44(and357), .in45(and358), .in46(and359), .in47(and360));
-or23$ or_gate18(.out(or18), .in0(and361), .in1(and362), .in2(and363), .in3(and364), .in4(and365), .in5(and366), .in6(and367), .in7(and368), .in8(and369), .in9(and370), .in10(and371), .in11(and372), .in12(and373), .in13(and374), .in14(and375), .in15(and376), .in16(and377), .in17(and378), .in18(and379), .in19(and380), .in20(and381), .in21(and382), .in22(and383));
-or16$ or_gate19(.out(or19), .in0(and384), .in1(and385), .in2(and386), .in3(and387), .in4(and388), .in5(and389), .in6(and390), .in7(and391), .in8(and392), .in9(and393), .in10(and394), .in11(and395), .in12(and396), .in13(and397), .in14(and398), .in15(and399));
-or4$ or_gate20(.out(or20), .in0(and400), .in1(and401), .in2(and402), .in3(and403));
-or3$ or_gate21(.out(or21), .in0(and404), .in1(and405), .in2(and406));
-or2$ or_gate22(.out(or22), .in0(and407), .in1(and408));
-or6$ or_gate23(.out(or23), .in0(and409), .in1(and410), .in2(and411), .in3(and412), .in4(and413), .in5(and414));
-or7$ or_gate24(.out(or24), .in0(and415), .in1(and416), .in2(and417), .in3(and418), .in4(and419), .in5(and420), .in6(and421));
+or3$ or_gate9(.out(or9), .in0(and250), .in1(and251), .in2(and252));
+or15$ or_gate10(.out(or10), .in0(and253), .in1(and254), .in2(and255), .in3(and256), .in4(and257), .in5(and258), .in6(and259), .in7(and260), .in8(and261), .in9(and262), .in10(and263), .in11(and264), .in12(and265), .in13(and266), .in14(and267));
+or2$ or_gate11(.out(or11), .in0(and268), .in1(and269));
+or3$ or_gate12(.out(or12), .in0(and270), .in1(and271), .in2(and272));
+or3$ or_gate13(.out(or13), .in0(and273), .in1(and274), .in2(and275));
+or2$ or_gate14(.out(or14), .in0(and276), .in1(and277));
+or11$ or_gate15(.out(or15), .in0(and278), .in1(and279), .in2(and280), .in3(and281), .in4(and282), .in5(and283), .in6(and284), .in7(and285), .in8(and286), .in9(and287), .in10(and288));
+or4$ or_gate16(.out(or16), .in0(and289), .in1(and290), .in2(and291), .in3(and292));
+or20$ or_gate17(.out(or17), .in0(and293), .in1(and294), .in2(and295), .in3(and296), .in4(and297), .in5(and298), .in6(and299), .in7(and300), .in8(and301), .in9(and302), .in10(and303), .in11(and304), .in12(and305), .in13(and306), .in14(and307), .in15(and308), .in16(and309), .in17(and310), .in18(and311), .in19(and312));
+or48$ or_gate18(.out(or18), .in0(and313), .in1(and314), .in2(and315), .in3(and316), .in4(and317), .in5(and318), .in6(and319), .in7(and320), .in8(and321), .in9(and322), .in10(and323), .in11(and324), .in12(and325), .in13(and326), .in14(and327), .in15(and328), .in16(and329), .in17(and330), .in18(and331), .in19(and332), .in20(and333), .in21(and334), .in22(and335), .in23(and336), .in24(and337), .in25(and338), .in26(and339), .in27(and340), .in28(and341), .in29(and342), .in30(and343), .in31(and344), .in32(and345), .in33(and346), .in34(and347), .in35(and348), .in36(and349), .in37(and350), .in38(and351), .in39(and352), .in40(and353), .in41(and354), .in42(and355), .in43(and356), .in44(and357), .in45(and358), .in46(and359), .in47(and360));
+or23$ or_gate19(.out(or19), .in0(and361), .in1(and362), .in2(and363), .in3(and364), .in4(and365), .in5(and366), .in6(and367), .in7(and368), .in8(and369), .in9(and370), .in10(and371), .in11(and372), .in12(and373), .in13(and374), .in14(and375), .in15(and376), .in16(and377), .in17(and378), .in18(and379), .in19(and380), .in20(and381), .in21(and382), .in22(and383));
+or16$ or_gate20(.out(or20), .in0(and384), .in1(and385), .in2(and386), .in3(and387), .in4(and388), .in5(and389), .in6(and390), .in7(and391), .in8(and392), .in9(and393), .in10(and394), .in11(and395), .in12(and396), .in13(and397), .in14(and398), .in15(and399));
+or4$ or_gate21(.out(or21), .in0(and400), .in1(and401), .in2(and402), .in3(and403));
+or3$ or_gate22(.out(or22), .in0(and404), .in1(and405), .in2(and406));
+or2$ or_gate23(.out(or23), .in0(and407), .in1(and408));
+or6$ or_gate24(.out(or24), .in0(and409), .in1(and410), .in2(and411), .in3(and412), .in4(and413), .in5(and414));
+or7$ or_gate25(.out(or25), .in0(and415), .in1(and416), .in2(and417), .in3(and418), .in4(and419), .in5(and420), .in6(and421));
 
 assign setd = and0;
 assign cleard = and1;
@@ -1176,22 +1177,22 @@ assign op0_reg_3 = or10;
 assign op0_reg_2 = or11;
 assign op0_reg_1 = or12;
 assign op0_reg_0 = or13;
-assign op1_reg_4 = and277;
-assign op1_reg_3 = or14;
-assign op1_reg_2 = or14;
-assign op1_reg_1 = or14;
-assign op1_reg_0 = or15;
-assign alu_op_3 = or16;
-assign alu_op_2 = or17;
-assign alu_op_1 = or18;
-assign alu_op_0 = or19;
-assign flag0_2 = or19;
-assign flag0_1 = or20;
-assign flag0_0 = or21;
-assign flag1_2 = or21;
-assign flag1_1 = or21;
-assign flag1_0 = or22;
-assign stack_op_1 = or23;
-assign stack_op_0 = or24;
+assign op1_reg_4 = or14;
+assign op1_reg_3 = or15;
+assign op1_reg_2 = or15;
+assign op1_reg_1 = or15;
+assign op1_reg_0 = or16;
+assign alu_op_3 = or17;
+assign alu_op_2 = or18;
+assign alu_op_1 = or19;
+assign alu_op_0 = or20;
+assign flag0_2 = or20;
+assign flag0_1 = or21;
+assign flag0_0 = or22;
+assign flag1_2 = or22;
+assign flag1_1 = or22;
+assign flag1_0 = or23;
+assign stack_op_1 = or24;
+assign stack_op_0 = or25;
 
 endmodule

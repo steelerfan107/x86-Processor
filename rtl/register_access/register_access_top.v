@@ -581,8 +581,8 @@ module register_access_top (
     mux #(.INPUTS(4),.WIDTH(32)) in_sel ({wb_reg_data, wb_reg_data, 
                                           new_local_esp_pop, new_local_esp_push}, local_esp_in, {wb_commit,stack_pop});	
      
-    slow_addr #(.WIDTH(32)) pop  (r_ss, local_esp         , p_stack_address_pop, nc0);
-    slow_addr #(.WIDTH(32)) push (r_ss, new_local_esp_push, p_stack_address_push, nc0);
+    slow_addr #(.WIDTH(32)) pop  ({r_ss,16'b0}, local_esp         , p_stack_address_pop, nc0);
+    slow_addr #(.WIDTH(32)) push ({r_ss,16'b0}, new_local_esp_push, p_stack_address_push, nc0);
 
     mux #(.INPUTS(2),.WIDTH(32)) addr_sel  ({p_stack_address_pop,p_stack_address_push} ,  p_stack_address, stack_pop);	   
 
