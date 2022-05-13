@@ -68,6 +68,9 @@ module JMP
   inv1$ zf_in_not_i(.in(eflags_in[3]), .out(zf_in_not));
   inv1$ cf_in_not_i(.in(eflags_in[1]), .out(cf_in_not));
 
+   and2$ (notzf_and_nofcf, zf_in_not, cf_in_not);
+   
+   
   and2$ zfen_and_cfen_i(.in0(ZF_en), .in1(CF_en), .out(zfen_and_cfen));
   and2$ zfen_and_notcfen_i (.in0(ZF_en), .in1(CF_en_not), .out(zfen_and_notcfen));
   or2$ notzf_or_notcf_i(.in0(zf_in_not), .in1(cf_in_not), .out(notzf_or_notcf));
@@ -83,7 +86,9 @@ module JMP
   and2$ (opcodeFF, aluOpIsSix, unQualopcodeFF);
   
   and2$ jne_i(.in0(zfen_and_notcfen), .in1(zf_in_not), .out(jne));
-  and2$ jnbe_i(.in0(zfen_and_cfen), .in1(notzf_or_notcf), .out(jnbe));
+  //and2$ jnbe_i(.in0(zfen_and_cfen), .in1(notzf_or_notcf), .out(jnbe));
+  assign jnbe = notzf_and_nofcf;
+   
   or2$ opcodeEB_i(.in0(opcode77), .in1(opcode75), .out(opcode77_75));
   
   or2$ jne_or_jnbe_i(.in0(jne), .in1(jnbe), .out(jne_or_jnbe));

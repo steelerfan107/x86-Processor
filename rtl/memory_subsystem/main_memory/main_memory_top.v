@@ -123,7 +123,27 @@ module main_memory_top(
     register #(.WIDTH(32)) staging_reg(clk, reset, dio_internal, reg_out, , reg_wr);
     
     wire [31:0] aligned_wr_data;
-    mem_align al(reg_out, wr_size, data, addr[1:0], aligned_wr_data);
+    
+    wire [31:0] switch_in;
+    wire [31:0] switch_out;
+    wire [31:0] switch_data;
+   
+    assign switch_data[7:0]   = data[31:24];
+    assign switch_data[15:8]  = data[23:16];
+    assign switch_data[23:16] = data[15:8];
+    assign switch_data[31:24] = data[7:0];
+   
+    assign switch_in[7:0]   = reg_out[31:24];
+    assign switch_in[15:8]  = reg_out[23:16];
+    assign switch_in[23:16] = reg_out[15:8];
+    assign switch_in[31:24] = reg_out[7:0];
+
+    assign aligned_wr_data[7:0]   = switch_out[31:24];
+    assign aligned_wr_data[15:8]  = switch_out[23:16];
+    assign aligned_wr_data[23:16] = switch_out[15:8];
+    assign aligned_wr_data[31:24] = switch_out[7:0];   
+
+    mem_align al(switch_in, wr_size, switch_data, addr[1:0], switch_out);
 
     wire ctrl_wr_n;
     inv1$ cren(ctrl_wr_n, ctrl_wr);

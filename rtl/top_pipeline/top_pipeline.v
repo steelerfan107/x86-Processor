@@ -103,7 +103,22 @@ module top_pipeline (
    output    [DSIZEW-1:0]  wmem_wr_size;
    input                   wmem_dp_valid;
    output                  wmem_dp_ready;
-   input    [DDATAW-1:0]   wmem_dp_read_data;   
+   input    [DDATAW-1:0]   wmem_dp_read_data;
+
+   /*
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_pipe;    
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_64;
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_32;
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_16;
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_8;
+
+   assign wmem_wr_data_es_8  = wmem_wr_data_es_pipe;
+   assign wmem_wr_data_es_16 = {wmem_wr_data_es_pipe[63:16],wmem_wr_data_es_pipe[7:0],wmem_wr_data_es_pipe[15:8]} ;
+   assign wmem_wr_data_es_32 = {wmem_wr_data_es_pipe[63:32],wmem_wr_data_es_pipe[7:0],wmem_wr_data_es_pipe[15:8],wmem_wr_data_es_pipe[23:16],wmem_wr_data_es_pipe[31:24]} ;
+   assign wmem_wr_data_es_64 = {wmem_wr_data_es_pipe[7:0]  ,wmem_wr_data_es_pipe[15:8] ,wmem_wr_data_es_pipe[23:16] ,wmem_wr_data_es_pipe[31:24],
+                                wmem_wr_data_es_pipe[39:32],wmem_wr_data_es_pipe[47:40],wmem_wr_data_es_pipe[55:48] ,wmem_wr_data_es_pipe[63:56]} ;
+   
+   */
 
    // Interrupt Interface
    wire                    pending_int;
@@ -144,7 +159,7 @@ module top_pipeline (
    wire                    f_valid;
    wire                    f_ready;
    wire [5:0]              f_bytes_read;
-   wire [5:0]              f_valid_bytes;
+   wire [6:0]              f_valid_bytes;
    wire [255:0]            f_instruction;
    wire [IADDRW-1:0]       f_pc;
    wire                    f_branch_taken;

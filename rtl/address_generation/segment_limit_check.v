@@ -26,7 +26,7 @@ module segment_limit_check (
     // segment limits
     wire [31:0] cs_limit = 32'h04fff000;
     wire [31:0] ds_limit = 32'h011ff000;
-    wire [31:0] ss_limit = 32'h04000000;
+    wire [31:0] ss_limit = 32'hf0000000;
     wire [31:0] es_limit = 32'h003ff000;
     wire [31:0] fs_limit = 32'h003ff000;
     wire [31:0] gs_limit = 32'h007ff000;
@@ -92,6 +92,11 @@ module segment_limit_check (
     inv1$ safe_inv (unsafe, safe);
 
     // only cause exception if this address is valid
-    and2$ out_and (cause_exception, unsafe, address_is_valid);
+    wire  is_ss, not_ss;
+   
+    compare #(.WIDTH(3)) (segment, 3'd2, is_ss);
+    inv1$ (not_ss, is_ss);
+   
+    and3$ out_and (cause_exception, unsafe, address_is_valid, not_ss);
 
 endmodule
