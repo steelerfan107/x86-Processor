@@ -1,0 +1,14 @@
+// movs_test.lst
+
+// test movs
+
+0x00: BE 00 00 00 02 // Put address in ESI
+0x05: BF 04 00 00 02 // Put address in EDI
+0x0A: B8 D4 C3 B2 A1 // Put value to write into EAX
+0x0F: 89 06 // Write EAX to DS:[ESI]
+0x11: FC  // Clear D Flag
+0x12: A5 // Do the MOVS
+0x13: 8B 0E // Read value in ES:[EDI] into ECX
+0x15: F4    // Halt
+
+// Result: EAX should equal ECX

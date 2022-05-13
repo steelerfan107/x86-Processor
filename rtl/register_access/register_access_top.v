@@ -485,7 +485,7 @@ module register_access_top (
     // d_movs
     // change the value in esi and edi if address generation is ready for new value
     wire esi_edi_en;
-    and2$ and_change_esi_edi (esi_edi_en, d_movs, r_ready);
+    and3$ and_change_esi_edi (esi_edi_en, d_movs, r_ready, r_valid);
     
 
     // --------------- //
