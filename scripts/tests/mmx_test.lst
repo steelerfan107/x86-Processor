@@ -1,10 +1,10 @@
 // mmx test
 
-0x0: B8 20 00 00 00 // move address into eax
+0x0: B8 00 00 00 02 // move address into eax
 0x5: 0F 6F 00 // move value at [eax] into mm0
 0x8: 0F 6F 48 08 // move value at [eax] + 8 into mm1
 0xC: 0F FD C1 // add mm0 and mm1 into mm0 
 0xF: F4 00 00 00 00 00 // halt
 
-0x20: 01 01 01 01 01 01 01 01
-0x28: 10 10 10 10 10 10 10 10
+0x00002000: 01 01 01 01 01 01 01 01
+0x00002008: 10 10 10 10 10 10 10 10

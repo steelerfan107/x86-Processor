@@ -320,7 +320,10 @@ module memory_read_top (
 
     wire  read_transaction = a_op0_is_address | a_op1_is_address;
 
-   wire   read_mask = (~read_transaction) | (rmem_dp_valid & rmem_dp_ready);
+   // wire   read_mask = (~read_transaction) | (rmem_dp_valid & rmem_dp_ready);
+   wire   read_mask = (~read_transaction) | (dcache_valid);
+
+   // delay the dcache interface state machine
    
     dcache_interface dcache_interface0 (
         clk,
