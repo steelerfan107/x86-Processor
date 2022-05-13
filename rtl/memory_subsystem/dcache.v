@@ -69,7 +69,7 @@ module dcache(
     output wr_req_ready;
     input [31:0] wr_req_address;
     input [63:0] wr_req_data;
-    input wr_size_in;
+    input [1:0] wr_size_in;
 
     // interrupt
     output page_fault;
@@ -93,8 +93,9 @@ module dcache(
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
-    //tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
     assign mem_en = bus_busy_out;
+    //tristate_bus_driver1$(~bus_busy_out, bus_busy_out, mem_en);
+    //assign mem_en = bus_busy_out;
    
     wire ctrl_write_cnt_z;
     wire ctrl_write_cnt_en;
@@ -117,7 +118,9 @@ module dcache(
     wire [31:0] req_pending_addr;
     wire ctrl_req_addr_en;
 
-    // TODO behavioral
+    //wire 4_or_more = ~wr_size[1];
+    //wire upper 
+
     wire [2:0] offset_mux_out;
     mux #(.WIDTH(3), .INPUTS(2)) offset_mux({3'd4, 3'd4 - byte_offset}, offset_mux_out, write_cnt[0]);
 
@@ -149,7 +152,7 @@ module dcache(
 
     wire ctrl_pa_src;
     wire ctrl_pa_wr_en;
-    wire wr_size;
+    wire [1:0] wr_size;
     wire write_num; 
 
     wire write_num_n;
@@ -288,8 +291,8 @@ module dcache(
     inv1$ a2m_inv(a2m_n, ctrl_addr2_mux);
     and2$ wr_req_and(wr_req_en, ctrl_req_addr_en, a2m_n);
     register #(.WIDTH(64)) wr_data_reg(clk, reset, wr_req_data, wr_data_reg_out, , wr_req_en);
-    register #(.WIDTH(1)) wr_size_reg(clk, reset, wr_size_in, wr_size, , wr_req_en);
 
+    register #(.WIDTH(2)) wr_size_reg(clk, reset, wr_size_in, wr_size, , wr_req_en);
     register #(.WIDTH(2)) byte_offset_reg(clk, reset, byte_offset_in, byte_offset,, wr_req_en);
 
     wire [31:0] mem_data_driver; 
@@ -322,45 +325,53 @@ module eval_wr_done(
     output wr_done,
     input [1:0] write_cnt,
     input [1:0] off,
-    input wr_size
+    input [1:0] wr_size
 );
-    wire off0;
-    wire aob;
-    or2$ or33(aob, off[0], off[1]);
-    inv1$ invee(off0, aob);
+    wire wr_cnt0 = write_cnt[0];
+    wire wr_cnt1 = write_cnt[1];
 
-    wire wr_size_n;
-    inv1$ wsn(wr_size_n, wr_size);
-   
-    wire write_cnt_1_n;
-    inv1$ wc1inv(write_cnt_1_n, write_cnt[1]);
-    
-    wire write_cnt_0_n;
-    inv1$ wc0inv(write_cnt_0_n, write_cnt[0]);
+    wire off0 = off[0]; 
+    wire off1 = off[1];
 
-    wire wr_cnt_eq_1;
-    and2$ wc1a(wr_cnt_eq_1, write_cnt[0], write_cnt_1_n);
+    wire wr_size0 = wr_size[0];
+    wire wr_size1 = wr_size[1];
 
-    wire wr_cnt_eq_2;
-    and2$ wc2a(wr_cnt_eq_2, write_cnt[1], write_cnt_0_n);
 
-    wire wr_cnt_eq_0;
-    and2$ wc0a(wr_cnt_eq_0, write_cnt_1_n, write_cnt_0_n);
+wire wr_cnt0_not;
+wire off1_not;
+wire off0_not;
+wire wr_size0_not;
+wire and0;
+wire wr_cnt1_not;
+wire and1;
+wire wr_size1_not;
+wire and2;
+wire and3;
+wire and4;
+wire and5;
+wire and6;
+wire and7;
+wire or0;
 
-    wire wrsnandoffn;
-    or2$ wsnao(wrsnandoffn, wr_size_n, off0);
+inv1$ wr_cnt0_inv (.out(wr_cnt0_not), .in(wr_cnt0));
+inv1$ off1_inv (.out(off1_not), .in(off1));
+inv1$ off0_inv (.out(off0_not), .in(off0));
+inv1$ wr_size0_inv (.out(wr_size0_not), .in(wr_size0));
+inv1$ wr_cnt1_inv (.out(wr_cnt1_not), .in(wr_cnt1));
+inv1$ wr_size1_inv (.out(wr_size1_not), .in(wr_size1));
 
-    wire term1;
-    and2$ t1a(term1, wr_cnt_eq_1, wrsnandoffn);
+and4$ and_gate0(.out(and0), .in0(wr_cnt0_not), .in1(off1_not), .in2(off0_not), .in3(wr_size0_not));
+and5$ and_gate1(.out(and1), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(off1), .in3(off0), .in4(wr_size1));
+and5$ and_gate2(.out(and2), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(off1_not), .in3(off0_not), .in4(wr_size1_not));
+and3$ and_gate3(.out(and3), .in0(wr_cnt0_not), .in1(off0_not), .in2(wr_size1));
+and3$ and_gate4(.out(and4), .in0(wr_cnt0_not), .in1(off1_not), .in2(wr_size1));
+and3$ and_gate5(.out(and5), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(wr_size0_not));
+and2$ and_gate6(.out(and6), .in0(wr_cnt1), .in1(wr_cnt0_not));
+and2$ and_gate7(.out(and7), .in0(wr_size1), .in1(wr_size0_not));
 
-    wire term2;
-    and2$ t2a(term2, wr_cnt_eq_2, wr_size);
+or8$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5), .in6(and6), .in7(and7));
 
-    wire term3;
-    and3$ t3a(term3, wr_cnt_eq_0, wr_size_n, off0);
-
-    or3$ wr_done_or(wr_done, term1, term2, term3);
-
+assign wr_done = or0;
 endmodule
 
 module wr_data_select(
@@ -395,12 +406,20 @@ endmodule
 module wr_size_select(
     input [1:0] wr_cnt,
     input [1:0] off,
-    input size_in,
+    input [1:0] size_in,
     output [1:0] size_out
 );
+wire wr_cnt0 = wr_cnt[0];
+wire wr_cnt1 = wr_cnt[1];
+
+wire off0 = off[0];
+wire off1 = off[1];
+
+wire size_in0 = size_in[0];
+wire size_in1 = size_in[1];
 
 wire wr_cnt1_not;
-wire size_in_not;
+wire size_in0_not;
 wire and0;
 wire wr_cnt0_not;
 wire and1;
@@ -408,26 +427,54 @@ wire off0_not;
 wire and2;
 wire off1_not;
 wire and3;
-wire or0;
 wire and4;
 wire and5;
+wire or0;
+wire and6;
+wire and7;
+wire and8;
+wire and9;
 wire or1;
 
-inv1$ wr_cnt1_inv (.out(wr_cnt1_not), .in(wr_cnt[1]));
-inv1$ size_in_inv (.out(size_in_not), .in(size_in));
-inv1$ wr_cnt0_inv (.out(wr_cnt0_not), .in(wr_cnt[0]));
-inv1$ off0_inv (.out(off0_not), .in(off[0]));
-inv1$ off1_inv (.out(off1_not), .in(off[1]));
+wire wr_cnt1_not;
+wire size_in1_not;
+wire size_in0_not;
+wire and0;
+wire wr_cnt0_not;
+wire and1;
+wire off0_not;
+wire and2;
+wire off1_not;
+wire and3;
+wire and4;
+wire and5;
+wire or0;
+wire and6;
+wire and7;
+wire and8;
+wire and9;
+wire or1;
 
-and4$ and_gate0(.out(and0), .in0(wr_cnt1_not), .in1(wr_cnt[0]), .in2(off[1]), .in3(size_in_not));
-and4$ and_gate1(.out(and1), .in0(wr_cnt[1]), .in1(wr_cnt0_not), .in2(off[1]), .in3(size_in));
-and4$ and_gate2(.out(and2), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off[1]), .in3(off0_not));
-and4$ and_gate3(.out(and3), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off1_not), .in3(off[0]));
-and3$ and_gate4(.out(and4), .in0(wr_cnt1_not), .in1(off[0]), .in2(size_in_not));
-and3$ and_gate5(.out(and5), .in0(wr_cnt0_not), .in1(off[0]), .in2(size_in));
+inv1$ wr_cnt1_inv (.out(wr_cnt1_not), .in(wr_cnt1));
+inv1$ size_in1_inv (.out(size_in1_not), .in(size_in1));
+inv1$ size_in0_inv (.out(size_in0_not), .in(size_in0));
+inv1$ wr_cnt0_inv (.out(wr_cnt0_not), .in(wr_cnt0));
+inv1$ off0_inv (.out(off0_not), .in(off0));
+inv1$ off1_inv (.out(off1_not), .in(off1));
 
-or4$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3));
-or2$ or_gate1(.out(or1), .in0(and4), .in1(and5));
+and5$ and_gate0(.out(and0), .in0(wr_cnt1_not), .in1(wr_cnt0), .in2(off1), .in3(size_in1_not), .in4(size_in0_not));
+and5$ and_gate1(.out(and1), .in0(wr_cnt1), .in1(wr_cnt0_not), .in2(off1), .in3(size_in1_not), .in4(size_in0));
+and5$ and_gate2(.out(and2), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off0_not), .in3(size_in1), .in4(size_in0));
+and5$ and_gate3(.out(and3), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off1_not), .in3(size_in1), .in4(size_in0));
+and5$ and_gate4(.out(and4), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off1), .in3(off0_not), .in4(size_in1_not));
+and5$ and_gate5(.out(and5), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(off1_not), .in3(off0), .in4(size_in1_not));
+and5$ and_gate6(.out(and6), .in0(wr_cnt1_not), .in1(off1), .in2(off0), .in3(size_in1), .in4(size_in0));
+and4$ and_gate7(.out(and7), .in0(wr_cnt1_not), .in1(off0), .in2(size_in1_not), .in3(size_in0_not));
+and4$ and_gate8(.out(and8), .in0(wr_cnt1_not), .in1(wr_cnt0_not), .in2(size_in1), .in3(size_in0_not));
+and4$ and_gate9(.out(and9), .in0(wr_cnt0_not), .in1(off0), .in2(size_in1_not), .in3(size_in0));
+
+or6$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5));
+or4$ or_gate1(.out(or1), .in0(and6), .in1(and7), .in2(and8), .in3(and9));
 
 assign size_out[1] = or0;
 assign size_out[0] = or1;

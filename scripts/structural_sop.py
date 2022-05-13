@@ -19,7 +19,9 @@ module_dictionary = {}
 
 console_out = subprocess.run(['./espresso.linux', '-o', 'eqntott', input], stdout=subprocess.PIPE)
 result = console_out.stdout
-logic_string = result.decode('utf-8').partition("specified above.")[2]
+#logic_string = result.decode('utf-8').partition("specified above.")[2]
+logic_string = result.decode('utf-8')
+#logic_string = result
 logic_string_array = logic_string.split(';')
 and_gate_num = 0
 or_gate_num = 0

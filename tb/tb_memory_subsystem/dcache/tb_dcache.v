@@ -23,7 +23,7 @@ module TOP;
     wire wr_req_ready;
     reg [31:0] wr_req_address;
     reg [63:0] wr_req_data;
-    reg wr_size_in;
+    reg [1:0] wr_size_in;
 
     // interrupt
     wire page_fault;
@@ -459,7 +459,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
          wr_req_valid = 0;
          wr_req_address = 0;
          wr_req_data = 0;
-         wr_size_in = 1;
+         wr_size_in = 2;
 
         // Arbiter Interface
          grant_in = 0;
@@ -471,12 +471,11 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
 
         #20
         #20
-        wr_size_in = 0;
+        wr_size_in = 3;
         rd_req_valid = 0;
         //rd_req_address = 32'h02000003;
 
-        wr_req_address = 32'h0b0000ff;
-
+        wr_req_address = 32'h0b0000fe;
         #20
         grant_in = 1;
 
@@ -485,14 +484,14 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
         #20 
         wr_req_valid = 0;
         wr_req_data = 64'b0;
-        wr_req_address = 32'h0b0000fb;
+        wr_req_address = 32'h0b0000fa;
         #1300
         wr_req_valid = 1;
         wr_req_data = 64'h01010101;
         #20
         wr_req_valid = 0;
         wr_req_data = 64'b0;
-        wr_req_address = 32'h0b0000f7;
+        wr_req_address = 32'h0b0000f6;
         #1300
         wr_req_valid=1;
         wr_req_data = 64'h34345634;
@@ -500,15 +499,15 @@ $readmemh("rom/rom_control_255_0", uut_memory.genblk1[7].genblk1[31].sram32x32$.
    
         #20
         wr_req_valid=0; 
-        rd_req_address = 32'h0b0000f7;
+        rd_req_address = 32'h0b0000f6;
         
         #1300
         rd_req_valid = 1;
 
         #1300
-        rd_req_address = 32'h0b0000fb;
+        rd_req_address = 32'h0b0000fa;
         #1300
-        rd_req_address = 32'h0b0000ff;
+        rd_req_address = 32'h0b0000fe;
         
         
 
