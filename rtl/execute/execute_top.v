@@ -72,7 +72,7 @@ module execute_top (
     wb_br_misprediction,
     wb_alu_op,
 
-    eflags_out
+    e_eflags_out
 
 
 );
@@ -145,7 +145,7 @@ module execute_top (
     output wb_op_b_is_address;
     output [3:0] wb_alu_op;
 
-    output [6:0] eflags_out;
+    output [6:0] e_eflags_out;
 
    
     wire [63:0] a;
@@ -155,7 +155,7 @@ module execute_top (
     wire [5:0] e_alu_set_eflags_mask;    
     wire [5:0] e_alu_eflags_out; 
     wire [5:0] e_alu_eflags_out_in;    
-    wire [6:0] e_eflags_out;
+    // wire [6:0] e_eflags_out;
     wire  wb_jump_load_address_unamsk;
 
     and2$ (wb_jump_load_address, e_valid, wb_jump_load_address_unamsk);
