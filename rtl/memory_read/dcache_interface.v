@@ -98,8 +98,20 @@ module dcache_interface (
         rd_dp_valid
     );
 
-    ao_mux #(.WIDTH(32), .NINPUTS(2)) rd_req_mux (
-        {op1_address, op0_address},
+    // ao_mux #(.WIDTH(32), .NINPUTS(2)) rd_req_mux (
+    //     {op1_address, op0_address},
+    //     rd_req_address,
+    //     {op1_address_is_valid, op0_address_is_valid}
+    // );
+
+    // make this a 4 input mux so that way when op1 is address it is always read
+    mux #(.WIDTH(32), .INPUTS(4)) rd_req_mux (
+        {
+            op1_address,
+            op1_address,
+            op0_address,
+            32'h0   // no read
+        },
         rd_req_address,
         {op1_address_is_valid, op0_address_is_valid}
     );

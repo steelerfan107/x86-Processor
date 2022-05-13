@@ -263,7 +263,7 @@ module mmx_stall_modify_table (
 
     // see if all match
     wire increment;
-    and4$ op0_and (increment, op0_xnor_out[0], op0_xnor_out[1], op0_xnor_out[2], op0_is_valid);
+    and5$ op0_and (increment, op0_xnor_out[0], op0_xnor_out[1], op0_xnor_out[2], op0_is_valid, next_stage_ready);
 
     // see if wb_reg == reg_number
     wire [2:0] wb_xnor_out;
@@ -292,11 +292,14 @@ module mmx_stall_modify_table (
     );
 
     // set write enable only if we are adding or subtracting
-    wire add_or_sub;
-    xor2$ we_xor (add_or_sub, increment, decrement);
+    // wire add_or_sub;
+    // xor2$ we_xor (add_or_sub, increment, decrement);
 
     // only write if next stage is ready
-    and2$ next_stage_and (reg_we, add_or_sub, next_stage_ready);
+    // and2$ next_stage_and (reg_we, add_or_sub, next_stage_ready);
+
+    // we if we either add or subtract
+    xor2$ we_xor (reg_we, increment, decrement);
 
 endmodule
 

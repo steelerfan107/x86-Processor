@@ -78,6 +78,8 @@ module mod_rm (
     value,
 
     is_address,
+
+    selected_seg_id,
     
     mod_rm_byte,
     sib_byte,
@@ -116,6 +118,8 @@ module mod_rm (
     output [63:0] value;
 
     output is_address;  // 1 if an address and needs mem read, 0 if its a reg value
+
+    output [2:0] selected_seg_id;
     
     input [7:0] mod_rm_byte;
     input [7:0] sib_byte;
@@ -339,7 +343,7 @@ module mod_rm (
     );
 
     // pick what to use based on seg override
-    wire [2:0] selected_seg_id;
+    // wire [2:0] selected_seg_id;
 
     mux #(.WIDTH(3), .INPUTS(2)) seg_override_mux (
         {seg_sel, normal_segment},

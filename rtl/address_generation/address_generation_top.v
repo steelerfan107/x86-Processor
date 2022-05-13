@@ -642,10 +642,13 @@ module op0_generator (
     // calculate mod_rm
     wire [63:0] op0_mod_rm;
     wire op0_mod_rm_is_address;
+    wire [2:0] selected_seg_id;
     mod_rm op0_mod_rm_calculator(
         op0_mod_rm,
 
         op0_mod_rm_is_address,
+
+        selected_seg_id,
         
         r_modrm,
         r_sib,
@@ -709,11 +712,12 @@ module op0_generator (
     // determine if op0 is an address or normie value
     // only read from memory if mod rm is an address
     // if op0 is memory, is_address should be zero since mem_read shouldn't do anything
-    wire op0_mux_is_address = 1'b0;
-    // op0_is_address op0_is_address0 (
-    //     r_op0[2], r_op0[1], r_op0[0],
-    //     op0_mux_is_address
-    // );
+    // wire op0_mux_is_address = 1'b0;
+    wire op0_mux_is_address;
+    op0_is_address op0_is_address0 (
+        r_op0[2], r_op0[1], r_op0[0],
+        op0_mux_is_address
+    );
 
  
     wire  op0_rm_and_address, op0_is_modrm;
@@ -743,7 +747,7 @@ module op0_generator (
             3'd0,
             3'd0,
             r_seg_override,
-            3'b011
+            selected_seg_id
         },
         op0_segment_num,
         {is_memory, r_seg_override_valid}
@@ -751,7 +755,7 @@ module op0_generator (
 
     // will this be read from memory later?
     wire op0_check_segment_limit_mem;
-    op0_is_address op0_is_address0 (
+    op0_is_address op0_is_address1 (
         r_op0[2], r_op0[1], r_op0[0],
         op0_check_segment_limit_mem
     );
@@ -929,10 +933,13 @@ module op1_generator (
     // calculate mod_rm
     wire [63:0] op1_mod_rm;
     wire op1_mod_rm_is_address;
+    wire [2:0] selected_seg_id;
     mod_rm op1_mod_rm_calculator(
         op1_mod_rm,
 
         op1_mod_rm_is_address,
+
+        selected_seg_id,
         
         r_modrm,
         r_sib,
@@ -1029,7 +1036,7 @@ module op1_generator (
    // else use ds
 
    mux #(.WIDTH(3), .INPUTS(2)) op1_seg_mux (
-       {r_seg_override, 3'b100},
+       {r_seg_override, selected_seg_id},
        op1_segment_num,
        r_seg_override_valid
    );
