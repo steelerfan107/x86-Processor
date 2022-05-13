@@ -72,6 +72,7 @@ module main_memory_top(
 
     genvar i;
     genvar j;
+    genvar k;
 
     wire [7:0] dec8_out;
     decoder3_8$ dec8(addr[14:12], dec8_out);
@@ -103,8 +104,17 @@ module main_memory_top(
                 inv1$ oeinv(oe_n, oe);
                 inv1$ wrinv(wr_n, wr);
 
+                wire [4:0] addr_buffered;
+                wire [4:0] intermediate [0:8];
+                assign intermediate[0] = addr[6:2];
+                for (k=0; k<8; k=k+1) begin
+                    buffer8$(intermediate[k+1], intermediate[k]);
+                end
+                
+                
+
                 sram32x32$ (
-                    .A(addr[6:2]),
+                    .A(intermediate[8]),
                     .DIO(dio_internal),
                     .OE(oe_n),
                     .WR(wr_n),

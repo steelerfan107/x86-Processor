@@ -180,8 +180,11 @@ memory_subsystem_top.dma.start = 1'b1;
     imem_address = 32'h02000000;
     imem_dp_ready = 1;
         #10000
-        imem_address = 32'h02000072;
-        dmem_r_address = 32'h02000071;
+        imem_address = 32'h02000000;
+        dmem_r_address = 32'h02000000;
+    sys_r_valid = 1;
+    sys_r_address = 32'h00002000;
+    sys_r_dp_ready =  1;
 
         #500
         dmem_r_valid = 1;

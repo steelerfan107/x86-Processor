@@ -124,16 +124,17 @@ module memory_subsystem_top (
 
     wire bus_busy_icache;
     wire bus_busy_dcache;
-    wire bus_busy_sys_controller = 'h0;
+    wire bus_busy_sys;
     wire bus_busy_dma;
     wire bus_busy;
 
 
 
-    or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
+    or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys, bus_busy_dma);
 
     wire dma_bus_en;
-    or4$ _or_en(bus_en, d_bus_en, i_bus_en, dma_bus_en, 1'b0);
+    wire sys_bus_en;
+    or4$ _or_en(bus_en, d_bus_en, i_bus_en, dma_bus_en, sys_bus_en);
 
     //or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
     //or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
@@ -266,17 +267,17 @@ module memory_subsystem_top (
         .dp_ready(sys_r_dp_ready),
         .dp_read_data(sys_r_dp_read_data),
 
-        .mem_addr(),
+        .mem_addr(bus_addr),
         .mem_req(),
-        .mem_data_valid(),
-        .mem_data(),
-        .mem_rd_wr(),
-        .mem_en(),
+        .mem_data_valid(bus_data_valid),
+        .mem_data(bus_data),
+        .mem_rd_wr(bus_rd_wr),
+        .mem_en(sys_bus_en),
 
         .grant_in(dcache_grant),
         .grant_out(sys_grant),
 
-        .bus_busy_out(bus_busy_sys_controller_nc),
+        .bus_busy_out(bus_busy_sys),
         .bus_busy_in(bus_busy)
     );
 
