@@ -1,13 +1,13 @@
 .i 7
-.o 6
+.o 8
 .ilb state1  state0  req_valid   grant_in    bus_busy_in mem_ready   dp_ready
-.ob req_ready   mem_req grant_pass  mem_en  new_state1  new_state0
+.ob req_en  dp_valid    req_ready   mem_req grant_pass  mem_en  new_state1  new_state0
 
-000---- 101000
-001---- 100001
-01-0--- 000001
-01--1-- 000001
-01-10-- 010110
-10---0- 010110
-10---11 010100
-10----0 010110
+000---- 00101000
+001---- 10100001
+01-0--- 00000001
+01--1-- 00000001
+01-10-- 00010110
+10---0- 00010110
+10---11 01010100
+10----0 00010110

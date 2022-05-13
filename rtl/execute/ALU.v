@@ -303,7 +303,7 @@ mux #(.WIDTH(1), .INPUTS(16)) mux_jump_load_address_out(.in({9'h00, jmp_load_add
 mux #(.WIDTH(1), .INPUTS(16)) mux_ump_load_cs_out(.in({9'h00, jmp_load_cs, 6'h00}), .out(jump_load_cs), .select(alu_op));
 mux #(.WIDTH(32), .INPUTS(16)) mux_cs_out(.in({32'h00000000,32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, jmp_cs, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000}), .out(jump_load_cs), .select(alu_op));
 //set_eflags, eflags_out
-mux #(.WIDTH(6), .INPUTS(16)) eflags_out_mux(.in({12'bz, sar_eflags_out, sal_eflags_out, 6'bz, 6'bz, 6'bz, or_eflags_out, 6'bz, 6'bz, daa_eflags_out, pass_mov_eflags_out, bsf_eflags_out, and_eflags_out, add_eflags_out, pass_mov_eflags_out}), .out(eflags_out), .select(alu_op));
+mux #(.WIDTH(6), .INPUTS(16)) eflags_out_mux(.in({12'bz, sar_eflags_out, sal_eflags_out, 6'bz, 6'bz, 6'bz, or_eflags_out, 6'bz, 6'bz, daa_eflags_out, pass_mov_eflags_out, bsf_eflags_out, and_eflags_out, add_eflags_out, pass_mov_eflags_out}), .out({eflags_out[5:1],nc}), .select(alu_op));
 pfgen alu_pf_out(.in(a[7:0]), .pf(eflags_out[0]));
 
 endmodule
