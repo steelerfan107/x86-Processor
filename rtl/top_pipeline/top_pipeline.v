@@ -578,7 +578,7 @@ module top_pipeline (
 
       .wb_mmx_number(wb_reg_number),
       .wb_mmx_en(wb_mmx_qual),   //(wb_op_a_is_mmx & wb_valid),
-      .wb_mmx_data(wb_reg_data),
+      .wb_mmx_data(wb_result),
 
       // Stack Commit Interface
       .wb_stack_en(wb_stack_qual),  //(wb_valid & wb_valid & wb_stack),
@@ -852,7 +852,10 @@ module top_pipeline (
   // assign  wmem_address = wb_dest_address;
   assign  wmem_wr_en = wb_is_address;
   // assign  wmem_wr_data = wb_result;
-  assign  wmem_wr_size = wb_opsize;    
+
+  // correct the size
+  wmem_size_mapper wmem_size_mapper0 (wmem_wr_size, wb_opsize);
+  // assign  wmem_wr_size = wb_opsize;    
 
   wire        sys_cont_val;
   and2$ (sys_cont_val, wb_to_sys_controller, wb_valid);
@@ -1014,3 +1017,34 @@ module top_pipeline (
   end
      
 endmodule   
+
+
+module wmem_size_mapper (
+   out,
+   in
+);
+   output [1:0] out;
+   input [2:0] in;
+
+   // o1 = (!in2&in1&!in0) | (!in2&!in1&in0);
+   // o0 = (in2&!in1&in0) | (!in2&in1&!in0);
+
+   wire [2:0] in_not;
+   inv1$ 
+   in_not_inv_0 (in_not[0], in[0]),
+   in_not_inv_1 (in_not[1], in[1]),
+   in_not_inv_2 (in_not[2], in[2]);
+
+   wire and0_out;
+   and3$ and0 (and0_out, in_not[2], in[1], in_not[0]);
+   wire and1_out;
+   and3$ and1 (and1_out, in_not[2], in_not[1], in[0]);
+   wire and2_out;
+   and3$ and2 (and2_out, in[2], in_not[1], in[0]);
+   wire and3_out;
+   and3$ and3 (and3_out, in_not[2], in[1], in_not[0]);
+
+   or2$ (out[1], and0_out, and1_out);
+   or2$ (out[0], and2_out, and3_out);
+
+endmodule

@@ -1,0 +1,9 @@
+// mem write size test
+
+0x0: B8 DD CC BB AA // Move 32 bit value into eax
+0x5: B9 00 00 00 02 // Move address into ecx
+0xA: 89 01 // Write 32 bit eax to addresss in ecx
+0xC: B3 11 // Move 8 bit value into ebx
+0xE: 88 19 // Write 8 bit ebx to address in ecx
+0x10: 8B 11 // read 32 bit [ecx] into edx
+0x12: F4 00 00 00 00 00 // halt
