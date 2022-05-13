@@ -72,15 +72,15 @@ module mmx_register_file (      // fanout good
     endgenerate
 
     // 8 registers
-    register #(.WIDTH(64)) 
-    mm0 (clk, reset, writeback_data_buf, mm0_out, ,wb_decoded_enabled[0]),
-    mm1 (clk, reset, writeback_data_buf, mm1_out, ,wb_decoded_enabled[1]),
-    mm2 (clk, reset, writeback_data_buf, mm2_out, ,wb_decoded_enabled[2]),
-    mm3 (clk, reset, writeback_data_buf, mm3_out, ,wb_decoded_enabled[3]),
-    mm4 (clk, reset, writeback_data_buf, mm4_out, ,wb_decoded_enabled[4]),
-    mm5 (clk, reset, writeback_data_buf, mm5_out, ,wb_decoded_enabled[5]),
-    mm6 (clk, reset, writeback_data_buf, mm6_out, ,wb_decoded_enabled[6]),
-    mm7 (clk, reset, writeback_data_buf, mm7_out, ,wb_decoded_enabled[7]);
+    // register #(.WIDTH(64)) 
+    // mm0 (clk, reset, writeback_data_buf, mm0_out, ,wb_decoded_enabled[0]),
+    // mm1 (clk, reset, writeback_data_buf, mm1_out, ,wb_decoded_enabled[1]),
+    // mm2 (clk, reset, writeback_data_buf, mm2_out, ,wb_decoded_enabled[2]),
+    // mm3 (clk, reset, writeback_data_buf, mm3_out, ,wb_decoded_enabled[3]),
+    // mm4 (clk, reset, writeback_data_buf, mm4_out, ,wb_decoded_enabled[4]),
+    // mm5 (clk, reset, writeback_data_buf, mm5_out, ,wb_decoded_enabled[5]),
+    // mm6 (clk, reset, writeback_data_buf, mm6_out, ,wb_decoded_enabled[6]),
+    // mm7 (clk, reset, writeback_data_buf, mm7_out, ,wb_decoded_enabled[7]);
 
     // 16 32 bit registers that are initialized to Z when reset
     register_32_reset 
