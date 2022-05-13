@@ -129,10 +129,15 @@ module execute_top (
     wire [63:0] a;
     wire [63:0] b;
     wire [63:0] e_alu_out;
-    wire [5:0] e_alu_set_eflags; 
+    wire [5:0] e_alu_set_eflags;
+    wire [5:0] e_alu_set_eflags_mask;    
     wire [5:0] e_alu_eflags_out; 
+    wire [5:0] e_alu_eflags_out_in;    
     wire [6:0] e_eflags_out;
-    
+    wire  wb_jump_load_address_unamsk;
+
+    and2$ (wb_jump_load_address, e_valid, wb_jump_load_address_unamsk);
+
 
     // -------   //
     // Pipestage //
@@ -213,7 +218,7 @@ module execute_top (
     ALU alu(
         .a(e_op_a), 
         .b(e_op_b),
-        .eax(eax),
+        .eax(e_eax),
         .eip(e_pc),
         .cs(e_cs),
         .eflags_in(e_eflags_out[5:0]),
@@ -223,7 +228,7 @@ module execute_top (
         .flag_0_map(e_flag_0_map),
         .flag_1_map(e_flag_1_map),
         .branch_taken(e_branch_taken),
-        .jump_load_address(wb_jump_load_address),
+        .jump_load_address(wb_jump_load_address_unamsk),
         .jump_load_cs(wb_jump_load_cs),
         .cs_out(wb_cs_out),
         .br_misprediction(wb_br_misprediction),
@@ -235,8 +240,13 @@ module execute_top (
     mux2$ mux_change_df(.outb(change_df), .in0(1'b0), .in1(1'b1), .s0(e_set_d_flag)); //if not set, then must be clear
     or2$ or_set_df(.out(set_df), .in0(e_set_d_flag), .in1(e_clear_d_flag));
 
+    assign e_alu_eflags_out_in = (e_valid) ? e_alu_eflags_out : e_eflags_out;
+   
     eflags eflags(
-        .eflags_in({change_df, e_alu_eflags_out}), 
+	.clk(clk),
+	.reset(reset),
+	.valid(1'b1),
+        .eflags_in({change_df, e_alu_eflags_out_in}), 
         .set_eflags({set_df, e_alu_set_eflags}), 
         .eflags_out(e_eflags_out));
 
