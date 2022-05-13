@@ -138,7 +138,7 @@ module dcache(
     wire virt_addr_mux_sel;
     wire [31:0] req_pending_addr_p8;
     slow_addr #(.WIDTH(32)) block_sel_adder(req_pending_addr, 32'd8, req_pending_addr_p8,);
-    mux #(.WIDTH(32), .INPUTS(2)) virt_addr_mux({ req_pending_addr_p8, req_pending_addr},  virt_addr, virt_addr_mux_sel);
+    mux #(.WIDTH(32), .INPUTS(2)) virt_addr_mux({ req_pending_addr_p8, req_pending_addr},  virt_addr, (virt_addr_mux_sel & ~ctrl_rd_wr_addr));
 
 
     wire [22:0] tag_out;

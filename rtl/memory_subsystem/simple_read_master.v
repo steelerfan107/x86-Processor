@@ -69,8 +69,8 @@ module simple_read_master(
 
     wire mem_en_n;
     inv1$ men(mem_en_n, mem_en);
-    tristate_bus_drive16$(mem_en_n, req_addr[15:0], mem_addr[15:0]);
-    tristate_bus_drive16$(mem_en_n, req_addr[31:16], mem_addr[31:16]);
+    tristate_bus_driver16$(mem_en_n, req_addr[15:0], mem_addr[15:0]);
+    tristate_bus_driver16$(mem_en_n, req_addr[31:16], mem_addr[31:16]);
 
     inv1$ reset_inv(reset_n, reset);
 

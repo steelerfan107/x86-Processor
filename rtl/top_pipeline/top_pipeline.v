@@ -933,9 +933,19 @@ module top_pipeline (
   reg [15:0] 	  r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss;
   reg [63:0] 	  r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7;
    reg 		  wb_to_sys_controller0;
+
+   reg [3:0] 	  wb_reg;
+   reg [31:0] 	  wb_address;
+   reg [63:0] 	  wb_data;
+   reg [3:0] 	  wb_reg0;
+   reg [31:0] 	  wb_address0;
+   reg [63:0] 	  wb_data0;   
    
   always @ (posedge clk) begin
-     begin    
+     begin
+	wb_reg0 <= wb_dest_reg;
+	wb_address0 <= wb_dest_address;
+	wb_data0 <= wb_result;	
 	wb_accept0 <= wb_accept;
 	curr_pc0 <= curr_pc;
 	wb_pc0  <= wb_pc;
@@ -980,6 +990,10 @@ module top_pipeline (
 	$display(" Operation to Memory : %b, Operation to Reg : %b, Operation to Seg : %b, Operation to MMX : %b", 
                  wb_op_a_is_address0, wb_op_a_is_reg0, wb_op_a_is_segment0, wb_op_a_is_mmx0);
 	$display(" Going to Sys Controller : %b", wb_to_sys_controller);
+	$display(" Writeback  ---------------------");
+	$display(" WB Address : 0x%h", wb_address0);	
+	$display(" WB Reg     : 0x%h", wb_reg0);	
+	$display(" WB Data    : 0x%h", wb_data0);		
 	$display(" Next ---------------------------");
 	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
 		 r_eax, r_ecx, r_edx, r_ebx, r_esp, r_ebp, r_esi, r_edi);
