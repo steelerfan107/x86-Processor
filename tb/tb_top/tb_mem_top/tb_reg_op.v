@@ -190,6 +190,7 @@ module TOP;
    reg 		r_r_emem_valid;
   
    // assign wmem_wr_size = 'h0; //wmem_wr_size_nc - 1; 
+
    top_pipeline #(.SINGLE_TXN(SINGLE_TXN)) uut_pipeline(
       clk,
       reset,

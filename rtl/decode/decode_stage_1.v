@@ -228,6 +228,18 @@ module decode_stage_1 (
       end      
    end
 
+   // For Segment Overrides force Size to 32
+   wire pCS, pSS, pDS, pES, pFS, pGS, force_size_32;
+
+   compare #(.WIDTH(8))   (8'h0E, s0_opcode[15:8], pCS);
+   compare #(.WIDTH(8))   (8'h16, s0_opcode[15:8], pSS);
+   compare #(.WIDTH(8))   (8'h1E, s0_opcode[15:8], pDS);
+   compare #(.WIDTH(8))   (8'h06, s0_opcode[15:8], pES);
+   compare #(.WIDTH(16))  (16'h0FA0, s0_opcode[15:0], pFS );
+   compare #(.WIDTH(16))  (16'h0FA8, s0_opcode[15:0], pGS);
+
+   or6$ ( force_size_32, pCS, pSS, pDS, pES, pFS, pGS);
+      
    // Force SHift to be 1 for D0,D1
    wire force_1_d0, force_1_d1, force_1;
    
@@ -422,7 +434,7 @@ module decode_stage_1 (
    // Output Muxes
    mux #(.INPUTS(2),.WIDTH(1))  ready_mux({rom_ready_mask,dec_ready},s0_ready, rom_in_control);     
    mux #(.INPUTS(2),.WIDTH(1))  valid_mux({rom_valid,dec_valid},pre_s1_valid, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(3))  size_mux({rom_size,dec_size},s1_size, rom_in_control);  
+   mux #(.INPUTS(4),.WIDTH(3))  size_mux({3'd3,3'd3,rom_size,dec_size},s1_size, {force_size_32, rom_in_control});  
    mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(1))  clear_d_flag_mux({rom_clear_d_flag,dec_clear_d_flag},s1_clear_d_flag, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(3))  op0_mux({rom_op0,dec_op0},s1_op0, rom_in_control);   

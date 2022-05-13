@@ -178,7 +178,7 @@ module mmx_stall (  // fanout good
     inv1$ op0_inv (op0_table_not_empty, op0_table_zero);
 
     wire op0_stall;
-    and2$ op0_and (op0_stall, op0_table_not_empty, op0_is_mmx);
+    and3$ op0_and (op0_stall, op0_table_not_empty, op0_is_mmx, is_mmx_size);
 
     // see if there is a stall
     wire [31:0] op1_table_data;
@@ -204,7 +204,7 @@ module mmx_stall (  // fanout good
     inv1$ op1_inv (op1_table_not_empty, op1_table_zero);
 
     wire op1_stall;
-    and2$ op1_and (op1_stall, op1_table_not_empty, op1_is_mmx);
+    and3$ op1_and (op1_stall, op1_table_not_empty, op1_is_mmx, is_mmx_size);
 
     // final stall signal
     or2$ or_stall (is_stall, op0_stall, op1_stall);

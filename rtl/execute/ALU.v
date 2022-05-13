@@ -35,6 +35,7 @@ output [5:0] eflags_out;
 PASS-MOV -alu_op 0, op 4
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 wire [63:0] pass_out;
+wire [63:0] mov_out;   
 wire [63:0] pass_mov_out;
 wire [31:0] pass_mov_eax_out;
 wire [5:0] pass_mov_set_eflags;
@@ -42,7 +43,9 @@ wire [5:0] pass_mov_eflags_out;
 wire cf_used;
 
 and2$ cf_required(.out(cf_used), .in0(eflags_in[1]), .in1(flag_0_map[0]));
-mux #(.INPUTS(2), .WIDTH(64)) mov_mux(.in({b,a}), .out(pass_out), .select(cf_used));
+mux #(.INPUTS(4), .WIDTH(64)) cmov_mux(.in({b,a,b,b}), .out(mov_out), .select({flag_0_map[0],cf_used}));   
+   mux #(.INPUTS(2), .WIDTH(64)) mov_mux(.in({b,a}), .out(pass_out), .select(cf_used));
+   
 
 //cmp = flag_0_map[1] & !flag_0_map[0]
 wire cmp, not_flag_0_map0;
@@ -291,7 +294,7 @@ mux #(.WIDTH(64), .INPUTS(16)) alu_out_mux(.in({64'd0,
                                                 {32'd0,not_out}, 
                                                 {32'd0,jmp_out}, 
                                                 {56'd0,daa_al_out}, 
-                                                b, 
+                                                mov_out, 
                                                 {32'd0,bsf_out}, 
                                                 {32'd0,and_out}, 
                                                 {32'd0,add_out}, 

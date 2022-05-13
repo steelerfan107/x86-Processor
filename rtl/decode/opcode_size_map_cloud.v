@@ -22,7 +22,6 @@ module opcode_size_map_cloud (
         output f16		      
 );
 
-
 wire i0_not;
 wire i1_not;
 wire i2_not;
@@ -69,27 +68,26 @@ wire and20;
 wire and21;
 wire and22;
 wire and23;
-wire i2_not;
 wire and24;
 wire and25;
 wire and26;
 wire and27;
 wire and28;
-wire and29;
 wire or1;
+wire and29;
 wire and30;
 wire and31;
 wire and32;
 wire and33;
-wire and34;
 wire i6_not;
+wire and34;
 wire and35;
 wire and36;
 wire and37;
 wire and38;
 wire and39;
-wire and40;
 wire or2;
+wire and40;
 wire and41;
 wire and42;
 wire and43;
@@ -100,9 +98,8 @@ wire and47;
 wire and48;
 wire and49;
 wire and50;
-wire and51;
 wire or3;
-wire and52;
+wire and51;
 
 inv1$ i0_inv (.out(i0_not), .in(i0));
 inv1$ i1_inv (.out(i1_not), .in(i1));
@@ -148,59 +145,58 @@ and7$ and_gate17(.out(and17), .in0(i0), .in1(i1), .in2(i2), .in3(i3), .in4(i4
 and8$ and_gate18(.out(and18), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6_not), .in7(i7));
 and8$ and_gate19(.out(and19), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6
 ), .in7(i7_not));
-and8$ and_gate20(.out(and20), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6), .in7(i7));
-and7$ and_gate21(.out(and21), .in0(i0), .in1(i2_not), .in2(i3_not), .in3(i4_not), .in4(i5_not), .in5(i6_not), .in6(i7_not));
-and8$ and_gate22(.out(and22), .in0(
-i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6), .in7(i7));
-and7$ and_gate23(.out(and23), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6_not));
-and5$ and_gate24(.out(and24), .in0(i1), .in1(i2_not), .in2(i3), .in3(i4_not), .in4(i5_not));
-and5$ and_gate25(.out(and25), .in0(i0_not), .in1(i1), .in2(i2_not), .in3(i3), .in4(i4_not));
-and6$ and_gate26(.out(and26), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4), .in5(i7_not));
-and6$ and_gate27(.out(and27), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i5), .in5(i6));
-and5$ and_gate28(.out(and28), .in0(i0_not), .in1(i1_not), .in2(i3_not), .in3(i4_not), .in4(i5_not));
-and5$ and_gate29(.out(and29), .in0(i1_not), .in1(i2_not), .in2(i3_not), .in3(i4), .in4(i5_not));
-and15$ and_gate30(.out(and30), .in0(i0_not), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4), .in5(i5), .in6(i6), .in7(i7), .in8(i8), .in9(i9_not), .in10(i10_not), .in11(i11_not), .in12(i12_not), .in13(i13), .in14(i15));
-and7$ and_gate31(.out(and31), .in0(i0
-), .in1(i1), .in2(i3_not), .in3(i4), .in4(i5_not), .in5(i6), .in6(i7_not));
-and7$ and_gate32(.out(and32), .in0(i1), .in1(i2), .in2(i3_not), .in3(i4), .in4(i5_not), .in5(i6_not), .in6(i7_not));
-and8$ and_gate33(.out(and33), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3
-), .in4(i4), .in5(i5_not), .in6(i6), .in7(i7_not));
-and7$ and_gate34(.out(and34), .in0(i0), .in1(i1), .in2(i2), .in3(i3_not), .in4(i4), .in5(i5_not), .in6(i6_not));
-and7$ and_gate35(.out(and35), .in0(i0_not), .in1(i1_not), .in2(i3_not), .in3(i4_not), .in4(i5), .in5(i6_not), .in6(i7));
-and7$ and_gate36(.out(and36), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i5_not), .in5(i6), .in6(i7_not));
-and8$ and_gate37(.out(and37), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6_not), .in7(i7));
-and7$ and_gate38(.out(and38), .in0(i0_not), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i5), .in5(i6_not), .in6(i7));
-and8$ and_gate39(.out(and39), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6), .in7(i7));
-and5$ and_gate40(.out(and40), .in0(i0), .in1(i1_not), .in2(i2), .in3(i3), .in4(i4));
-and7$ and_gate41(.out(and41), .in0(i0_not), .in1(i1), .in2(i2), .in3(i3), .in4(i4_not), .in5(i5), .in6(i7));
-and8$ and_gate42(.out(and42), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3), .in4(i4), .in5(i5_not), .in6(i6), .in7(i7_not));
-and7$ and_gate43(.out(and43), .in0(i1), .in1(i2
-), .in2(i3_not), .in3(i4), .in4(i5_not), .in5(i6), .in6(i7_not));
-and7$ and_gate44(.out(and44), .in0(i0_not), .in1(i1_not), .in2(i3_not), .in3(i4_not), .in4(i5), .in5(i6_not), .in6(i7_not));
-and7$ and_gate45(.out(and45), .in0(i0), .in1(i1), .in2(i2), .in3(i3_not), .in4(i4
-), .in5(i5_not), .in6(i6));
-and7$ and_gate46(.out(and46), .in0(i0_not), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i5), .in5(i6_not), .in6(i7_not));
-and8$ and_gate47(.out(and47), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6), .in7(i7_not));
-and7$ and_gate48(.out(and48), .in0(
-i0), .in1(i2_not), .in2(i3_not), .in3(i4_not), .in4(i5_not), .in5(i6_not), .in6(i7_not));
-and8$ and_gate49(.out(and49), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6), .in7(i7));
-and7$ and_gate50(.out(and50), .in0(i0), .in1(i1
+and6$ and_gate20(.out(and20), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3), .in4(i4_not), .in5(i5_not));
+and8$ and_gate21(.out(and21), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6), .in7(i7));
+and7$ and_gate22(.out(and22), .in0(i0
+), .in1(i2_not), .in2(i3_not), .in3(i4_not), .in4(i5_not), .in5(i6_not), .in6(i7_not));
+and8$ and_gate23(.out(and23), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6), .in7(i7));
+and7$ and_gate24(.out(and24), .in0(i0), .in1(i1
 ), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6_not));
-and5$ and_gate51(.out(and51), .in0(i0), .in1(i1_not), .in2(i2), .in3(i3), .in4(i4_not));
-and7$ and_gate52(.out(and52), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i5_not), .in5(i6), .in6(i7_not));
+and6$ and_gate25(.out(and25), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4), .in5(i7_not));
+and5$ and_gate26(.out(and26), .in0(i0_not), .in1(i1_not), .in2(i3_not), .in3(i4_not), .in4(i5_not));
+and6$ and_gate27(.out(and27), .in0(
+i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i5), .in5(i6));
+and5$ and_gate28(.out(and28), .in0(i1_not), .in1(i2_not), .in2(i3_not), .in3(i4), .in4(i5_not));
+and15$ and_gate29(.out(and29), .in0(i0_not), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4), .in5(i5), .in6(i6), .in7(i7), .in8(i8), .in9(i9_not), .in10(i10_not), .in11(i11_not), .in12(i12_not), .in13(i13), .in14(i15));
+and7$ and_gate30(.out(and30), .in0(i0
+), .in1(i1), .in2(i3_not), .in3(i4), .in4(i5_not), .in5(i6), .in6(i7_not));
+and7$ and_gate31(.out(and31), .in0(i1), .in1(i2), .in2(i3_not), .in3(i4), .in4(i5_not), .in5(i6_not), .in6(i7_not));
+and8$ and_gate32(.out(and32), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3
+), .in4(i4), .in5(i5_not), .in6(i6), .in7(i7_not));
+and7$ and_gate33(.out(and33), .in0(i0), .in1(i1), .in2(i2), .in3(i3_not), .in4(i4), .in5(i5_not), .in6(i6_not));
+and7$ and_gate34(.out(and34), .in0(i0_not), .in1(i1_not), .in2(i3_not), .in3(i4_not), .in4(i5), .in5(i6_not), .in6(i7));
+and7$ and_gate35(.out(and35), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i5_not), .in5(i6), .in6(i7_not));
+and8$ and_gate36(.out(and36), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6_not), .in7(i7));
+and7$ and_gate37(.out(and37), .in0(i0_not), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i5), .in5(i6_not), .in6(i7));
+and8$ and_gate38(.out(and38), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6), .in7(i7));
+and5$ and_gate39(.out(and39), .in0(i0), .in1(i1_not), .in2(i2), .in3(i3), .in4(i4));
+and7$ and_gate40(.out(and40), .in0(i0_not), .in1(i1), .in2(i2), .in3(i3), .in4(i4_not), .in5(i5), .in6(i7));
+and8$ and_gate41(.out(and41), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3), .in4(i4), .in5(i5_not), .in6(i6), .in7(i7_not));
+and7$ and_gate42(.out(and42), .in0(i1), .in1(i2
+), .in2(i3_not), .in3(i4), .in4(i5_not), .in5(i6), .in6(i7_not));
+and7$ and_gate43(.out(and43), .in0(i0_not), .in1(i1_not), .in2(i3_not), .in3(i4_not), .in4(i5), .in5(i6_not), .in6(i7_not));
+and7$ and_gate44(.out(and44), .in0(i0), .in1(i1), .in2(i2), .in3(i3_not), .in4(i4
+), .in5(i5_not), .in6(i6));
+and7$ and_gate45(.out(and45), .in0(i0_not), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i5), .in5(i6_not), .in6(i7_not));
+and8$ and_gate46(.out(and46), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5), .in6(i6), .in7(i7_not));
+and7$ and_gate47(.out(and47), .in0(
+i0), .in1(i2_not), .in2(i3_not), .in3(i4_not), .in4(i5_not), .in5(i6_not), .in6(i7_not));
+and8$ and_gate48(.out(and48), .in0(i0), .in1(i1_not), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6), .in7(i7));
+and7$ and_gate49(.out(and49), .in0(i0), .in1(i1
+), .in2(i2_not), .in3(i3_not), .in4(i4_not), .in5(i5_not), .in6(i6_not));
+and5$ and_gate50(.out(and50), .in0(i0), .in1(i1_not), .in2(i2), .in3(i3), .in4(i4_not));
+and7$ and_gate51(.out(and51), .in0(i0), .in1(i1), .in2(i2_not), .in3(i3_not), .in4(i5_not), .in5(i6), .in6(i7_not));
 
 or9$ or_gate0(.out(or0), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5), .in6(and6), .in7(and7), .in8(and8));
-or21$ or_gate1(.out(or1), .in0(and9), .in1(and10), .in2(and11), .in3(and12), .in4(and13), .in5(and14), .in6(and15), .in7(and16), .in8(and17), .in9(and18), .in10(and19), .in11(and20), .in12(and21), .in13(and22), .in14(and23), .in15(and24), .in16(and25), .in17(and26), .in18(and27), .in19(and28), .in20(and29));
-or11$ or_gate2(.out(or2), .in0(and30), .in1(and31), .in2(and32), .in3(and33), .in4(and34), .in5(and35), .in6(and36), .in7(and37), .in8(and38), .in9(and39), .in10(and40));
-or11$ or_gate3(.out(or3), .in0(and41), .in1(and42), .in2(and43), .in3(and44), .in4(and45), .in5(and46), .in6(and47), .in7(and48), .in8(and49), .in9(and50), .in10(and51));
+or20$ or_gate1(.out(or1), .in0(and9), .in1(and10), .in2(and11), .in3(and12), .in4(and13), .in5(and14), .in6(and15), .in7(and16), .in8(and17), .in9(and18), .in10(and19), .in11(and20), .in12(and21), .in13(and22), .in14(and23), .in15(and24), .in16(and25), .in17(and26), .in18(and27), .in19(and28));
+or11$ or_gate2(.out(or2), .in0(and29), .in1(and30), .in2(and31), .in3(and32), .in4(and33), .in5(and34), .in6(and35), .in7(and36), .in8(and37), .in9(and38), .in10(and39));
+or11$ or_gate3(.out(or3), .in0(and40), .in1(and41), .in2(and42), .in3(and43), .in4(and44), .in5(and45), .in6(and46), .in7(and47), .in8(and48), .in9(and49), .in10(and50));
 
 assign opsize = or0;
 assign modrm = or1;
 assign imm1 = or2;
 assign imm0 = or3;
-assign f16 = and52;
-
-
+assign f16 = and51;
   
 endmodule 
    
