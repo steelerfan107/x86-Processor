@@ -125,12 +125,15 @@ module memory_subsystem_top (
     wire bus_busy_icache;
     wire bus_busy_dcache;
     wire bus_busy_sys_controller = 'h0;
-    wire bus_busy_dma = 'h0;
+    wire bus_busy_dma;
     wire bus_busy;
+
+
 
     or4$ _or_busy(bus_busy, bus_busy_icache, bus_busy_dcache, bus_busy_sys_controller, bus_busy_dma);
 
-    or4$ _or_en(bus_en, d_bus_en, i_bus_en, 1'b0, 1'b0);
+    wire dma_bus_en;
+    or4$ _or_en(bus_en, d_bus_en, i_bus_en, dma_bus_en, 1'b0);
 
     //or3$(bus_req, bus_req_icache, 1'b0, 1'b0);
     //or3$(bus_done, bus_done_icache, 1'b0, 1'b0);
@@ -153,8 +156,7 @@ module memory_subsystem_top (
     wire dec_mem_en;
     wire dec_io_en;
    wire  test_bus;
-   
-   
+  
     arb_decoder dec(
         .bus_addr(bus_addr),
         .rd_wr_in(bus_rd_wr),
@@ -195,6 +197,10 @@ module memory_subsystem_top (
 
 
     wire [1:0] mem_wr_size;   
+    wire [1:0] d_wr_size;   
+    wire [1:0] dma_wr_size;   
+
+    assign mem_wr_size = dma_bus_en ? dma_wr_size : d_wr_size;
 
     //dcache dcache();
     dcache uut(
@@ -234,7 +240,7 @@ module memory_subsystem_top (
         .mem_data(bus_data),
         .mem_rd_wr(bus_rd_wr),
         .mem_en(d_bus_en),
-        .mem_wr_size(mem_wr_size),
+        .mem_wr_size(d_wr_size),
 
         // Arbiter Interface
         .grant_in(arb_grant),
@@ -292,7 +298,7 @@ module memory_subsystem_top (
         .mem_req(bus_req_icache),
         .mem_data_valid(bus_data_valid),
         .mem_data(bus_data),
-        .mem_rd_wr(nc), //bus_rd_wr),
+        .mem_rd_wr(bus_rd_wr),
         .mem_en(i_bus_en),
         .grant_in(sys_grant),
         .grant_out(icache_grant),
@@ -300,7 +306,23 @@ module memory_subsystem_top (
         .bus_busy_in(bus_busy)
     );
 
-    //dma_top dma();
+    wire dma_grant;
+    dma dma(
+        .clk(clk),
+        .reset(reset),
+        .en(dec_dma_en),
+        .addr(bus_addr),
+        .data(bus_data),
+        .grant_in(icache_grant),
+        .grant_out(dma_grant),
+        .mem_ready(bus_data_valid),
+        .busy_in(bus_busy),
+        .busy_out(bus_busy_dma),
+        .mem_en(dma_bus_en),
+        .wr_size(dma_wr_size),
+        .dma_int(dma_int),
+        .rd_wr(bus_rd_wr)
+    );
     
     main_memory_top main_memory_top(
         .clk(clk),

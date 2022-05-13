@@ -8,3 +8,6 @@ simv.daidir/
 *.vpd
 *.key
 simv
+
+# vim temp files
+.*.sw*

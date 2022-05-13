@@ -228,7 +228,7 @@ module dcache(
         .TLB_rd_wr(tlb_rd_wr),
         .TLB_pcd(tlb_pcd),
         .mem_ready(mem_data_valid),
-        .mem_rd_wr(mem_rd_wr),
+        .mem_rd_wr(mem_rd_wr_comb),
         .mem_req(mem_req),
         .bus_grant(grant_in),
         .grant_pass(ctrl_grant_pass),
@@ -240,12 +240,12 @@ module dcache(
 
    
     //assign mem_rd_wr = 1'b0;
-    //tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
+    tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
 
     // TODO behavioral
     assign ctrl_staging_wr_en = (ctrl_write & ~read_num) | ctrl_stage;
 
-    assign virt_addr_mux_sel = read_num;
+    assign virt_addr_mux_sel = read_num & ~ctrl_rd_wr_addr;
     
     wire read_num_n;
     inv1$ read_num_inv(read_num_n, read_num);
