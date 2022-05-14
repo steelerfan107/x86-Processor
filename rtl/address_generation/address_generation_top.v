@@ -360,7 +360,7 @@ module address_generation_top (
     );
 
     wire maybe_segment_limit_exception;
-    or3$ exception_or (maybe_segment_limit_exception, op0_exception, op1_exception, stack_exception);
+    or2$ exception_or (maybe_segment_limit_exception, op0_exception, op1_exception);
 
     // only cause exception if the incoming data is valid
     and2$ except_and (segment_limit_exception, r_valid, maybe_segment_limit_exception);

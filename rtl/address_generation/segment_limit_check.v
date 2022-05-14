@@ -67,6 +67,7 @@ module segment_limit_check (
     fs_limit_add (fs_shifted, fs_limit_offset, fs_limit),
     gs_limit_add (gs_shifted, gs_limit_offset, gs_limit);
 
+
     // have 3 of these blocks, 2 for operands and one for stack address
 
 
@@ -125,6 +126,11 @@ module segment_limit_check (
     ucomp32 seg_compare (largest_address, seg_max, unsafe, , 0);
 
     // only cause exception if this address is valid
-    and2$ out_and (cause_exception, unsafe, address_is_valid);
+    wire  is_ss, not_ss;
+   
+    compare #(.WIDTH(3)) (segment, 3'd2, is_ss);
+    inv1$ (not_ss, is_ss);
+   
+    and3$ out_and (cause_exception, unsafe, address_is_valid, not_ss);
 
 endmodule

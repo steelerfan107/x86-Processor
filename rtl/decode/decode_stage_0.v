@@ -57,7 +57,7 @@ module decode_stage_0 (
    input                f_valid;
    output               f_ready;
    output [5:0]         f_bytes_read;
-   input [5:0]          f_valid_bytes;
+   input [6:0]          f_valid_bytes;
    input [127:0]        f_instruction;
    input [IADDRW-1:0]   f_pc;
    input                f_branch_taken;
@@ -132,7 +132,7 @@ module decode_stage_0 (
    slow_addr  #(.WIDTH(4))      imm_disp_addr  (s0_displacement_bytes, s0_immediete_bytes, imm_p_disp[3:0], imm_p_disp[4]);
    slow_addr  #(.WIDTH(5))       ins_len_addr  ({1'b0,poa_bytes}, imm_p_disp, f_bytes_read, nc0);
     
-   mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {2'b0,f_valid_bytes}, vr_gate_byte, nc1);
+   mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {1'b0,f_valid_bytes}, vr_gate_byte, nc1);
 
    or2$ gate (vr_gate, vr_gate_byte, halt);
 

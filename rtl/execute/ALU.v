@@ -230,12 +230,15 @@ wire [3:0] eq;
 wire [3:0] bga;
 wire [3:0] s_comp; //compare select
 wire compare_op; //pmax = 0, pmin = 1
-assign compare_op = alu_op[0];
+
+compare #(.WIDTH(16)) (16'h0FEA, opcode, compare_op);
+   
+//assign compare_op = alu_op[0];
 generate
 for(i = 0; i < 4; i = i+1) begin : comp16_block
     comp16 comp(.a(a[((i*16)+15):(i*16)]), .b(b[((i*16)+15):(i*16)]), .agb(agb[i]), .eq(eq[i]), .bga(bga[i]));
     xor2$ mux_select(.out(s_comp[i]), .in0(compare_op), .in1(bga[i]));
-    mux #(.INPUTS(2), .WIDTH(16)) comp_mux(.out(pcompare_out[((i*16)+15):(i*16)]), .in({(mm64[((i*16)+15):(i*16)]), mm[((i*16)+15):(i*16)]}),  .select(s_comp[i]));
+    mux #(.INPUTS(2), .WIDTH(16)) comp_mux(.out(pcompare_out[((i*16)+15):(i*16)]), .in({(b[((i*16)+15):(i*16)]), a[((i*16)+15):(i*16)]}),  .select(s_comp[i]));
 end
 endgenerate
 

@@ -125,7 +125,7 @@ module decode_top (
    input                f_valid;
    output               f_ready;
    output [5:0]         f_bytes_read;
-   input [5:0]          f_valid_bytes;
+   input [6:0]          f_valid_bytes;
    input [255:0]        f_instruction;
    input [IADDRW-1:0]   f_pc;
    input                f_branch_taken;

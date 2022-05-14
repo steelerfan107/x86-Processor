@@ -90,6 +90,14 @@ module dcache(
     output bus_busy_out;
     input bus_busy_in;
 
+    wire [31:0] mem_data_swap;
+    assign mem_data_swap = {
+			      mem_data[7:0],
+			      mem_data[15:8],
+			      mem_data[23:16],			    
+			      mem_data[31:24]
+			   };
+   
     wire ctrl_write;
     wire ctrl_rd_wr_addr;
 
@@ -228,7 +236,7 @@ module dcache(
         .TLB_rd_wr(tlb_rd_wr),
         .TLB_pcd(tlb_pcd),
         .mem_ready(mem_data_valid),
-        .mem_rd_wr(mem_rd_wr),
+        .mem_rd_wr(mem_rd_wr_comb),
         .mem_req(mem_req),
         .bus_grant(grant_in),
         .grant_pass(ctrl_grant_pass),
@@ -240,12 +248,12 @@ module dcache(
 
    
     //assign mem_rd_wr = 1'b0;
-    //tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
+    tristate_bus_driver1$(n_drive_addr, mem_rd_wr_comb, mem_rd_wr);
 
     // TODO behavioral
     assign ctrl_staging_wr_en = (ctrl_write & ~read_num) | ctrl_stage;
 
-    assign virt_addr_mux_sel = read_num;
+    assign virt_addr_mux_sel = read_num & ~ctrl_rd_wr_addr;
     
     wire read_num_n;
     inv1$ read_num_inv(read_num_n, read_num);
@@ -267,10 +275,10 @@ module dcache(
   
     // FIXME enable should be write_num && rd -- nevermind its fine
     wire [31:0] accum_reg_out;
-    register #(.WIDTH(32)) accum_reg(clk, reset, mem_data, accum_reg_out, , write_num);
+    register #(.WIDTH(32)) accum_reg(clk, reset, mem_data_swap, accum_reg_out, , write_num);
 
     wire [63:0] dataram_in;
-    assign dataram_in = {mem_data, accum_reg_out};
+    assign dataram_in = {mem_data_swap, accum_reg_out};
 
     wire [63:0] dataram_out;
     ddataRAM dataram(clk, reset, index, ctrl_write, dataram_in, dataram_out); 
@@ -307,9 +315,10 @@ module dcache(
     wire n_drive_addr;
     inv1$ drive_bus_addr_inv(n_drive_addr, bus_busy_out);
 
-    tristate_bus_driver16$ data_bus_driver1(n_drive_data, mem_data_driver[15:0], mem_data[15:0]);
-    tristate_bus_driver16$ data_bus_driver2(n_drive_data, mem_data_driver[31:16], mem_data[31:16]);
-
+    tristate_bus_driver8$ data_bus_driver1(n_drive_data, mem_data_driver[7:0]  , mem_data[31:24]);
+    tristate_bus_driver8$ data_bus_driver2(n_drive_data, mem_data_driver[15:8] , mem_data[23:16]);
+    tristate_bus_driver8$ data_bus_driver3(n_drive_data, mem_data_driver[23:16], mem_data[15:8]);
+    tristate_bus_driver8$ data_bus_driver4(n_drive_data, mem_data_driver[31:24], mem_data[7:0]);
 
     tristate_bus_driver16$(n_drive_addr, pa_out[15:0],  mem_addr[15:0]);
     tristate_bus_driver16$(n_drive_addr, pa_out[31:16], mem_addr[31:16]);
