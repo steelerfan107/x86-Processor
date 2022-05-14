@@ -262,12 +262,14 @@ module register_stall_modify_table (    // fanout good
     wire        p1;
 
     mux2$ (p1, 1'b0, 1'b1, next_stage_ready);
-   
-    slow_addr #(.WIDTH(4)) plus_one (reg_out, {3'b0,p1}, reg_plus_one, );
+
+    CLA4 plus_one (reg_out, {3'b0,p1}, 1'b0, reg_plus_one, );
+    //slow_addr #(.WIDTH(4)) plus_one (reg_out, {3'b0,p1}, reg_plus_one, );
 
     // sub 1
     wire [3:0] reg_minus_one;
-    slow_addr #(.WIDTH(4)) minus_one (reg_out, 4'hf, reg_minus_one, );
+    CLA4 minus_one (reg_out, 4'hf, 1'b0, reg_minus_one, );
+    //slow_addr #(.WIDTH(4)) minus_one (reg_out, 4'hf, reg_minus_one, );
 
     // decide on what to use
     //

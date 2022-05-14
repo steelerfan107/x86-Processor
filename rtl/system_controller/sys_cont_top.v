@@ -306,7 +306,8 @@ module sys_cont_top (
            inv1$ (not_hold_int, hold_int); 
            and2$ (mask_int_vec, not_hold_int, or_int_vec);
 
-           slow_addr #(.WIDTH(32)) ( mem_address_p0, 32'd4 , mem_address_p4,);
+           CLA32 add_memp0_4( mem_address_p0, 32'd4 , 1'b0, mem_address_p4,);
+           //slow_addr #(.WIDTH(32)) ( mem_address_p0, 32'd4 , mem_address_p4,);
 
            wire 			     addr_p1;
               
@@ -347,8 +348,9 @@ module sys_cont_top (
           assign fixed_end_bus[23:16] = mem_dp_read_data[15:8];
           assign fixed_end_bus[15:8] = mem_dp_read_data[23:16];   
           assign fixed_end_bus[7:0] = mem_dp_read_data[31:24];
-   
-          slow_addr #(.WIDTH(32)) ( {bottom_entry[31:16],16'b0}, {fixed_end_bus[31:16],bottom_entry[15:0]},comb_adddress,);
+
+          CLA32 add_comb_address( {bottom_entry[31:16],16'b0}, {fixed_end_bus[31:16],bottom_entry[15:0]}, 1'b0, comb_adddress,);
+          //slow_addr #(.WIDTH(32)) ( {bottom_entry[31:16],16'b0}, {fixed_end_bus[31:16],bottom_entry[15:0]},comb_adddress,);
     
           assign fetch_load_address_int = {fixed_end_bus[31:16],bottom_entry[15:0]};
           assign reg_cs_int = fixed_end_bus[31:16];
@@ -493,8 +495,9 @@ module sys_cont_top (
            inv1$ npv (not_iretd_pop_valid,iretd_pop_valid);
 
            assign iretd_halt = not_zero_state;
-	     
-           slow_addr #(.WIDTH(3)) (curr_state_iretd,1,curr_state_iretd_p1,iretd_nc0);
+
+           CLA3 add_state(curr_state_iretd,1,1'b0,curr_state_iretd_p1,iretd_nc0);
+           //slow_addr #(.WIDTH(3)) (curr_state_iretd,1,curr_state_iretd_p1,iretd_nc0);
          
            register #(.WIDTH(3)) state_reg (
               clk,

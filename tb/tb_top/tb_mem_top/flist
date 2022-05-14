@@ -104,4 +104,6 @@
 ../../../rtl/execute/XCHG.v
 ../../../rtl/execute/orn$.v
 ../../../rtl/execute/andn$.v
+../../../rtl/diskdma/disk.v
+../../../rtl/diskdma/dma.v
 tb_reg_op.v

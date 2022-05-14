@@ -126,12 +126,18 @@ module decode_stage_0 (
    
    prefix_size_detect psd (f_instruction[127:104], s0_prefix_bytes, size_prefix, detected_f4_prefix);
 
+   CLA2  po_addr        (s0_prefix_bytes, s0_opcode_bytes, 1'b0, po_bytes[1:0], po_bytes[2]);
+   CLA3  poa_addr       (po_bytes, {1'b0,s0_addressing_bytes}, 1'b0, poa_bytes[2:0], poa_bytes[3]);
+   CLA4  imm_disp_addr  (s0_displacement_bytes, s0_immediete_bytes, 1'b0, imm_p_disp[3:0], imm_p_disp[4]);
+   CLA5  ins_len_addr   ({1'b0,poa_bytes}, imm_p_disp, 1'b0, f_bytes_read, nc0);
    // Adds - Can make these faster by doing one hot adds. or lookahead carry ads. Probable Long Path
+   /*
    slow_addr  #(.WIDTH(2))            po_addr  (s0_prefix_bytes, s0_opcode_bytes, po_bytes[1:0], po_bytes[2]);
    slow_addr  #(.WIDTH(3))           poa_addr  (po_bytes, {1'b0,s0_addressing_bytes}, poa_bytes[2:0], poa_bytes[3]);
    slow_addr  #(.WIDTH(4))      imm_disp_addr  (s0_displacement_bytes, s0_immediete_bytes, imm_p_disp[3:0], imm_p_disp[4]);
    slow_addr  #(.WIDTH(5))       ins_len_addr  ({1'b0,poa_bytes}, imm_p_disp, f_bytes_read, nc0);
-    
+   */
+
    mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {1'b0,f_valid_bytes}, vr_gate_byte, nc1);
 
    or2$ gate (vr_gate, vr_gate_byte, halt);

@@ -134,7 +134,8 @@ module fetch_top (
    
    and2$ out_acc ( out_accept, f_valid, f_ready);
 
-   slow_addr #(.WIDTH(32)) ({26'b0,f_bytes_read},pc_out,pc_p_bytes_read,nc0); 
+   CLA32 add_pc_bytes_read ({26'b0,f_bytes_read},pc_out,1'b0,pc_p_bytes_read,nc0); 
+   //slow_addr #(.WIDTH(32)) ({26'b0,f_bytes_read},pc_out,pc_p_bytes_read,nc0); 
    
    mux  #(.WIDTH(32),.INPUTS(2)) idt_select ( {minus_cs, pc_p_bytes_read}, pc_in, load);
 

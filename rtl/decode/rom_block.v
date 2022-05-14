@@ -160,7 +160,8 @@ module rom_block (
    // Micro Count
    wire [4:0] micro_count_next_p1;
    
-   slow_addr #(.WIDTH(5)) sac (5'd1, micro_count, micro_count_next_p1, nc0);
+   CLA5 sac (5'd1, micro_count, 1'b0, micro_count_next_p1, nc0);
+   //slow_addr #(.WIDTH(5)) sac (5'd1, micro_count, micro_count_next_p1, nc0);
    mux #(.WIDTH(5),.INPUTS(2)) mc_mux ({5'd0,micro_count_next_p1}, micro_count_next, (out_accept & rom_ready));  
  
    register  #(.WIDTH(5)) micro_reg (clk, reset, micro_count_next, micro_count, micro_count_not, out_accept);
@@ -206,7 +207,8 @@ module rom_block (
                                   micro_offset, rom_control);
 
    // Address Generation
-   slow_addr #(.WIDTH(5)) offset_add (micro_offset, micro_count, micro_address, nc0);
+   CLA5 offset_add (micro_offset, micro_count, 1'b0, micro_address, nc0);
+   //slow_addr #(.WIDTH(5)) offset_add (micro_offset, micro_count, micro_address, nc0);
 
    // Micro Program Complete
    compare #(.WIDTH(5)) count_compare (micro_count, micro_length, rom_ready);

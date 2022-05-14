@@ -211,11 +211,13 @@ module segment_stall_modify_table (
 
     // add to reg out
     wire [31:0] reg_out_add;
-    slow_addr #(.WIDTH(32)) add_1 (reg_out, 32'h1, reg_out_add, );
+    CLA32 add_1 (reg_out, 32'h1, 1'b0, reg_out_add, );
+    //slow_addr #(.WIDTH(32)) add_1 (reg_out, 32'h1, reg_out_add, );
 
     // sub to reg out
     wire [31:0] reg_out_sub;
-    slow_addr #(.WIDTH(32)) sub_1 (reg_out, 32'hFFFFFFFF, reg_out_sub, );
+    CLA32 sub_1 (reg_out, 32'hFFFFFFFF, 1'b0, reg_out_sub, );
+    //slow_addr #(.WIDTH(32)) sub_1 (reg_out, 32'hFFFFFFFF, reg_out_sub, );
 
     // mux selecting which to use
     ao_mux #(.WIDTH(32), .NINPUTS(2)) reg_in_mux (

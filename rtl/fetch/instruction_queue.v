@@ -277,11 +277,19 @@ module instruction_queue (
       end     
    endgenerate
 
+   CLA7 sub0 (head       ,{tail_inv,3'b111},  1'b0,   head_m_tail, nc3);
+   CLA7 sub1 ({tail,3'b0},         head_inv,  1'b0,   tail_m_head, nc4);
+   /*
    slow_addr #(.WIDTH(7)) sub0 (head       ,{tail_inv,3'b111},head_m_tail, nc3);
    slow_addr #(.WIDTH(7)) sub1 ({tail,3'b0},         head_inv,tail_m_head, nc4);
+   */
 
+   CLA7 p10 (7'd1,head_m_tail,1'b0,head_m_tail_p1, nc5);
+   CLA7 p20 (7'd1,tail_m_head,1'b0,tail_m_head_p1, nc6);
+   /*
    slow_addr #(.WIDTH(7)) p10  (7'd1,head_m_tail,head_m_tail_p1, nc5);
    slow_addr #(.WIDTH(7)) p20  (7'd1,tail_m_head,tail_m_head_p1, nc6);
+   */
 
    wire [6:0] true_tail = {tail[2:0],4'b0};
    
@@ -328,13 +336,16 @@ module instruction_queue (
 
    
    // Head Ptr Plus 8
-   slow_addr #(.WIDTH(7)) hp1 (7'd16,head,head_p16, nc0);
+   CLA7 hp1 (7'd16,head,1'b0,head_p16, nc0);
+   //slow_addr #(.WIDTH(7)) hp1 (7'd16,head,head_p16, nc0);
    
    // Head Ptr Plus Bytes Read
-   slow_addr #(.WIDTH(7)) hpbr ({3'b0,bytes_read_o},head,head_p_br, nc1);
+   CLA7 hpbr ({3'b0,bytes_read_o},head,1'b0,head_p_br, nc1);
+   //slow_addr #(.WIDTH(7)) hpbr ({3'b0,bytes_read_o},head,head_p_br, nc1);
 
    // Tail Ptr Plus 1
-   slow_addr #(.WIDTH(4)) tp1 (4'd1,tail,tail_p1, nc2);
+   CLA7 tp1 (4'd1,tail,1'b0,tail_p1, nc2);
+   //slow_addr #(.WIDTH(4)) tp1 (4'd1,tail,tail_p1, nc2);
 
    // Byte Shifter
    wire [255:0] shifter_o;

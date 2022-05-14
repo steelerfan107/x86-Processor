@@ -539,12 +539,19 @@ module register_access_top (
 
     assign write_esp_enable = wb_stack_en;
 
-    slow_addr #(.WIDTH(32)) com_add4 (r_esp, 32'd4, new_esp_pop_p4, nc0);
-    slow_addr #(.WIDTH(32)) com_add2 (r_esp, 32'd2, new_esp_pop_p2, nc0);
+    CLA32 com_add4 (r_esp, 32'd4, 1'b0, new_esp_pop_p4, nc0);
+    CLA32 com_add2 (r_esp, 32'd2, 1'b0, new_esp_pop_p2, nc0);
+    //slow_addr #(.WIDTH(32)) com_add4 (r_esp, 32'd4, new_esp_pop_p4, nc0);
+    //slow_addr #(.WIDTH(32)) com_add2 (r_esp, 32'd2, new_esp_pop_p2, nc0);
 
+    CLA32 com_m4(r_esp, 32'hFFFFFFFC, 1'b0, new_esp_push_m4, nc0);
+    CLA32 com_m2(r_esp, 32'hFFFFFFFE, 1'b0, new_esp_push_m2, nc0);
+    CLA32 com_m1(r_esp, 32'hFFFFFFFF, 1'b0, new_esp_push_m1, nc0);
+    /*
     slow_addr #(.WIDTH(32)) com_m4 (r_esp, 32'hFFFFFFFC, new_esp_push_m4, nc0);
     slow_addr #(.WIDTH(32)) com_m2 (r_esp, 32'hFFFFFFFE, new_esp_push_m2, nc0);   
     slow_addr #(.WIDTH(32)) com_m1 (r_esp, 32'hFFFFFFFF, new_esp_push_m1, nc0);   
+    */
 
     mux #(.INPUTS(2),.WIDTH(32)) com_pop_sel  ({new_esp_pop_p4 , new_esp_pop_p2} , new_esp_pop , wb_stack_size[0]);	
     mux #(.INPUTS(4),.WIDTH(32)) com_push_sel ({new_esp_push_m4, 
@@ -567,13 +574,21 @@ module register_access_top (
    
     or2$  (temp_esp_commit , wb_commit, local_commit);
    
+    CLA32 add4 (local_esp, 32'd4, 1'b0, new_local_esp_pop_p4, nc0);
+    CLA32 add2 (local_esp, 32'd2, 1'b0, new_local_esp_pop_p2, nc0);
+    /*
     slow_addr #(.WIDTH(32)) add4 (local_esp, 32'd4, new_local_esp_pop_p4, nc0);
     slow_addr #(.WIDTH(32)) add2 (local_esp, 32'd2, new_local_esp_pop_p2, nc0);
+    */
 
+    CLA32 m4(local_esp, 32'hFFFFFFFC, 1'b0, new_local_esp_push_m4, nc0);
+    CLA32 m2(local_esp, 32'hFFFFFFFE, 1'b0, new_local_esp_push_m2, nc0);
+    CLA32 m1(local_esp, 32'hFFFFFFFF, 1'b0, new_local_esp_push_m1, nc0);
+    /*
     slow_addr #(.WIDTH(32)) m4 (local_esp, 32'hFFFFFFFC, new_local_esp_push_m4, nc0);
     slow_addr #(.WIDTH(32)) m2 (local_esp, 32'hFFFFFFFE, new_local_esp_push_m2, nc0);   
     slow_addr #(.WIDTH(32)) m1 (local_esp, 32'hFFFFFFFF, new_local_esp_push_m1, nc0);   
-
+    */
     mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({new_local_esp_pop_p4 , new_local_esp_pop_p2} , new_local_esp_pop , d_size[0]);	
     mux #(.INPUTS(4),.WIDTH(32)) push_sel ({new_local_esp_push_m4, 
                                             new_local_esp_push_m2,
@@ -582,10 +597,13 @@ module register_access_top (
     
     mux #(.INPUTS(4),.WIDTH(32)) in_sel ({wb_reg_data, wb_reg_data, 
                                           new_local_esp_pop, new_local_esp_push}, local_esp_in, {wb_commit,stack_pop});	
-     
+    
+    CLA32 pop   ({r_ss,16'b0}, local_esp         , 1'b0, p_stack_address_pop, nc0);
+    CLA32 push  ({r_ss,16'b0}, new_local_esp_push, 1'b0, p_stack_address_push, nc0);
+    /*
     slow_addr #(.WIDTH(32)) pop  ({r_ss,16'b0}, local_esp         , p_stack_address_pop, nc0);
     slow_addr #(.WIDTH(32)) push ({r_ss,16'b0}, new_local_esp_push, p_stack_address_push, nc0);
-
+    */
     mux #(.INPUTS(2),.WIDTH(32)) addr_sel  ({p_stack_address_pop,p_stack_address_push} ,  p_stack_address, stack_pop);	   
 
     register #(.WIDTH(32)) local_esp_reg (
@@ -757,27 +775,33 @@ module register_access_movs_add_subtract (
 
     // +1
     wire [31:0] in_plus_1;
-    slow_addr #(.WIDTH(32)) plus_1 (in, 32'h1, in_plus_1, );
+    CLA32 plus_1(in, 32'h1, 1'b0, in_plus_1);
+    //slow_addr #(.WIDTH(32)) plus_1 (in, 32'h1, in_plus_1, );
 
     // -1
     wire [31:0] in_minus_1;
-    slow_addr #(.WIDTH(32)) minus_1 (in, 32'hFFFFFFFF, in_minus_1, );
+    CLA32 minus_1(in, 32'hFFFFFFFF, 1'b0, in_minus_1);
+    //slow_addr #(.WIDTH(32)) minus_1 (in, 32'hFFFFFFFF, in_minus_1, );
 
     // +2
     wire [31:0] in_plus_2;
-    slow_addr #(.WIDTH(32)) plus_2 (in, 32'h2, in_plus_2, );
+    CLA32 plus_2(in, 32'h2, 1'b0, in_plus_2);
+    //slow_addr #(.WIDTH(32)) plus_2 (in, 32'h2, in_plus_2, );
 
     // -2
     wire [31:0] in_minus_2;
-    slow_addr #(.WIDTH(32)) minus_2 (in, 32'hFFFFFFFE, in_minus_2, );
+    CLA32 minus_2 (in, 32'hFFFFFFFE, 1'b0, in_minus_2);
+    //slow_addr #(.WIDTH(32)) minus_2 (in, 32'hFFFFFFFE, in_minus_2, );
 
     // +4
     wire [31:0] in_plus_4;
-    slow_addr #(.WIDTH(32)) plus_4 (in, 32'h4, in_plus_4, );
+    CLA32 plus_4(in, 32'h4, 1'b0, in_plus_4);
+    //slow_addr #(.WIDTH(32)) plus_4 (in, 32'h4, in_plus_4, );
 
     // -4
     wire [31:0] in_minus_4;
-    slow_addr #(.WIDTH(32)) minus_4 (in, 32'hFFFFFFFC, in_minus_4, );
+    CLA32 minus_4 (in, 32'hFFFFFFFC, 1'b0, in_minus_4);
+    //slow_addr #(.WIDTH(32)) minus_4 (in, 32'hFFFFFFFC, in_minus_4, );
 
     // select correct size
     wire [31:0] size_mux_out_plus, size_mux_out_minus;

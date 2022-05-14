@@ -713,7 +713,8 @@ module op0_generator (
 
     wire [31:0] op0_memory;
 
-    slow_addr #(.WIDTH(32)) op0_memory_adder (es_shifted, r_edi, op0_memory, );
+    CLA32 op0_memory_adder (es_shifted, r_edi, 1'b0, op0_memory, );
+    //slow_addr #(.WIDTH(32)) op0_memory_adder (es_shifted, r_edi, op0_memory, );
 
     mux #(.WIDTH(64), .INPUTS(8)) op0_mux (
         {
@@ -1020,7 +1021,8 @@ module op1_generator (
 
     wire [31:0] op1_memory;
 
-    slow_addr #(.WIDTH(32)) op1_memory_adder (shifted_seg, r_esi, op1_memory, );
+    CLA32 op1_memory_adder (shifted_seg, r_esi, 1'b0, op1_memory, );
+    //slow_addr #(.WIDTH(32)) op1_memory_adder (shifted_seg, r_esi, op1_memory, );
 
 
     mux #(.WIDTH(64), .INPUTS(8)) op1_mux (

@@ -47,8 +47,9 @@ wire [63:0] end_swap_s0_displace_n_imm;
    assign end_swap_s0_displace_n_imm[47:40] = s0_displace_n_imm[23:16];
    assign end_swap_s0_displace_n_imm[55:48] = s0_displace_n_imm[15:8];
    assign end_swap_s0_displace_n_imm[63:56] = s0_displace_n_imm[7:0]; 
-   
-slow_addr #(.WIDTH(4)) (s0_displacement_bytes,s0_immediete_bytes,imm_plus_disp_bytes,nc0); 
+
+CLA4 temp (s0_displacement_bytes,s0_immediete_bytes,1'b0,imm_plus_disp_bytes,nc0); 
+//slow_addr #(.WIDTH(4)) (s0_displacement_bytes,s0_immediete_bytes,imm_plus_disp_bytes,nc0); 
 
 wire [3:0] sub6_imm_bytes;
 wire [3:0] sub4_disp_bytes;
@@ -152,7 +153,8 @@ module byte_shifter_right_8B (
       for(i = 0; i < 8; i=i+1) begin
          wire [2:0] sel;
          wire       nc;
-         slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
+         CLA3 shft_add (i, shift_amount, 1'b0, sel, nc);  
+         //slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
          mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out_pre[((i+1)*8)-1:(i*8)],sel);
          mux #(.WIDTH(8), .INPUTS(2)) byte_mux_mask ({8'b0, out_pre[((i+1)*8)-1:(i*8)]}, out[((i+1)*8)-1:(i*8)],nc);	 	 
       end
@@ -176,7 +178,8 @@ module byte_shifter_right_6B (
       for(i = 0; i < 6; i=i+1) begin
          wire [2:0] sel;
          wire       nc;
-         slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
+         CLA3 shft_add (i, shift_amount, 1'b0, sel, nc);  
+         //slow_addr #(.WIDTH(3)) shft_add (i, shift_amount, sel, nc);        
          mux #(.WIDTH(8), .INPUTS(8)) byte_mux (in, out_pre[((i+1)*8)-1:(i*8)],sel);
          mux #(.WIDTH(8), .INPUTS(2)) byte_mux_mask ({8'b0, out_pre[((i+1)*8)-1:(i*8)]}, out[((i+1)*8)-1:(i*8)],nc);	 	 
       end
@@ -200,7 +203,8 @@ module byte_shifter_right_4B (
       for(i = 0; i < 4; i=i+1) begin
          wire [1:0] sel;
          wire       nc;
-         slow_addr #(.WIDTH(2)) shft_add (i, shift_amount, sel, nc);        
+         CLA2 shft_add (i, shift_amount, 1'b0, sel, nc);  
+         //slow_addr #(.WIDTH(2)) shft_add (i, shift_amount, sel, nc);        
          mux #(.WIDTH(8), .INPUTS(4)) byte_mux (in, out_pre[((i+1)*8)-1:(i*8)],sel);
          mux #(.WIDTH(8), .INPUTS(2)) byte_mux_mask ({8'b0, out_pre[((i+1)*8)-1:(i*8)]}, out[((i+1)*8)-1:(i*8)],nc);	 
       end

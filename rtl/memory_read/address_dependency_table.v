@@ -136,8 +136,8 @@ module address_dependency_table (
 				   push_size
 				 );
    
-   
-   slow_addr #(.WIDTH(3)) biu (3'd1, bits_from_size, bits_i_unaligned, nc2);
+   CLA3 biu (3'd1, bits_from_size, 1'b0, bits_i_unaligned, nc2);
+   //slow_addr #(.WIDTH(3)) biu (3'd1, bits_from_size, bits_i_unaligned, nc2);
 
    mux #(.WIDTH(3), .INPUTS(2)) (
 				   {
@@ -206,9 +206,13 @@ module address_dependency_table (
    register #(.WIDTH(7)) head_r (clk, reset, head_p16, head, head_b, out_accept);
 
    // Tail Ptr Plus 1
+   CLA4 tp1 (4'd1,tail,1'b0,tail_p1, nc2);
+   CLA7 hp1 (7'd16,head,1'b0,head_p16, nc0);
+   /*
    slow_addr #(.WIDTH(4)) tp1 (4'd1,tail,tail_p1, nc2);
    slow_addr #(.WIDTH(7)) hp1 (7'd16,head,head_p16, nc0);
-   
+   */
+
    // Registers to hold each entries data
    register #(.WIDTH(32)) entry_0_r (clk, int_reset, data_i, data0, data0_b, set0);
    register #(.WIDTH(32)) entry_1_r (clk, int_reset, data_i, data1, data1_b, set1);
@@ -297,8 +301,8 @@ module address_dependency_table (
 				   compare_address_0_size
 				 );
    
-   
-   slow_addr #(.WIDTH(3)) ba0u (3'd1, addr0_bits_from_size, addr0_bits_unaligned, nc2);
+   CLA3 ba0u (3'd1, addr0_bits_from_size, 1'b0, addr0_bits_unaligned, nc2);
+   //slow_addr #(.WIDTH(3)) ba0u (3'd1, addr0_bits_from_size, addr0_bits_unaligned, nc2);
 
    mux #(.WIDTH(3), .INPUTS(2)) (
 				   {
@@ -422,8 +426,8 @@ module address_dependency_table (
 				   compare_address_1_size
 				 );
    
-   
-   slow_addr #(.WIDTH(3)) ba1u (3'd1, addr1_bits_from_size, addr1_bits_unaligned, nc2);
+   CLA3 ba1u (3'd1, addr1_bits_from_size, 1'b0, addr1_bits_unaligned, nc2);
+   //slow_addr #(.WIDTH(3)) ba1u (3'd1, addr1_bits_from_size, addr1_bits_unaligned, nc2);
 
    mux #(.WIDTH(3), .INPUTS(2)) (
 				   {
