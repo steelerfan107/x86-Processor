@@ -61,11 +61,11 @@ module segment_limit_check (
 
     slow_addr #(.WIDTH(32)) 
     cs_limit_add (cs_shifted, cs_limit_offset, cs_limit),
-    cs_limit_add (ds_shifted, ds_limit_offset, ds_limit),
-    cs_limit_add (ss_shifted, ss_limit_offset, ss_limit),
-    cs_limit_add (es_shifted, es_limit_offset, es_limit),
-    cs_limit_add (fs_shifted, fs_limit_offset, fs_limit),
-    cs_limit_add (gs_shifted, gs_limit_offset, gs_limit);
+    ds_limit_add (ds_shifted, ds_limit_offset, ds_limit),
+    ss_limit_add (ss_shifted, ss_limit_offset, ss_limit),
+    es_limit_add (es_shifted, es_limit_offset, es_limit),
+    fs_limit_add (fs_shifted, fs_limit_offset, fs_limit),
+    gs_limit_add (gs_shifted, gs_limit_offset, gs_limit);
 
     // have 3 of these blocks, 2 for operands and one for stack address
 
