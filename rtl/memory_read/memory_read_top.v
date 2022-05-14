@@ -167,6 +167,13 @@ module memory_read_top (
     input                   rmem_dp_valid;
     output                  rmem_dp_ready;
     input    [DDATAW-1:0]   rmem_dp_read_data;
+
+    // buffers
+    wire [63:0] a_op0_buf;
+    buffH16 a_op0_16 (a_op0_buf, a_op0);
+
+    wire [63:0] a_op1_buf;
+    buffH16 a_op1_16 (a_op1_buf, a_op1);
    
     // --------- //
     // Pipestage //
@@ -276,7 +283,7 @@ module memory_read_top (
     wire 		 stack_select;
     and2$ ( stack_select, ~a_stack_op[1], a_stack_op[0]);
    
-    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , a_op0[31:0]} ,  p_op_a_address, stack_select);
+    mux #(.INPUTS(2),.WIDTH(32)) pop_sel  ({a_stack_address , a_op0_buf[31:0]} ,  p_op_a_address, stack_select);
    
     //assign p_op_a_is_address = a_op0_is_address | (a_stack_op[0]);
    //   
@@ -337,9 +344,9 @@ module memory_read_top (
         dcache_ready,   // ready out
         dcache_valid,   // valid out
 
-        a_op0,
+        a_op0_buf,
         a_op0_is_address,
-        a_op1,
+        a_op1_buf,
         a_op1_is_address,
 
         rmem_valid,
@@ -363,7 +370,7 @@ module memory_read_top (
     mux #(.WIDTH(64), .INPUTS(2)) op_a_mux (
         {
             dcache_out_resized,
-            a_op0
+            a_op0_buf
         },
         p_op_a,
         a_op0_is_address
@@ -372,7 +379,7 @@ module memory_read_top (
     mux #(.WIDTH(64), .INPUTS(2)) op_b_mux (
         {
             dcache_out_resized,
-            a_op1
+            a_op1_buf
         },
         p_op_b,
         a_op1_is_address
@@ -403,7 +410,7 @@ module memory_read_top (
      .compare_address_0_size(p_size),			  
      .compare_address_0_hit(addr0_match),			  
 
-     .compare_address_1(a_op1),
+     .compare_address_1(a_op1_buf),
      .compare_address_1_size(p_size),			  
      .compare_address_1_hit(addr1_match),
 		  
