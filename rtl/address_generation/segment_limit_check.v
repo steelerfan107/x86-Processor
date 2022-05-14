@@ -24,12 +24,12 @@ module segment_limit_check (
     input [2:0] size;
 
     // segment limits
-    wire [31:0] cs_limit = 32'h04fff000;
-    wire [31:0] ds_limit = 32'h011ff000;
+    wire [31:0] cs_limit = 32'h4fff0000;
+    wire [31:0] ds_limit = 32'h11ff0000;
     wire [31:0] ss_limit = 32'hf0000000;
-    wire [31:0] es_limit = 32'h003ff000;
-    wire [31:0] fs_limit = 32'h003ff000;
-    wire [31:0] gs_limit = 32'h007ff000;
+    wire [31:0] es_limit = 32'h03ff0000;
+    wire [31:0] fs_limit = 32'h03ff0000;
+    wire [31:0] gs_limit = 32'h07ff0000;
 
     // have 3 of these blocks, 2 for operands and one for stack address
 

@@ -437,15 +437,15 @@ module decode_stage_1 (
    mux #(.INPUTS(4),.WIDTH(3))  size_mux({3'd3,3'd3,rom_size,dec_size},s1_size, {force_size_32, rom_in_control});  
    mux #(.INPUTS(2),.WIDTH(1))  set_d_flag_mux({rom_set_d_flag,dec_set_d_flag},s1_set_d_flag, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(1))  clear_d_flag_mux({rom_clear_d_flag,dec_clear_d_flag},s1_clear_d_flag, rom_in_control);  
-   mux #(.INPUTS(2),.WIDTH(3))  op0_mux({rom_op0,dec_op0},s1_op0, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(3))  op1_mux({rom_op1,dec_op1},s1_op1, rom_in_control);   
+   mux #(.INPUTS(4),.WIDTH(3))  op0_mux({3'd6, 3'd6, rom_op0,dec_op0},s1_op0, {s1_movs, rom_in_control});   
+   mux #(.INPUTS(4),.WIDTH(3))  op1_mux({3'd6, 3'd6, rom_op1,dec_op1},s1_op1, {s1_movs, rom_in_control});   
    mux #(.INPUTS(2),.WIDTH(3))  op0_reg_mux({rom_op0_reg,dec_op0_reg},s1_op0_reg, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  op1_reg_mux({rom_op1_reg,dec_op1_reg},s1_op1_reg, rom_in_control);  
    mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({dec_modrm,dec_modrm},s1_modrm, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(8))  sib_mux({dec_sib,dec_sib},s1_sib, rom_in_control);   
    mux #(.INPUTS(4),.WIDTH(48)) imm_mux({48'd1,48'd1, rom_imm,dec_imm},s1_imm, {force_1,rom_in_control});   
    mux #(.INPUTS(2),.WIDTH(32)) disp_mux({rom_disp,dec_disp},s1_disp, rom_in_control);   
-   mux #(.INPUTS(2),.WIDTH(4))  alu_op_mux({rom_alu_op,dec_alu_op},s1_alu_op, rom_in_control);  
+   mux #(.INPUTS(4),.WIDTH(4))  alu_op_mux({4'd4,4'd4,rom_alu_op,dec_alu_op},s1_alu_op, {s1_movs,rom_in_control});  
    mux #(.INPUTS(2),.WIDTH(3))  flag_0_mux({rom_flag_0,dec_flag_0},s1_flag_0, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(2))  stack_op_mux({rom_stack_op,dec_stack_op},s1_stack_op, rom_in_control);   
