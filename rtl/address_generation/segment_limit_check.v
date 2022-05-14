@@ -12,6 +12,13 @@ module segment_limit_check (
 
     segment,
 
+    cs,
+    ds,
+    ss,
+    es,
+    fs,
+    gs,
+
     size
 );
     output cause_exception;
@@ -21,15 +28,44 @@ module segment_limit_check (
 
     input [2:0] segment;
 
+    input [15:0] cs;
+    input [15:0] ds;
+    input [15:0] ss;
+    input [15:0] es;
+    input [15:0] fs;
+    input [15:0] gs;
+
     input [2:0] size;
 
     // segment limits
-    wire [31:0] cs_limit = 32'h04fff000;
-    wire [31:0] ds_limit = 32'h011ff000;
-    wire [31:0] ss_limit = 32'h04000000;
-    wire [31:0] es_limit = 32'h003ff000;
-    wire [31:0] fs_limit = 32'h003ff000;
-    wire [31:0] gs_limit = 32'h007ff000;
+    wire [31:0] cs_limit_offset = 32'h04fff000;
+    wire [31:0] ds_limit_offset = 32'h011ff000;
+    wire [31:0] ss_limit_offset = 32'h04000000;
+    wire [31:0] es_limit_offset = 32'h003ff000;
+    wire [31:0] fs_limit_offset = 32'h003ff000;
+    wire [31:0] gs_limit_offset = 32'h007ff000;
+
+    wire [31:0] cs_limit;
+    wire [31:0] ds_limit;
+    wire [31:0] ss_limit;
+    wire [31:0] es_limit;
+    wire [31:0] fs_limit;
+    wire [31:0] gs_limit;
+
+    wire [31:0] cs_shifted = {cs[15:0], 16'h0};
+    wire [31:0] ds_shifted = {ds[15:0], 16'h0};
+    wire [31:0] ss_shifted = {ss[15:0], 16'h0};
+    wire [31:0] es_shifted = {es[15:0], 16'h0};
+    wire [31:0] fs_shifted = {fs[15:0], 16'h0};
+    wire [31:0] gs_shifted = {gs[15:0], 16'h0};
+
+    slow_addr #(.WIDTH(32)) 
+    cs_limit_add (cs_shifted, cs_limit_offset, cs_limit),
+    ds_limit_add (ds_shifted, ds_limit_offset, ds_limit),
+    ss_limit_add (ss_shifted, ss_limit_offset, ss_limit),
+    es_limit_add (es_shifted, es_limit_offset, es_limit),
+    fs_limit_add (fs_shifted, fs_limit_offset, fs_limit),
+    gs_limit_add (gs_shifted, gs_limit_offset, gs_limit);
 
     // have 3 of these blocks, 2 for operands and one for stack address
 
@@ -84,12 +120,9 @@ module segment_limit_check (
     );
 
     // from rtl/execute/ucomp.v
-    // safe if largest_address < seg_max, so fault on inverse of this
-    wire safe;
-    ucomp32 seg_compare (largest_address, seg_max, , , safe);
-
+    // fault if largest_address > seg_max
     wire unsafe;
-    inv1$ safe_inv (unsafe, safe);
+    ucomp32 seg_compare (largest_address, seg_max, unsafe, , 0);
 
     // only cause exception if this address is valid
     and2$ out_and (cause_exception, unsafe, address_is_valid);
