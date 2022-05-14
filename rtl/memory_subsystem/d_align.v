@@ -21,7 +21,7 @@ module d_align(
         {in_high[23:0], in_low[63:24]},
         {in_high[15:0], in_low[63:16]},
         {in_high[7:0], in_low[63:8]},
-        in_low
+        in_high
         },
         out,
         offset
