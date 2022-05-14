@@ -129,6 +129,8 @@ module top_pipeline (
    // Address Load Interface
    wire   [IADDRW-1:0]     load_address;
    wire  	           load;
+
+   wire 		   fetch_seg_limit_ex;
    
    // Flush Interface
    wire	                   fetch_flush;   
@@ -389,6 +391,7 @@ module top_pipeline (
       load_address,
       load,
       r_cs_bypass,
+      fetch_seg_limit_ex,
       f_eip,		
       f_set_eip,		  
       imem_valid,
@@ -877,11 +880,14 @@ module top_pipeline (
 
   wire        sys_cont_val;
   and2$ (sys_cont_val, wb_to_sys_controller, wb_valid);
-      
+
+  wire       sel_limit_ex;
+  or2$( sel_limit_ex ,fetch_seg_limit_ex, segment_limit_int);
+   
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     {3'b0, segment_limit_int, 12'b0},
+     {2'b0, sel_limit_ex, 13'b0},
      //{3'b0, 1'b0, 12'b0},			     
      r_cs,		     
      emem_valid,

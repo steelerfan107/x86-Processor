@@ -460,6 +460,7 @@ module decode_stage_1 (
    assign s1_branch_taken = s0_branch_taken;
    
    wire nc_ric;  
+   wire [31:0] eip_to_use = (handle_int) ? curr_eip : s0_pc;
    
    // ROM Block
    rom_block #(.IADDRW(IADDRW)) rom_block (
@@ -494,7 +495,7 @@ module decode_stage_1 (
       rom_in_control,
       rom_control,
       eflags_reg,
-      s0_pc,	
+      eip_to_use,	
       dec_imm,
       handle_int_done	
    );

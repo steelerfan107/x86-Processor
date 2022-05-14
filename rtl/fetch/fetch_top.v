@@ -14,7 +14,8 @@ module fetch_top (
    load,
    
    // Code Segment
-   cs_register,	
+   cs_register,
+   seg_limit_int, 
 
    // Set EIP
    eip,
@@ -66,6 +67,7 @@ module fetch_top (
  
    // Code Segment
    input [15:0] 	 cs_register;
+   output                seg_limit_int;
 
    output [31:0] 	 eip;
    output                set_eip;	
@@ -99,6 +101,31 @@ module fetch_top (
    output [IADDRW-1:0]   f_pc;
    output                f_branch_taken;
 
+
+   wire 		 flush_not;
+   
+   // ----------------------
+   //
+   //  Segment Limit Check
+   //
+
+   segment_limit_check i_seg_check (
+        seg_limit_int,
+        imem_address,
+        imem_v ,
+
+        3'b001,
+
+        r_cs,
+        16'b0,
+        16'b0,
+        16'b0,
+        16'b0,
+        16'b0,
+
+        3'd5
+    );
+   
    wire [127:0] 	 imem_dp_read_data_endian_corrected;
 
    assign imem_dp_read_data_endian_corrected = {imem_dp_read_data[31:0],
@@ -241,8 +268,12 @@ module fetch_top (
    // Wrapper Tieoffs
    inv1$ finv (flush_not, flush);
    or3$ imem_vo (imem_v, flush_not, load, load_hold);   
+
+   wire 		 not_ex;
+   inv1$ (not_ex, seg_limit_int);
+   and2$ (imem_valid, imem_v, not_ex);
    
-   assign imem_valid = imem_v;
+   //assign imem_valid = imem_v & ~;
    assign imem_wr_en = 'h0;
    assign imem_wr_data = 'h0;
    assign imem_wr_size = 'h0;
