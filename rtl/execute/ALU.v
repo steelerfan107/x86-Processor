@@ -5,7 +5,7 @@ module ALU(
     eflags_in, 
     opsize, opcode, alu_op, alu_out, 
     flag_0_map, flag_1_map, set_eflags, eflags_out, 
-    branch_taken, br_misprediction, jump_load_address, jump_load_cs, cs_out, jump_address
+    branch_taken, br_misprediction, jump_load_address, jump_load_cs, cs_out, jump_address, cmp_xchg
     );
 input [63:0] a; //destination operand
 input [63:0] b; //source operand
@@ -27,6 +27,7 @@ output br_misprediction;
 output [63:0] alu_out;
 output [5:0] set_eflags; 
 output [5:0] eflags_out;
+output cmp_xchg;
 
    assign jump_load_cs = 'h0;
    assign cs_out = 'h0;
@@ -43,8 +44,8 @@ wire [5:0] pass_mov_eflags_out;
 wire cf_used;
 
 and2$ cf_required(.out(cf_used), .in0(eflags_in[1]), .in1(flag_0_map[0]));
-mux #(.INPUTS(4), .WIDTH(64)) cmov_mux(.in({b,a,b,b}), .out(mov_out), .select({flag_0_map[0],cf_used}));   
-   mux #(.INPUTS(2), .WIDTH(64)) mov_mux(.in({b,a}), .out(pass_out), .select(cf_used));
+mux #(.INPUTS(4), .WIDTH(64)) cmov_mux(.in({b,a,b,b}), .out(pass_out), .select({flag_0_map[0],cf_used}));   
+   //mux #(.INPUTS(2), .WIDTH(64)) mov_mux(.in({b,a}), .out(pass_out), .select(cf_used));
    
 
 //cmp = flag_0_map[1] & !flag_0_map[0]
@@ -73,10 +74,12 @@ mux #(.WIDTH(32), .INPUTS(8)) mux_cmpxchg_dest(.in({32'hz,32'hz,32'hz, 32'hz, cm
 mux #(.WIDTH(32), .INPUTS(8)) mux_cmpxchg_eax_out(.in({32'hz,32'hz,32'hz, 32'hz, cmpxchg32_eax_out, {16'h0000, cmpxchg16_ax_out}, {24'h000000, cmpxchg8_al_out}, 32'hz}), .out(cmpxchg_eax_out), .select(opsize));
 mux #(.WIDTH(6), .INPUTS(8)) mux_cmpxchg_eflags(.in({6'hz,6'hz, 6'hz, 6'hz, cmpxchg32_eflags, cmpxchg16_eflags, cmpxchg8_eflags, 32'hz}), .out(cmpxchg_eflags), .select(opsize));
 
-mux #(.WIDTH(64), .INPUTS(2)) mux_mov_pass_out(.in({{pass_mov_eax_out, cmpxchg_dest}, pass_out}), .out(pass_mov_out), .select(cmp));
+mux #(.WIDTH(64), .INPUTS(2)) mux_mov_pass_out(.in({{cmpxchg_dest, pass_mov_eax_out}, pass_out}), .out(pass_mov_out), .select(cmp));
 mux #(.WIDTH(32), .INPUTS(2)) mux_mov_pass_eax_out(.in({cmpxchg_eax_out, eax}), .out(pass_mov_eax_out), .select(cmp));
 mux #(.WIDTH(6), .INPUTS(2)) mux_mov_eflags_out(.in({cmpxchg_eflags, 6'bz}), .out(pass_mov_eflags_out), .select(cmp));
 mux #(.WIDTH(6), .INPUTS(2)) mux_mov_set_eflags(.in({cmpxchg_set_eflags, 6'b000000}), .out(pass_mov_set_eflags), .select(cmp));
+assign  cmp_xchg = cmp;
+   
 /*ADD -alu_op 1
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 wire [31:0] add8b_out; 
@@ -142,7 +145,7 @@ wire [5:0] bsf_eflags_out;
 BSF16 bsf16(.in(b[15:0]), .out(bsf16b_out), .v(bsf_v));
 BSF32 bsf32(.in(b[31:0]), .out(bsf32b_out), .v(bsf_v));
 assign bsf_set_eflags = 6'bzz1zzz;
-mux #(.WIDTH(32), .INPUTS(8)) bsf_mux(.in({32'hz, 32'hz,32'hz, 32'hz, bsf32b_out, bsf16b_out, 32'hz, 32'hz}), .out(bsf_out), .select(opsize[1]));
+mux #(.WIDTH(32), .INPUTS(8)) bsf_mux(.in({32'hz, 32'hz,32'hz, 32'hz, bsf32b_out, bsf16b_out, 32'hz, 32'hz}), .out(bsf_out), .select(opsize));
 ucomp16 zf_bsf16b(.a(b[15:0]), .b(16'h0000), .eq(bsf_eflags_out[3]));
 ucomp32 zf_bsf32b(.a(b[31:0]), .b(32'h00000000), .eq(bsf_eflags_out[3]));
 
@@ -297,7 +300,7 @@ mux #(.WIDTH(64), .INPUTS(16)) alu_out_mux(.in({64'd0,
                                                 {32'd0,not_out}, 
                                                 {32'd0,jmp_out}, 
                                                 {56'd0,daa_al_out}, 
-                                                mov_out, 
+                                                pass_mov_out, 
                                                 {32'd0,bsf_out}, 
                                                 {32'd0,and_out}, 
                                                 {32'd0,add_out}, 

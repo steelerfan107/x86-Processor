@@ -373,10 +373,10 @@ module register_access_top (
     seg_reg_valid_inv (seg_reg_valid, seg_reg_is_stall),
     mmx_valid_inv (mmx_valid, mmx_is_stall);
 
-    and3$ r_valid_and (r_valid, d_valid, reg_file_valid, seg_reg_valid); //, mmx_valid); 
-    and3$ d_ready_and (d_ready, r_ready, reg_file_valid, seg_reg_valid); //, mmx_valid);, mmx_valid);
-    // assign r_valid = d_valid;
-    // assign d_ready = r_ready;
+    //and3$ r_valid_and (r_valid, d_valid, reg_file_valid, seg_reg_valid); //, mmx_valid); 
+    //and3$ d_ready_and (d_ready, r_ready, reg_file_valid, seg_reg_valid); //, mmx_valid);, mmx_valid);
+    assign r_valid = d_valid;
+    assign d_ready = r_ready;
 
     //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
    

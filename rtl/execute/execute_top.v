@@ -157,7 +157,8 @@ module execute_top (
     wire [5:0] e_alu_eflags_out_in;    
     // wire [6:0] e_eflags_out;
     wire  wb_jump_load_address_unamsk;
-
+    wire   cmp_xchg;
+   
     and2$ (wb_jump_load_address, e_valid, wb_jump_load_address_unamsk);
 
 
@@ -170,9 +171,9 @@ module execute_top (
     localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16+3+32+1+1+4;
 
     wire [31:0]  p_dest_address = e_op_a_address;
-    wire  [31:0] p_dest_reg = e_dest_reg;
-    wire  [63:0] p_result = e_alu_out;
-    wire  [2:0]  p_opsize = e_opsize;
+   wire [31:0] 	 p_dest_reg; // = e_dest_reg;
+   wire [63:0] 	 p_result; // = e_alu_out;
+   wire [2:0] 	 p_opsize; // = e_opsize;
     wire         p_mem_or_reg = 'h0;
     wire         p_branch_taken = 'h0;
     wire         p_to_sys_controller = e_to_sys_controller;
@@ -196,7 +197,7 @@ module execute_top (
     assign pipe_in_data = {
         p_dest_address,
         p_dest_reg,
-        e_alu_out,
+        p_result,
         p_opsize,
         p_mem_or_reg,
         e_branch_taken,
@@ -241,6 +242,25 @@ module execute_top (
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
 
+    // XCHANGE Inner Register
+   
+    wire opsize_is_8, opcode_is_xchg, check_reg_a_b, a_and_b_regs, xchg_reg_select;
+    wire [3:0] e_op_x;
+   
+    ucomp4 comp_opsize(.a({1'b0, e_opsize}), .b(4'b0001), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .eq_out(opsize_is_8));
+    ucomp4 check_if_xchg(.a(e_op), .b(4'b1110), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .eq_out(opcode_is_xchg));
+    ucomp4 check_if_regs_same(.a({2'b0, e_dest_reg[1:0]}), .b({2'b0, e_op_b_reg[1:0]}), .agb_in(1'b0), .eq_in(1'b1), .bga_in(1'b0), .eq_out(check_reg_a_b));
+    and2$ and_ab_reg(.in0(e_op_a_is_reg), .in1(e_op_b_is_reg), .out(a_and_b_regs));
+    and4$ xchg_special(.in0(opsize_is_8), .in1(opcode_is_xchg), .in2(check_reg_a_b), .in3(a_and_b_regs), .out(xchg_reg_select));
+    mux #(.WIDTH(3), .INPUTS(2)) mux_chg_size(.in({3'b010, e_opsize}), .out(p_opsize), .select(xchg_reg_select));
+    mux #(.WIDTH(3), .INPUTS(4)) mux_chg_dest(.in({e_alu_out[34:32],e_alu_out[34:32],{1'b0, e_dest_reg[1:0]}, e_dest_reg}), .out(p_dest_reg), .select({cmp_xchg, xchg_reg_select}));
+    mux #(.WIDTH(4), .INPUTS(2)) mux_chg_op(.in({4'b0000, e_op}), .out(e_op_x), .select(xchg_reg_select));
+    mux #(.WIDTH(64), .INPUTS(4)) mux_chg_res(.in({{48'd0, e_op_a[7:0], e_op_b[7:0]} ,
+						   {48'd0, e_op_b[7:0], e_op_a[7:0]} ,
+						  e_alu_out,
+                                                  e_alu_out}), .out(p_result), .select({xchg_reg_select,~e_dest_reg[2]}));
+
+
     genvar i;
     generate
     for(i = 0; i < 64; i = i+1) begin : opa_buffer_block
@@ -263,7 +283,7 @@ module execute_top (
         .eflags_in(e_eflags_out[5:0]),
         .opsize(e_opsize),
         .opcode(e_opcode), 
-        .alu_op(e_op), 
+        .alu_op(e_op_x), 
         .flag_0_map(e_flag_0_map),
         .flag_1_map(e_flag_1_map),
         .branch_taken(e_branch_taken),
@@ -274,7 +294,10 @@ module execute_top (
         .alu_out(e_alu_out),
         .set_eflags(e_alu_set_eflags), 
         .eflags_out(e_alu_eflags_out),
-        .jump_address(wb_jump_address));
+        .jump_address(wb_jump_address),
+        .cmp_xchg(cmp_xchg));
+
+    
     
     mux2$ mux_change_df(.outb(change_df), .in0(1'b0), .in1(1'b1), .s0(e_set_d_flag)); //if not set, then must be clear
     or2$ or_set_df(.out(set_df), .in0(e_set_d_flag), .in1(e_clear_d_flag));

@@ -1022,13 +1022,13 @@ module top_pipeline (
 		 r_cs, r_ds, r_es, r_fs, r_gs, r_ss);
 	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
                  r_mm0, r_mm1, r_mm2, r_mm3, r_mm4, r_mm5, r_mm6, r_mm7);
-	$display(" Previous   ---------------------------");
-	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
-		 r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi);
-	$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
-		 r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss);
-	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
-                 r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7);     	 
+	//$display(" Previous   ---------------------------");
+	//$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
+	//	 r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi);
+	//$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
+	//	 r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss);
+	//$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
+        //         r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7);     	 
 	$display("====================================================== ");
 	$display("");
      end

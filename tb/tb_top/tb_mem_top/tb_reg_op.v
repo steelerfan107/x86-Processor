@@ -568,7 +568,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
   //     emem_ready        = ~ememory_valid;     
   //end
    
-  always #25 clk          = ~clk;
+  always #10 clk          = ~clk;
 
   initial begin
         $vcdplusfile("fsys_reg.dump.vpd");

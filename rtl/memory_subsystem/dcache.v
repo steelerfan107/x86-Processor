@@ -288,7 +288,7 @@ module dcache(
 
     d_align align_result(
         .in_high(dataram_out),
-        .in_low(staging_reg_out),
+        .in_low(staging_reg_out),		 
         .offset(virt_addr[2:0]),
         .out(rd_dp_read_data)
     );
