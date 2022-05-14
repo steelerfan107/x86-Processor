@@ -309,6 +309,13 @@ module address_generation_top (
 
         op0_segment,
 
+        r_cs,
+        r_ds,
+        r_ss,
+        r_es,
+        r_fs,
+        r_gs,
+
         r_size
     );
 
@@ -320,6 +327,13 @@ module address_generation_top (
         op1_check_segment_limit,
 
         op1_segment,
+
+        r_cs,
+        r_ds,
+        r_ss,
+        r_es,
+        r_fs,
+        r_gs,
 
         r_size
     );
@@ -334,6 +348,13 @@ module address_generation_top (
         stack_is_address,
 
         3'b010,
+
+        r_cs,
+        r_ds,
+        r_ss,
+        r_es,
+        r_fs,
+        r_gs,
 
         r_size
     );
