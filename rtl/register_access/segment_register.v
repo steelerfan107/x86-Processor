@@ -64,10 +64,16 @@ module segment_register_file (
     // write_register = write enable and write_select
     // set write register as enable for registers
 
+    wire write_enable_buf;
+    bufferH16 (.WIDTH(1)) write_enable_16 (write_enable_buf, write_enable);
+
+    wire [15:0] write_data_buf;
+    bufferH16 (.WIDTH(16)) write_data_16 (write_data_buf, write_data);
+
     genvar i;
     generate
         for (i = 0; i < 8; i = i + 1) begin
-            and2$ and_write_reg (write_register[i], write_select_decoded[i], write_enable);
+            and2$ and_write_reg (write_register[i], write_select_decoded[i], write_enable_buf);
         end
     endgenerate
 
@@ -78,7 +84,7 @@ module segment_register_file (
     wire [15:0] cs_write_data;
 
     mux #(.WIDTH(16), .INPUTS(2)) cs_in_mux (
-        {write_cs, write_data},
+        {write_cs, write_data_buf},
         cs_write_data,
         write_cs_enable
     );
@@ -93,12 +99,12 @@ module segment_register_file (
 
     // 6 registers
     register #(.WIDTH(16)) 
-    es (clk, reset, write_data, es_out, ,write_register[0]),
+    es (clk, reset, write_data_buf, es_out, ,write_register[0]),
     cs (clk, reset, cs_write_data, cs_out, ,cs_we),
-    ss (clk, reset, write_data, ss_out, ,write_register[2]),
-    ds (clk, reset, write_data, ds_out, ,write_register[3]),
-    fs (clk, reset, write_data, fs_out, ,write_register[4]),
-    gs (clk, reset, write_data, gs_out, ,write_register[5]);
+    ss (clk, reset, write_data_buf, ss_out, ,write_register[2]),
+    ds (clk, reset, write_data_buf, ds_out, ,write_register[3]),
+    fs (clk, reset, write_data_buf, fs_out, ,write_register[4]),
+    gs (clk, reset, write_data_buf, gs_out, ,write_register[5]);
 
     
 

@@ -172,6 +172,61 @@ module address_generation_top (
 
     // exception output
     output segment_limit_exception;
+
+    // buffers
+    wire [2:0] r_size_buf;
+    bufferH16 #(.WIDTH(3)) r_size_16 (r_size_buf, r_size);
+
+    wire [2:0] r_op0_buf;
+    bufferH64 #(.WIDTH(3)) r_op0_64 (r_op0_buf, r_op0);
+
+    wire [2:0] r_op1_buf;
+    bufferH64 #(.WIDTH(3)) r_op1_64 (r_op1_buf, r_op1);
+
+    wire [2:0] r_op0_reg_buf;
+    bufferH16 #(.WIDTH(3)) r_op0_reg_16 (r_op0_reg_buf, r_op0_reg);
+
+    wire [2:0] r_op1_reg_buf;
+    bufferH16 #(.WIDTH(3)) r_op1_reg_16 (r_op1_reg_buf, r_op1_reg);
+
+    wire [7:0] r_modrm_buf;
+    bufferH64 #(.WIDTH(8)) r_modrm_64 (r_modrm_buf, r_modrm);
+
+    wire [7:0] r_sib_buf;
+    bufferH16 #(.WIDTH(8)) r_sib_buf_16 (r_sib_buf, r_sib);
+
+    wire [47:0] r_imm_buf;
+    bufferH16 #(.WIDTH(48)) r_imm_16 (r_imm_buf, r_imm);
+
+    wire [31:0] r_disp_buf;
+    bufferH64 #(.WIDTH(32)) r_disp_64 (r_disp_buf, r_disp);
+
+    wire [2:0] r_seg_override_buf;
+    bufferH16 #(.WIDTH(3)) r_seg_override_64 (r_seg_override_buf, r_seg_override);
+
+    wire r_seg_override_valid_buf;
+    bufferH16 #(.WIDTH(1)) r_seg_override_valid_16 (r_seg_override_valid_buf, r_seg_override_valid);
+
+    wire [31:0] r_eax_buf;
+    wire [31:0] r_ecx_buf;
+    wire [31:0] r_edx_buf;
+    wire [31:0] r_ebx_buf;
+    wire [31:0] r_esp_buf;
+    wire [31:0] r_ebp_buf;
+    wire [31:0] r_esi_buf;
+    wire [31:0] r_edi_buf;
+
+    bufferH16 #(.WIDTH(32)) 
+    r_eax_16 (r_eax_buf, r_eax),
+    r_ecx_16 (r_ecx_buf, r_ecx),
+    r_edx_16 (r_edx_buf, r_edx),
+    r_ebx_16 (r_ebx_buf, r_ebx),
+    r_esp_16 (r_esp_buf, r_esp),
+    r_ebp_16 (r_ebp_buf, r_ebp),
+    r_esi_16 (r_esi_buf, r_esi),
+    r_edi_16 (r_edi_buf, r_edi);
+
+
    
     // -------   //
     // Pipestage //
@@ -234,20 +289,20 @@ module address_generation_top (
     } = pipe_out_data;
 
     assign pipe_in_data = {
-      r_size,
+      r_size_buf,
       r_set_d_flag,
       r_clear_d_flag,
       p_op0,
       p_op1,
-      r_op0_reg,
-      r_op1_reg,
+      r_op0_reg_buf,
+      r_op1_reg_buf,
       p_op0_is_address,
       p_op0_is_reg,
       p_op0_is_segment,
       p_op0_is_mmx,
       p_op1_is_reg,
       p_op1_is_address,
-      r_imm,
+      r_imm_buf,
       r_alu_op,
       r_flag_0,
       r_flag_1,
@@ -267,17 +322,17 @@ module address_generation_top (
 
     wire not_is_an_address,  p_op0_is_modrm, p_op0_is_modrm, gen_op0_is_address, gen_op0_is_address, is_an_address_modrm;
    
-    compare #(.WIDTH(2)) (r_modrm[7:6], 2'b11, not_is_an_address); 
+    compare #(.WIDTH(2)) (r_modrm_buf[7:6], 2'b11, not_is_an_address); 
     and2$ ( p_op0_is_modrm_mask, p_op0_is_modrm, not_is_an_address);
     inv1$ ( is_an_address_modrm, not_is_an_address);
 
-    compare #(.WIDTH(3)) (r_op0 , 3'd1, p_op0_is_register);      
-    compare #(.WIDTH(3)) (r_op0 , 3'd4, p_op0_is_modrm);
+    compare #(.WIDTH(3)) (r_op0_buf , 3'd1, p_op0_is_register);      
+    compare #(.WIDTH(3)) (r_op0_buf , 3'd4, p_op0_is_modrm);
     
     or2$ ( p_op0_is_reg, p_op0_is_register, p_op0_is_modrm_mask);     
       
-    compare #(.WIDTH(3)) (r_op0 , 3'd2, p_op0_is_segment);      
-    compare #(.WIDTH(3)) (r_size, 3'd5, p_op0_is_mmx);
+    compare #(.WIDTH(3)) (r_op0_buf , 3'd2, p_op0_is_segment);      
+    compare #(.WIDTH(3)) (r_size_buf, 3'd5, p_op0_is_mmx);
 
     // -------                            //
     // For Pops force op1 to be stack op  //
@@ -291,7 +346,7 @@ module address_generation_top (
     // Indicate to Sys Controller //
     // -------                    //
 
-   compare #(.WIDTH(3)) (r_op0, 3'h7, p_to_sys_controller);
+   compare #(.WIDTH(3)) (r_op0_buf, 3'h7, p_to_sys_controller);
 
     // ------------------- //
     // Segment Limit Check //
@@ -309,7 +364,7 @@ module address_generation_top (
 
         op0_segment,
 
-        r_size
+        r_size_buf
     );
 
     // checks op1 and the stack operand
@@ -321,7 +376,7 @@ module address_generation_top (
 
         op1_segment,
 
-        r_size
+        r_size_buf
     );
 
     wire stack_is_address;
@@ -335,7 +390,7 @@ module address_generation_top (
 
         3'b010,
 
-        r_size
+        r_size_buf
     );
 
     wire maybe_segment_limit_exception;
@@ -349,7 +404,7 @@ module address_generation_top (
     // ---------------------------- //
 
     // a register if op1 is reg or is mod rm with mod 11
-    is_op1_reg (p_op1_is_reg, r_op1, r_modrm);
+    is_op1_reg (p_op1_is_reg, r_op1_buf, r_modrm_buf);
 
     // ------- //
     // OP0 Mux //
@@ -360,17 +415,17 @@ module address_generation_top (
         op0_segment,
         op0_check_segment_limit,
 
-        r_size,
+        r_size_buf,
 
-        r_op0,
-        r_op0_reg,
+        r_op0_buf,
+        r_op0_reg_buf,
         
-        r_modrm,
-        r_sib,
-        r_imm,
-        r_disp,
-        r_seg_override,
-        r_seg_override_valid,
+        r_modrm_buf,
+        r_sib_buf,
+        r_imm_buf,
+        r_disp_buf,
+        r_seg_override_buf,
+        r_seg_override_valid_buf,
 
         r_eax,
         r_ecx,
@@ -407,17 +462,17 @@ module address_generation_top (
     op1_segment,
     op1_check_segment_limit,
 
-    r_size,
+    r_size_buf,
 
-    r_op1,
-    r_op1_reg,
+    r_op1_buf,
+    r_op1_reg_buf,
     
-    r_modrm,
-    r_sib,
-    r_imm,
-    r_disp,
-    r_seg_override,
-    r_seg_override_valid,
+    r_modrm_buf,
+    r_sib_buf,
+    r_imm_buf,
+    r_disp_buf,
+    r_seg_override_buf,
+    r_seg_override_valid_buf,
 
     r_eax,
     r_ecx,
@@ -484,8 +539,8 @@ module op0_generator (
 
     r_size,
 
-    r_op0,
-    r_op0_reg,
+    r_op0_buf,
+    r_op0_reg_buf,
     
     r_modrm,
     r_sib,
@@ -772,8 +827,8 @@ module op1_generator (
 
     r_size,
 
-    r_op1,
-    r_op1_reg,
+    r_op1_buf,
+    r_op1_reg_buf,
     
     r_modrm,
     r_sib,
