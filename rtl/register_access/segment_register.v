@@ -65,10 +65,10 @@ module segment_register_file (
     // set write register as enable for registers
 
     wire write_enable_buf;
-    bufferH16 (.WIDTH(1)) write_enable_16 (write_enable_buf, write_enable);
+    bufferH16 #(.WIDTH(1)) write_enable_16 (write_enable_buf, write_enable);
 
     wire [15:0] write_data_buf;
-    bufferH16 (.WIDTH(16)) write_data_16 (write_data_buf, write_data);
+    bufferH16 #(.WIDTH(16)) write_data_16 (write_data_buf, write_data);
 
     genvar i;
     generate

@@ -170,10 +170,10 @@ module memory_read_top (
 
     // buffers
     wire [63:0] a_op0_buf;
-    buffH16 a_op0_16 (a_op0_buf, a_op0);
+    bufferH16 #(.WIDTH(64)) a_op0_16 (a_op0_buf, a_op0);
 
     wire [63:0] a_op1_buf;
-    buffH16 a_op1_16 (a_op1_buf, a_op1);
+    bufferH16 #(.WIDTH(64)) a_op1_16 (a_op1_buf, a_op1);
    
     // --------- //
     // Pipestage //

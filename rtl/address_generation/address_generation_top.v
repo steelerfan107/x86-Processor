@@ -560,8 +560,8 @@ module op0_generator (
 
     r_size,
 
-    r_op0_buf,
-    r_op0_reg_buf,
+    r_op0,
+    r_op0_reg,
     
     r_modrm,
     r_sib,
@@ -848,8 +848,8 @@ module op1_generator (
 
     r_size,
 
-    r_op1_buf,
-    r_op1_reg_buf,
+    r_op1,
+    r_op1_reg,
     
     r_modrm,
     r_sib,

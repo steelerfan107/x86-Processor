@@ -17,6 +17,7 @@
 ../../../rtl/lib/compare.v
 ../../../rtl/lib/subtract.v
 ../../../rtl/lib/bufferH16.v
+../../../rtl/lib/bufferH64.v
 ../../../rtl/decode/decode_stage_0.v
 ../../../rtl/decode/byte_shifter_16B.v
 ../../../rtl/decode/byte_shifter_8B.v
