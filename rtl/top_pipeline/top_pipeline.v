@@ -578,9 +578,10 @@ module top_pipeline (
       .flag_df(eflags_reg[6]),
                
       .wb_reg_number(wb_reg_number),
-      .wb_reg_en(wb_reg_qual),   //(wb_op_a_is_reg & wb_valid),
+      .wb_reg_en(wb_reg_en),   //(wb_op_a_is_reg & wb_valid),
       .wb_stack(wb_stack),
-      .wb_reg_size(wb_opsize),
+      .wb_decode(dec_wb_valid),
+      .wb_reg_size(wb_reg_size),
       .wb_reg_data(wb_reg_data[31:0]),
       
       .wb_reg_number_2(wb_reg_number_2),
@@ -880,8 +881,8 @@ module top_pipeline (
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     //{3'b0, segment_limit_int, 12'b0},
-     {3'b0, 1'b0, 12'b0},			     
+     {3'b0, segment_limit_int, 12'b0},
+     //{3'b0, 1'b0, 12'b0},			     
      r_cs,		     
      emem_valid,
      emem_ready,
@@ -926,13 +927,13 @@ module top_pipeline (
 
   or4$ ( busy_ahead_of_decode, wb_valid, a_valid, r_valid , e_valid);
    
-  or2$ (wb_reg_en, wb_valid, dec_wb_valid);
+  or2$ (wb_reg_en, wb_reg_qual, dec_wb_valid);
 
   //mux  #(.WIDTH(16),.INPUTS(2)) ( {wb_jump_load_cs[15:0], r_cs}        , r_cs_bypass  , wb_jump_load_cs);
   assign r_cs_bypass = r_cs;
  
   mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_reg, wb_dest_reg[2:0]} , wb_reg_number, dec_wb_valid);
-  mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, wb_opsize}       , wb_reg_size  , dec_wb_valid);
+  mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, {1'b0, wb_opsize}}       , wb_reg_size  , dec_wb_valid);
   mux  #(.WIDTH(32),.INPUTS(2)) ( {dec_wb_data, wb_result[31:0]} , wb_reg_data  , dec_wb_valid);   
    
   assign wb_seg_number = 'h0;

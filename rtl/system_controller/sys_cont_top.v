@@ -175,8 +175,8 @@ module sys_cont_top (
            parameter IDT_ADDRESS10 = 32'hc000;
            parameter IDT_ADDRESS11 = 32'hf000;   
            parameter IDT_ADDRESS12 = 32'h0100;   
-           parameter IDT_ADDRESS13 = 32'hf000;   
-           parameter IDT_ADDRESS14 = 32'hf000;   
+           parameter IDT_ADDRESS13 = 32'h2068;   
+           parameter IDT_ADDRESS14 = 32'h2070;   
            parameter IDT_ADDRESS15 = 32'hf000;
 
            ////////////////////////////////
@@ -447,10 +447,10 @@ module sys_cont_top (
            assign       last_state = fetch_load_iretd;
    
            assign       flush_fetch_iretd = iretd_halt;
-           assign       flush_decode_0_iretd = 'h0;
-           assign       flush_decode_1_iretd = 'h0;
-           assign       flush_register_iretd = 'h0;
-           assign       flush_address_iretd = 'h0;
+           assign       flush_decode_0_iretd = fetch_load_iretd;
+           assign       flush_decode_1_iretd = fetch_load_iretd;
+           assign       flush_register_iretd = fetch_load_iretd;
+           assign       flush_address_iretd = fetch_load_iretd;
            assign       flush_execute_iretd = 'h0;
            assign       flush_writeback_iretd = 'h0;    
 

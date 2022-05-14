@@ -355,8 +355,8 @@ module decode_stage_1 (
    or2$ (ret_near_non_mask,ret_near0, ret_near1);
    or2$ (ret_far_non_mask,ret_far0, ret_far1);
 
-   and2$ (ret_near, ret_near_non_mask, s0_valid);
-   and2$ (ret_far, ret_far_non_mask, s0_valid);
+   and3$ (ret_near, ret_near_non_mask, s0_valid, not_busy);
+   and3$ (ret_far, ret_far_non_mask, s0_valid, not_busy);
 
    wire 		rom_in_control_mask;
    and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
@@ -444,7 +444,7 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(8))  modrm_mux({dec_modrm,dec_modrm},s1_modrm, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(8))  sib_mux({dec_sib,dec_sib},s1_sib, rom_in_control);   
    mux #(.INPUTS(4),.WIDTH(48)) imm_mux({48'd1,48'd1, rom_imm,dec_imm},s1_imm, {force_1,rom_in_control});   
-   mux #(.INPUTS(2),.WIDTH(32)) disp_mux({rom_disp,dec_disp},s1_disp, rom_in_control);   
+   mux #(.INPUTS(2),.WIDTH(32)) disp_mux({dec_disp,dec_disp},s1_disp, rom_in_control);   
    mux #(.INPUTS(4),.WIDTH(4))  alu_op_mux({4'd4,4'd4,rom_alu_op,dec_alu_op},s1_alu_op, {s1_movs,rom_in_control});  
    mux #(.INPUTS(2),.WIDTH(3))  flag_0_mux({rom_flag_0,dec_flag_0},s1_flag_0, rom_in_control);   
    mux #(.INPUTS(2),.WIDTH(3))  flag_1_mux({rom_flag_1,dec_flag_1},s1_flag_1, rom_in_control);   

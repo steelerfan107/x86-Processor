@@ -81,6 +81,8 @@
 ../../../rtl/memory_subsystem/store_queue.v
 ../../../rtl/memory_subsystem/interconnect/arbiter.v
 ../../../rtl/memory_subsystem/interconnect/arb_decoder.v
+../../../rtl/diskdma/dma.v
+../../../rtl/diskdma/disk.v
 ../../../rtl/execute/ALU.v
 ../../../rtl/execute/ANDN.v
 ../../../rtl/execute/BSF.v

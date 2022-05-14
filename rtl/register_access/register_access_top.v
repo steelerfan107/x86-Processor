@@ -93,6 +93,7 @@ module register_access_top (
     wb_reg_number,
     wb_reg_en,
     wb_stack,
+    wb_decode,
     wb_reg_size,
     wb_reg_data,
     
@@ -204,7 +205,8 @@ module register_access_top (
     // register file writeback
     input [2:0] wb_reg_number;
     input wb_reg_en;
-    input wb_stack;   
+    input wb_stack;
+    input  wb_decode;
     input [2:0] wb_reg_size;
     input [31:0] wb_reg_data;
 
@@ -393,7 +395,7 @@ module register_access_top (
         clk,
         reset,
 
-	    stack_operation,					  
+	stack_operation,					  
 
         d_size[1:0],
 
@@ -411,7 +413,7 @@ module register_access_top (
         ,    // not used...
         wb_reg_number,
         wb_reg_size[1:0],
-        wb_reg_en,
+        (wb_reg_en & (!wb_decode)),
 
         (in_accept  &  (d_alu_op != 6))   
     );

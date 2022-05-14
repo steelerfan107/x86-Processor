@@ -156,20 +156,28 @@ module fetch_top (
    wire                  outstanding_a_flush;
    wire                  not_outstanding;
    wire                  not_data_accept__and__outstanding;
-
+   wire                  not_cmd_accept;
+   wire                  not_cmd_accept_and_load;
+   wire 		 load_hold, load_hold_in;
+   
+   
    inv1$ ( not_outstanding, outstanding);
   
    
    and2$( memory_accept, imem_valid, imem_ready);
    nand2$( not_data_accept, imem_dp_valid, imem_dp_ready);
+   nand2$( not_cmd_accept, imem_valid, imem_ready);
+   
    and2$ (not_data_accept__and__outstanding,  not_data_accept, outstanding);
+
    
    mux2$ ( outstanding_in , memory_accept, not_data_accept, outstanding);
-
    and2$ ( outstanding_a_flush, outstanding, flush);
    mux2$ ( drop_in , outstanding_a_flush, not_data_accept__and__outstanding, drop);
 
-   
+   and2$ ( not_cmd_accept_and_load, not_cmd_accept, load);
+   mux2$ ( load_hold_in , not_cmd_accept_and_load, not_cmd_accept, load_hold);
+
    register #(.WIDTH(1)) outstanding_reg (
                clk,
                reset,
@@ -186,7 +194,16 @@ module fetch_top (
                drop,
                n_drop,	
                1'b1			    
-           ); 
+           );
+
+   register #(.WIDTH(1)) load_hold_reg (
+               clk,
+               reset,
+               load_hold_in,
+               load_hold,
+               ,	
+               1'b1			    
+           );    
 
    and2$ ( masked_dp_valid,  n_drop, imem_dp_valid);
   
@@ -223,7 +240,7 @@ module fetch_top (
    
    // Wrapper Tieoffs
    inv1$ finv (flush_not, flush);
-   or2$ imem_vo (imem_v, flush_not, load);   
+   or3$ imem_vo (imem_v, flush_not, load, load_hold);   
    
    assign imem_valid = imem_v;
    assign imem_wr_en = 'h0;
