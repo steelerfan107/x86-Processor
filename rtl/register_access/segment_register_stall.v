@@ -39,6 +39,23 @@ module segment_register_stall (
 
     input next_stage_ready;
 
+    // buffers
+    wire [2:0] write_select_buf;
+    bufferH16 #(.WIDTH(3)) write_sel_16 (write_select_buf, write_select);
+
+    wire write_enable_buf;
+    bufferH16 #(.WIDTH(1)) write_en_16 (write_enable_buf, write_enable);
+
+    wire [2:0] op0_reg_buf;
+    bufferH16 #(.WIDTH(3)) op0_reg_16 (op0_reg_buf, op0_reg);
+
+    wire op0_is_segment_buf;
+    bufferH16 #(.WIDTH(1)) op0_is_seg_16 (op0_is_segment_buf, op0_is_segment);
+
+    wire next_stage_ready_buf;
+    bufferH16 #(.WIDTH(1)) next_stage_ready_16 (next_stage_ready_buf, next_stage_ready);
+
+
 
     // first determine if segment register is being used
     wire op0_is_segment, op1_is_segment;
@@ -89,12 +106,12 @@ module segment_register_stall (
    
     // see if the value of the regs is going to be changed
     segment_stall_modify_table
-    es_mod (es_in, es_out, es_en, 3'd0, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
-    cs_mod (cs_in, cs_out, cs_en, 3'd1, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
-    ss_mod (ss_in, ss_out, ss_en, 3'd2, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
-    ds_mod (ds_in, ds_out, ds_en, 3'd3, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
-    fs_mod (fs_in, fs_out, fs_en, 3'd4, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready),
-    gs_mod (gs_in, gs_out, gs_en, 3'd5, op0_reg, op0_is_segment, write_select, write_enable, next_stage_ready);
+    es_mod (es_in, es_out, es_en, 3'd0, op0_reg_buf, op0_is_segment_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    cs_mod (cs_in, cs_out, cs_en, 3'd1, op0_reg_buf, op0_is_segment_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    ss_mod (ss_in, ss_out, ss_en, 3'd2, op0_reg_buf, op0_is_segment_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    ds_mod (ds_in, ds_out, ds_en, 3'd3, op0_reg_buf, op0_is_segment_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    fs_mod (fs_in, fs_out, fs_en, 3'd4, op0_reg_buf, op0_is_segment_buf, write_select_buf, write_enable_buf, next_stage_ready_buf),
+    gs_mod (gs_in, gs_out, gs_en, 3'd5, op0_reg_buf, op0_is_segment_buf, write_select_buf, write_enable_buf, next_stage_ready_buf);
 
     // see if there should be a stall
     // use mux to pic which table op1 needs
