@@ -344,7 +344,7 @@ module instruction_queue (
    //slow_addr #(.WIDTH(7)) hpbr ({3'b0,bytes_read_o},head,head_p_br, nc1);
 
    // Tail Ptr Plus 1
-   CLA7 tp1 (4'd1,tail,1'b0,tail_p1, nc2);
+   CLA4 tp1 (4'd1,tail,1'b0,tail_p1, nc2);
    //slow_addr #(.WIDTH(4)) tp1 (4'd1,tail,tail_p1, nc2);
 
    // Byte Shifter
