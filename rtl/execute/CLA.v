@@ -67,10 +67,10 @@ endmodule
 module CLA4(input [3:0] a,
 input [3:0] b, 
 input Cin, 
-output Gg, 
-output Pg, 
 output [3:0] s, 
 output Cout,
+output Gg, 
+output Pg, 
 output overflow);
 
 wire g0, g1, g2, g3;
