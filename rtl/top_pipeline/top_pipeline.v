@@ -270,7 +270,8 @@ module top_pipeline (
    wire                    wb_mmx_en;
    wire  [63:0]            wb_mmx_data;
    wire [31:0] 	           wb_pc;
-
+   wire [5:0] 		   wb_eflags;
+   
    wire                    dec_wb_valid;
    wire [2:0]              dec_wb_reg;
    wire [31:0]             dec_wb_data;  
@@ -823,7 +824,7 @@ module top_pipeline (
     wb_cs_out,
     wb_br_misprediction,		       
     wb_alu_op,
-    
+    wb_eflags,
     eflags_reg
   );
 
@@ -968,11 +969,13 @@ module top_pipeline (
    reg [63:0] 	  wb_data;
    reg [3:0] 	  wb_reg0;
    reg [31:0] 	  wb_address0;
-   reg [63:0] 	  wb_data0;   
+   reg [63:0] 	  wb_data0; 
+   reg [5:0] 	  wb_eflags0;     
    
   always @ (posedge clk) begin
      begin
 	wb_reg0 <= wb_dest_reg;
+	wb_eflags0 <= wb_eflags;
 	wb_opsize0 <= wb_opsize;	
 	wb_address0 <= wb_dest_address;
 	wb_data0 <= wb_result;	
@@ -1020,6 +1023,9 @@ module top_pipeline (
 	$display(" Operation to Memory : %b, Operation to Reg : %b, Operation to Seg : %b, Operation to MMX : %b", 
                  wb_op_a_is_address0, wb_op_a_is_reg0, wb_op_a_is_segment0, wb_op_a_is_mmx0);
 	$display(" Going to Sys Controller : %b", wb_to_sys_controller);
+	$display(" EFLAGS  ---------------------");
+	$display(" OF : %h, SF : %h, \n ZF  : %h, AF : %h, \n CF  : %h, PF : %h" ,
+		 wb_eflags0[5] ,wb_eflags0[4], wb_eflags0[3], wb_eflags0[2], wb_eflags0[1], wb_eflags0[0]);	
 	$display(" Writeback  ---------------------");
 	$display(" WB Address : 0x%h", wb_address0);	
 	$display(" WB Reg     : 0x%h", wb_reg0);	

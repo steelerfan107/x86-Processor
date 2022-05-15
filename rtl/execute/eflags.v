@@ -54,7 +54,7 @@ STD: The DF flag is set. The CF, OF, ZF, SF, AF, and PF flags are unaffected.
 XCHG: None. 
 */
 `timescale 1ns / 1ps
-module eflags(clk, reset, valid, eflags_in, set_eflags, eflags_out);
+module eflags(clk, reset, valid, eflags_in, set_eflags, eflags_out, eflags_next);
 input clk;
 input reset;
 
@@ -62,6 +62,7 @@ input        valid;
 input [6:0]  eflags_in;
 input [6:0]  set_eflags;
 output [6:0] eflags_out;
+output [6:0] eflags_next;
 
 //latch$ DF(.d(eflags_in[6]), .en(set_eflags[6]), .q(eflags_out[6]));
 //latch$ OF(.d(eflags_in[5]), .en(set_eflags[5]), .q(eflags_out[5]));
@@ -84,6 +85,8 @@ generate
                nc,
                set_eflags[i]
            );
+
+      assign eflags_next[i] = set_eflags[i] ? eflags_in[i] : eflags_out[i];      
    end
 endgenerate
 

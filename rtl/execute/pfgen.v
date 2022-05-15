@@ -2,6 +2,26 @@ module pfgen(in, pf);
 input [7:0] in;
 output pf;
 
+wire xor3, xor2, xor1, xor0;
+
+wire xor_0_0, xor_0_1;
+ 
+   
+xor2$ ( xor3, in[7], in[6]);
+xor2$ ( xor2, in[5], in[4]); 
+xor2$ ( xor1, in[3], in[2]); 
+xor2$ ( xor0, in[1], in[0]); 
+
+xor2$ ( xor_0_1, xor3, xor2); 
+xor2$ ( xor_0_0, xor1, xor0); 
+
+   wire inv_pf;
+   
+xor2$ ( inv_pf, xor_0_0, xor_0_1);  
+
+   inv1$ (  pf, inv_pf);
+   
+   /*
 wire in7_not;
 wire in6_not;
 wire in5_not;
@@ -314,5 +334,6 @@ and8$ and_gate126(.out(and126), .in0(in7_not), .in1(in6_not), .in2(in5_strong), 
 and8$ and_gate127(.out(and127), .in0(in7_strong), .in1(in6_strong), .in2(in5_strong), .in3(in4_strong), .in4(in3_strong), .in5(in2_strong), .in6(in1_strong), .in7(in0_strong));
 
 or128$ or_pf(.out(pf), .in0(and0), .in1(and1), .in2(and2), .in3(and3), .in4(and4), .in5(and5), .in6(and6), .in7(and7), .in8(and8), .in9(and9), .in10(and10), .in11(and11), .in12(and12), .in13(and13), .in14(and14), .in15(and15), .in16(and16), .in17(and17), .in18(and18), .in19(and19), .in20(and20), .in21(and21), .in22(and22), .in23(and23), .in24(and24), .in25(and25), .in26(and26), .in27(and27), .in28(and28), .in29(and29), .in30(and30), .in31(and31), .in32(and32), .in33(and33), .in34(and34), .in35(and35), .in36(and36), .in37(and37), .in38(and38), .in39(and39), .in40(and40), .in41(and41), .in42(and42), .in43(and43), .in44(and44), .in45(and45), .in46(and46), .in47(and47), .in48(and48), .in49(and49), .in50(and50), .in51(and51), .in52(and52), .in53(and53), .in54(and54), .in55(and55), .in56(and56), .in57(and57), .in58(and58), .in59(and59), .in60(and60), .in61(and61), .in62(and62), .in63(and63), .in64(and64), .in65(and65), .in66(and66), .in67(and67), .in68(and68), .in69(and69), .in70(and70), .in71(and71), .in72(and72), .in73(and73), .in74(and74), .in75(and75), .in76(and76), .in77(and77), .in78(and78), .in79(and79), .in80(and80), .in81(and81), .in82(and82), .in83(and83), .in84(and84), .in85(and85), .in86(and86), .in87(and87), .in88(and88), .in89(and89), .in90(and90), .in91(and91), .in92(and92), .in93(and93), .in94(and94), .in95(and95), .in96(and96), .in97(and97), .in98(and98), .in99(and99), .in100(and100), .in101(and101), .in102(and102), .in103(and103), .in104(and104), .in105(and105), .in106(and106), .in107(and107), .in108(and108), .in109(and109), .in110(and110), .in111(and111), .in112(and112), .in113(and113), .in114(and114), .in115(and115), .in116(and116), .in117(and117), .in118(and118), .in119(and119), .in120(and120), .in121(and121), .in122(and122), .in123(and123), .in124(and124), .in125(and125), .in126(and126), .in127(and127));
-
+*/
+   
 endmodule 

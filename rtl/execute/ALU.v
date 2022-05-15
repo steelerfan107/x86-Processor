@@ -72,7 +72,7 @@ CMPXCHG32 cmpxchg32(.rm32(a[31:0]), .r32(b[31:0]), .eax_in(eax[31:0]), .dest(cmp
 
 mux #(.WIDTH(32), .INPUTS(8)) mux_cmpxchg_dest(.in({32'hz,32'hz,32'hz, 32'hz, cmpxchg32_dest, {16'h0000, cmpxchg16_dest}, {24'h000000, cmpxchg8_dest}, 32'hz}), .out(cmpxchg_dest), .select(opsize));
 mux #(.WIDTH(32), .INPUTS(8)) mux_cmpxchg_eax_out(.in({32'hz,32'hz,32'hz, 32'hz, cmpxchg32_eax_out, {16'h0000, cmpxchg16_ax_out}, {24'h000000, cmpxchg8_al_out}, 32'hz}), .out(cmpxchg_eax_out), .select(opsize));
-mux #(.WIDTH(6), .INPUTS(8)) mux_cmpxchg_eflags(.in({6'hz,6'hz, 6'hz, 6'hz, cmpxchg32_eflags, cmpxchg16_eflags, cmpxchg8_eflags, 32'hz}), .out(cmpxchg_eflags), .select(opsize));
+mux #(.WIDTH(6), .INPUTS(8)) mux_cmpxchg_eflags(.in({6'hz,6'hz, 6'hz, 6'hz, cmpxchg32_eflags, cmpxchg16_eflags, cmpxchg8_eflags, 6'hz}), .out(cmpxchg_eflags), .select(opsize));
 
 mux #(.WIDTH(64), .INPUTS(2)) mux_mov_pass_out(.in({{cmpxchg_dest, pass_mov_eax_out}, pass_out}), .out(pass_mov_out), .select(cmp));
 mux #(.WIDTH(32), .INPUTS(2)) mux_mov_pass_eax_out(.in({cmpxchg_eax_out, eax}), .out(pass_mov_eax_out), .select(cmp));
@@ -262,7 +262,10 @@ xor2$ sal_xorg(.out(sal_xor), .in0(a[31]), .in1(sal_carry));
 mux2$ sal_of_mux(.outb(sal_of), .in0(1'bz), .in1(sal_xor), .s0(count_one));
 mux #(.WIDTH(6), .INPUTS(2)) sal_eflags_mux(.in({6'b000000, {count_one,5'b11z11}}), .out(sal_set_eflags), .select(shift_zero));
 mux #(.WIDTH(1), .INPUTS(2)) sal_oflag_mux(.in({sal_of, 1'bz}), .out(sal_eflags_out[5]), .select(count_one));
-assign sal_eflags_out[4] = sal_out[31];
+   
+//assign sal_eflags_out[4] = sal_out[31];
+mux #(.WIDTH(1), .INPUTS(4)) (.in({sal_out[31], sal_out[15], sal_out[7],1'b0}), .out(sal_eflags_out[4]), .select(opsize)); 
+
 //ucomp32 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
 //ucomp16 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
 //ucomp32 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
@@ -276,7 +279,10 @@ compare #(.WIDTH(8))  (8'b0, sal_out[7:0], sal_z8);
 mux #(.WIDTH(1), .INPUTS(4)) sar_z_mux(.in({sal_z32, sal_z16, sal_z8,1'b0}), .out(sal_eflags_out[3]), .select(opsize)); 
    
 assign sal_eflags_out[2] = 1'bz;
-assign sal_eflags_out[1] = sal_carry;
+
+mux #(.WIDTH(1), .INPUTS(4)) (.in({sal_carry, sal_out[16], sal_out[8],1'b0}), .out(sal_eflags_out[1]), .select(opsize)); 
+   
+//assign sal_eflags_out[1] = sal_carry;
 
 /*SAR alu_op 13
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -290,11 +296,13 @@ wire sar_of;
 mux2$ sar_of_mux(.outb(sar_of), .in0(1'bz), .in1(1'b0), .s0(count_one));
 mux #(.WIDTH(6), .INPUTS(2)) sar_eflags_mux(.in({6'b000000, {count_one,5'b11z11}}), .out(sar_set_eflags), .select(shift_zero));
 mux #(.WIDTH(1), .INPUTS(2)) sar_oflag_mux(.in({1'b0, 1'bz}), .out(sar_eflags_out[5]), .select(count_one));
-assign sar_eflags_out[4] = sar_out_calc[31];
+//assign sar_eflags_out[4] = sar_out_calc[31];
 ucomp32 sar_zero(.a(sar_out_calc), .b(32'h00000000), .eq(sar_eflags_out[3]));
 assign sar_eflags_out[2] = 1'bz;
 assign sar_eflags_out[1] = sar_carry;
 
+mux #(.WIDTH(1), .INPUTS(4)) (.in({sar_out[31], sar_out[15], sar_out[7],1'b0}), .out(sar_eflags_out[4]), .select(opsize)); 
+   
 mux #(.WIDTH(32), .INPUTS(8)) sar_mux(.in({32'h0,32'h0,32'h0, 32'h0, {a[31],sar_out_calc[30:0]}, {16'b0,a[15],sar_out_calc[14:0]}, {24'b0, a[7],sar_out_calc[6:0]}, 32'h0}), .out(sar_out), .select(opsize));   
 
 /*XCHG alu_op 14
@@ -327,6 +335,6 @@ mux #(.WIDTH(1), .INPUTS(16)) mux_jump_load_address_out(.in({9'h00, jmp_load_add
 //mux #(.WIDTH(32), .INPUTS(16)) mux_cs_out(.in({32'h00000000,32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, jmp_cs, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000, 32'h00000000}), .out(jump_load_cs), .select(alu_op));
 //set_eflags, eflags_out
 mux #(.WIDTH(6), .INPUTS(16)) eflags_out_mux(.in({12'bz, sar_eflags_out, sal_eflags_out, 6'bz, 6'bz, 6'bz, or_eflags_out, 6'bz, 6'bz, daa_eflags_out, pass_mov_eflags_out, bsf_eflags_out, and_eflags_out, add_eflags_out, pass_mov_eflags_out}), .out({eflags_out[5:1],nc}), .select(alu_op));
-pfgen alu_pf_out(.in(a[7:0]), .pf(eflags_out[0]));
+pfgen alu_pf_out(.in(alu_out[7:0]), .pf(eflags_out[0]));
 
 endmodule

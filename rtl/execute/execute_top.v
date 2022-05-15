@@ -71,7 +71,7 @@ module execute_top (
     wb_cs_out,
     wb_br_misprediction,
     wb_alu_op,
-
+    wb_eflags,
     e_eflags_out
 
 
@@ -144,7 +144,8 @@ module execute_top (
     output wb_op_b_is_reg;
     output wb_op_b_is_address;
     output [3:0] wb_alu_op;
-
+    output [5:0]  wb_eflags;
+   
     output [6:0] e_eflags_out;
 
    
@@ -166,9 +167,11 @@ module execute_top (
     // Pipestage //
     // -------   //
     // Some Temp Logic
+
+    wire [6:0] e_eflags_next;
    
     // localparam PIPEWIDTH = 32+32+64+3+1+1+1+32+1+2+1+1+1+1+3+32+1+1+4;
-    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16+3+32+1+1+4;
+    localparam PIPEWIDTH = 32+32+64+2+1+1+32+1+1+1+4+2+1+16+3+32+1+1+4+6;
 
     wire [31:0]  p_dest_address = e_op_a_address;
    wire [31:0] 	 p_dest_reg; // = e_dest_reg;
@@ -189,12 +192,15 @@ module execute_top (
     wire p_op_b_is_reg = e_op_b_is_reg;
     wire p_op_b_is_address = e_op_b_is_address;
     wire [3:0] p_alu_op = e_op;
+    wire [5:0] p_eflags = e_eflags_next[5:0];
+    
    
     or2$ (p_stack, e_stack_op[0], e_stack_op[1]);
 
     wire [PIPEWIDTH-1:0] pipe_in_data, pipe_out_data;   
 
     assign pipe_in_data = {
+	p_eflags,		   
         p_dest_address,
         p_dest_reg,
         p_result,
@@ -218,6 +224,7 @@ module execute_top (
     };
 
     assign {
+	wb_eflags,    
         wb_dest_address,
         wb_dest_reg,
         wb_result,
@@ -309,7 +316,8 @@ module execute_top (
 	.reset(reset),
 	.valid(1'b1),
         .eflags_in({change_df, e_alu_eflags_out_in}), 
-        .set_eflags({set_df, e_alu_set_eflags}), 
+        .set_eflags({set_df, e_alu_set_eflags}),
+	.eflags_next(e_eflags_next),
         .eflags_out(e_eflags_out));
 
     

@@ -32,7 +32,7 @@ module TOP;
    reg                   clk;
    reg                   reset;
 
-   reg [15:0] 		 interrupt;
+   wire [15:0] 		 interrupt;
 
    // Instruction Memory Interface
    wire                  imem_valid;
@@ -85,6 +85,9 @@ module TOP;
    wire i_rd_wr_out;
    wire i_PCD_out;
    wire [31:0] i_pa_out;
+
+   wire        page_fault;
+   
    
    wire [351:0] contents_concat;
    
@@ -183,11 +186,15 @@ module TOP;
     .sys_r_dp_valid         (emem_dp_valid     ),
     .sys_r_dp_ready         (emem_dp_ready   ),
     .sys_r_dp_read_data     (emem_dp_read_data  ),
-    .tlb_contents           (contents_concat)
+    .tlb_contents           (contents_concat),
+    .page_fault (page_fault)
    );                                        
                              
    reg 		r_emem_valid;
    reg 		r_r_emem_valid;
+
+   assign interrupt = {2'b0,page_fault,13'b0};
+   
   
    // assign wmem_wr_size = 'h0; //wmem_wr_size_nc - 1; 
 
@@ -512,25 +519,24 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
 
         $readmemb("rom/dcache_interface_rom.bit", uut_pipeline.uut_memory_read.dcache_interface0.rom.mem);
      
-        //contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
-        //contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[4] = {20'h0c000,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
-
         contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
         contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
-        contents[4] = {20'h0b001,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
+        contents[4] = {20'h0c000,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
+
+        //contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
+        //contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[4] = {20'h0b001,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[6] = 44'h12345123451;
         contents[7] = 44'h12344123441;
      
         clk = 0;
         reset = 1;
-        interrupt = 'h0;   
   
         //rmem_ready = 'h0;
         //rmem_dp_valid = 'h0;
@@ -544,15 +550,11 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
      
         //clk = 0;
         //reset = 1;
-        interrupt = 'h0;   
 
         $strobe("============ \n Begin Test \n============");       	  
         #55
         reset = 0;
-        #2350
-        interrupt = 'h0; //16'h04;     
-	#50
-        interrupt = 0;     	  
+   
   end
    
   initial #2000000 $finish;

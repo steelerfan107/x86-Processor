@@ -43,6 +43,7 @@ module memory_subsystem_top (
     sys_r_dp_ready,
     sys_r_dp_read_data,
 
+    page_fault,			     
     tlb_contents
 );
 
@@ -96,6 +97,8 @@ module memory_subsystem_top (
     input               dmem_w_dp_ready;     // unused
     output [IDATAW-1:0] dmem_w_dp_read_data; // unused
 
+   output 		page_fault;
+   
     // System Controller Read Interface
     input sys_r_valid;
     output sys_r_ready;

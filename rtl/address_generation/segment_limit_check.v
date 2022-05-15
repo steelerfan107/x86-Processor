@@ -41,7 +41,7 @@ module segment_limit_check (
     wire [31:0] cs_limit_offset = 32'h04fff;
     wire [31:0] ds_limit_offset = 32'h011ff;
     wire [31:0] ss_limit_offset = 32'h04000;
-    wire [31:0] es_limit_offset = 32'h00419;
+    wire [31:0] es_limit_offset = 32'h003ff;
     wire [31:0] fs_limit_offset = 32'h003ff;
     wire [31:0] gs_limit_offset = 32'h007ff;
 

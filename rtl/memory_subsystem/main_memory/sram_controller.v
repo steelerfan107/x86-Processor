@@ -11,8 +11,8 @@ module sram_controller(
    
     output done
 );
-    parameter RD_CYCLES = 10;
-    parameter WR_CYCLES = 10;
+    parameter RD_CYCLES = 2;
+    parameter WR_CYCLES = 2;
 
     parameter WR_WAIT = 10;
     parameter RD_WAIT = 10;

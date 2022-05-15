@@ -493,7 +493,7 @@ module sys_cont_top (
            assign       reg_eip_iretd = iretd_hold ?  captured_eip : iretd_pop_data;
 	     
            and2$ load_cs_and (reg_load_cs_iretd, iretd_pop_valid, commit_cs);
-           assign       reg_cs_iretd = iretd_hold ?  captured_cs : iretd_pop_data[15:0];
+           assign       reg_cs_iretd = iretd_hold ? iretd_pop_data[15:0] : iretd_pop_data[15:0];
 
            wire           not_ret_near;
            wire [15:0]    used_cs;
@@ -524,7 +524,7 @@ module sys_cont_top (
 
            assign commit_eip    = iretd_hold ? curr_state_iretd_three : curr_state_iretd_three;
            assign commit_eflags = iretd_hold ? curr_state_iretd_three : curr_state_iretd_one;
-           assign commit_cs     = iretd_hold ? curr_state_iretd_three : curr_state_iretd_two;
+           assign commit_cs     = iretd_hold ? curr_state_iretd_two   : curr_state_iretd_two;
            
 
            register #(.WIDTH(32)) EIP (

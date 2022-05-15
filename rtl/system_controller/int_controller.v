@@ -63,12 +63,13 @@ module int_controller (
    
    wire [2:0] 	     curr_state, next_state, n_curr_state;
 
-   //assign reg_load_cs = (curr_state == 4) & mem_dp_valid;
+   assign reg_load_cs = (curr_state == 4) & mem_dp_valid;
 
    wire [2:0] 	     next_state_c;
 
-   //assign next_state = (curr_state == 5 && mem_ready) ? 6 : next_state_c;
+   assign next_state = (curr_state == 5 && mem_ready) ? 6 : next_state_c;
 
+   /*
    wire 	     curr_state_is_five;
    wire 	     curr_state_is_five_and_ready;   
    wire 	     curr_state_is_four;
@@ -87,7 +88,7 @@ module int_controller (
         },
         next_state ,
         curr_state_is_five_and_ready			
-   );
+   );*/
        
    register #(.WIDTH(3)) state_reg (
        clk,
