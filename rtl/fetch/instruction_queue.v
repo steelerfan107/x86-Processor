@@ -135,7 +135,7 @@ module instruction_queue (
    // Clear indications of each entry
    wire 	  head_eq_0, head_in_eq_0;
    wire 	  head_eq_1, head_in_eq_1;
-   wire 	  head_eq_1, head_in_eq_2;
+   wire 	  head_eq_2, head_in_eq_2;
    wire 	  head_eq_3, head_in_eq_3;
    
    compare #(.WIDTH(2)) (2'd0,head[5:4],head_eq_0);
@@ -269,11 +269,11 @@ module instruction_queue (
    genvar 	 i;
    generate
       for(i = 0; i < 7; i = i+1) begin
-         inv1$ head_inv (head_inv[i], head[i]);	 
+         inv1$ (head_inv[i], head[i]);	 
       end
 
       for(i = 0; i < 4; i = i+1) begin
-         inv1$ tail_inv (tail_inv[i], tail[i]);	 
+         inv1$ (tail_inv[i], tail[i]);	 
       end     
    endgenerate
 
@@ -314,15 +314,56 @@ module instruction_queue (
    wire [6:0] valid_bytes_p16;
    wire [6:0] valid_bytes_p16_mBR;
    wire [6:0] valid_bytes_mBR;
+   wire [6:0] zero_m_load;
 
+   /*
    assign valid_bytes_p16 = valid_bytes_o + 16;
    assign valid_bytes_p16_mBR = valid_bytes_o + 16 - bytes_read_o;
    assign valid_bytes_mBR = valid_bytes_o - bytes_read_o;
+   
    
    assign valid_bytes_i = (load) ? 0 - load_address[3:0] : 
                           (in_accept & out_accept) ? valid_bytes_p16_mBR :
 			  (in_accept)  ? valid_bytes_p16 :
 			  (out_accept) ? valid_bytes_mBR : valid_bytes_o;
+   
+   */
+   
+   wire [6:0] load_mux_sel;
+   wire [6:0] accept_mux_sel;
+   
+   mux #(.INPUTS(4),.WIDTH(7))  ({valid_bytes_p16_mBR,
+                                  valid_bytes_p16,
+                                  valid_bytes_mBR,
+                                  valid_bytes_o}, accept_mux_sel, {in_accept, out_accept});
+   mux #(.INPUTS(2),.WIDTH(7))  ({zero_m_load, accept_mux_sel}, valid_bytes_i, load);   
+
+   slow_addr #(.WIDTH(7))  (7'd16,valid_bytes_o,valid_bytes_p16, nc0);
+
+   subtract #(.WIDTH(7)) (
+	7'b0,
+        {3'b0,load_address[3:0]},
+        zero_m_load	 
+   );
+
+   subtract #(.WIDTH(7)) (
+	valid_bytes_o,
+        {3'b0, bytes_read_o},
+        valid_bytes_mBR	 
+   );
+
+   subtract #(.WIDTH(7)) (
+	valid_bytes_p16,
+        {3'b0,bytes_read_o},
+        valid_bytes_p16_mBR	 
+   );    
+    
+   /*
+   assign valid_bytes_i = (load) ? 0 - load_address[3:0] : 
+                          (in_accept & out_accept) ? valid_bytes_p16_mBR :
+			  (in_accept)  ? valid_bytes_p16 :
+			  (out_accept) ? valid_bytes_mBR : valid_bytes_o;    
+    */
    
    register #(.WIDTH(7)) vnc (clk, reset, valid_bytes_i, valid_bytes_o, , (in_accept | out_accept | load));
 

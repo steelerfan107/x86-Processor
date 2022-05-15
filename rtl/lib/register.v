@@ -29,11 +29,11 @@ module register (
 	    mux2$ data_in(bit_data, q[i], din[i], en);
 	 
 	    dff$(clk,
-		 bit_data,
+	    	 bit_data,
                  q[i],
                  q_bar[i], 
                  reset_n, 
-                 1'b1);
+                 1'b1);	 
       end
    endgenerate
 

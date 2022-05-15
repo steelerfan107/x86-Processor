@@ -359,12 +359,21 @@ module address_generation_top (
         r_size
     );
 
-    wire maybe_segment_limit_exception;
+    wire maybe_segment_limit_exception, segment_limit_exception_in;
     or2$ exception_or (maybe_segment_limit_exception, op0_exception, op1_exception);
 
     // only cause exception if the incoming data is valid
-    and2$ except_and (segment_limit_exception, r_valid, maybe_segment_limit_exception);
+    and2$ except_and (segment_limit_exception_in, r_valid, maybe_segment_limit_exception);
 
+    register #(.WIDTH(1))  (
+               clk,
+               (reset | flush),
+               segment_limit_exception_in,
+               segment_limit_exception,
+               nc0,
+               1'b1				    
+           );  
+   
     // ---------------------------- //
     // Determine if OP1 is Register //
     // ---------------------------- //

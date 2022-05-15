@@ -21,8 +21,44 @@ module slow_addr (
    genvar 	      i;
    generate
       if (WIDTH == 1) begin
-	 full_addr fa (a, b, out, 1'b0, carry);
-      end else begin
+	 full_addr fa (a, b, out, 1'b0, carry_vec[WIDTH-1]);
+      end else if (WIDTH == 32) begin
+	 CLA32(
+               a,  // input [31:0] a, 
+               b,   //input [31:0] b, 
+               1'b0,  // input Cin, 
+               out,   //output [31:0] s, 
+               carry_vec[WIDTH-1], //  output Cout,
+                     //output overflow 
+               );	
+      /*end else if (WIDTH == 2) begin
+	 CLA2(
+               a,  // input [31:0] a, 
+               b,   //input [31:0] b, 
+               1'b0,  // input Cin, 
+               out,   //output [31:0] s, 
+               carry_vec[WIDTH-1], //  output Cout,
+                     //output overflow 
+               ) ;    
+      end else if (WIDTH == 8) begin
+	 CLA8(
+               a,  // input [31:0] a, 
+               b,   //input [31:0] b, 
+               1'b0,  // input Cin, 
+               out,   //output [31:0] s, 
+               carry_vec[WIDTH-1], //  output Cout,
+                     //output overflow 
+               ) ;	 
+      end else if (WIDTH == 4) begin
+	 CLA4(
+               a,  // input [31:0] a, 
+               b,   //input [31:0] b, 
+               1'b0,  // input Cin, 
+               out,   //output [31:0] s, 
+               carry_vec[WIDTH-1], //  output Cout,
+                     //output overflow 
+               ) ;	*/ 
+      end else begin     
          for(i = 0; i < WIDTH; i=i+1) begin
 	    if ( i == 0 ) begin
 	      full_addr fa (a[i], b[i], out[i], 1'b0, carry_vec[i]);	       
@@ -34,6 +70,8 @@ module slow_addr (
    endgenerate
 
    assign carry = carry_vec[WIDTH-1];
+
+   
 endmodule // slow_addr
 
 module half_addr (

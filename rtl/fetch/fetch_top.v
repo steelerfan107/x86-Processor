@@ -103,7 +103,7 @@ module fetch_top (
 
 
    wire 		 flush_not;
-   
+
    // ----------------------
    //
    //  Segment Limit Check
@@ -238,7 +238,7 @@ module fetch_top (
    instruction_queue iq (
       .clk(clk),
       .reset(reset),  
-      .load_address(load_address),
+      .load_address(load_address[5:0]),
       .load(load),
       .flush(flush),			 
       .valid_i(masked_dp_valid),
