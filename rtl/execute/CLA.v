@@ -2,8 +2,6 @@
 module CLA2(input [1:0] a,
 input [1:0] b, 
 input Cin, 
-output Gg, 
-output Pg, 
 output [1:0] s, 
 output Cout);
 
@@ -30,8 +28,6 @@ endmodule
 module CLA3(input [2:0] a,
 input [2:0] b, 
 input Cin, 
-output Gg, 
-output Pg, 
 output [2:0] s, 
 output Cout);
 
@@ -63,7 +59,7 @@ or4$ g_c3(.in0(g2), .in1(and3), .in2(and4), .in3(and5), .out(c3));
 assign Cout = c3;
 
 //Logic for Gg and Pg, edit if necessary
-//and4$ g_pg(.in0(p3), .in1(p2), .in2(p1), .in3(p0), .out(Pg)); //group propogate logic
+//and3$ g_pg(.in0(p2), .in1(p1), .in2(p0), .out(Pg)); //group propogate logic
 //or4$ g_gg(.in0(g3), .in1(and6), .in2(and7), .in3(and8), .out(Gg)); //group generate logic
 endmodule
 
@@ -132,19 +128,19 @@ module CLA5(
     output overflow
 );
     wire dummy_carry, g0, p0;
-    CLA3 cla0(.a(a[2:0]), .b(b[2:0]), .Cin(Cin), .Gg(g0), .Pg(p0), .s(s[2:0]), .Cout(dummy_carry));
-    //Lookahead logic for c3
-    wire and0, c3;
+    CLA4 cla0(.a(a[3:0]), .b(b[3:0]), .Cin(Cin), .Gg(g0), .Pg(p0), .s(s[3:0]), .Cout(dummy_carry));
+    //Lookahead logic for c4
+    wire and0, c4;
     and2$ g_and0(.in0(p0), .in1(Cin), .out(and0));
-    or2$ g_c3(.in0(g0), .in1(and0), .out(c3));
+    or2$ g_c4(.in0(g0), .in1(and0), .out(c4));
 
-    wire g3, p3;
-    CLA2 cla3(.a(a[4:3]), .b(b[4:3]), .Cin(c3), .Gg(g3), .Pg(p3), .s(s[4:3]), .Cout(dummy_carry));
+    wire g4, p4;
+    halfadder h4(.in0(a[4]), .in1(b[4]), .Cin(c4), .g(g4), .p(p4), .s(s[4]));
     //Lookahead logic for Cout
     wire and1, and2;
-    and2$ g_and1(.in0(p3), .in1(g0), .out(and1));
-    and3$ g_and2(.in0(p3), .in1(p0), .in2(Cin), .out(and2));
-    or3$ g_c2(.in0(g3), .in1(and1), .in2(and2), .out(Cout));
+    and2$ g_and1(.in0(p4), .in1(g0), .out(and1));
+    and3$ g_and2(.in0(p4), .in1(p0), .in2(Cin), .out(and2));
+    or3$ g_c2(.in0(g4), .in1(and1), .in2(and2), .out(Cout));
 
     wire input_signs, output_sign_not, in_out_signs;
     xnor2$ signs_xnor(.out(input_signs), .in0(a[4]), .in1(b[4]));
@@ -163,19 +159,28 @@ module CLA6(
     output overflow
 );
     wire dummy_carry, g0, p0;
-    CLA3 cla0(.a(a[2:0]), .b(b[2:0]), .Cin(Cin), .Gg(g0), .Pg(p0), .s(s[2:0]), .Cout(dummy_carry));
+    CLA4 cla0(.a(a[3:0]), .b(b[3:0]), .Cin(Cin), .Gg(g0), .Pg(p0), .s(s[3:0]), .Cout(dummy_carry));
     //Lookahead logic for c3
-    wire and0, c3;
+    wire and0, c4;
     and2$ g_and0(.in0(p0), .in1(Cin), .out(and0));
-    or2$ g_c3(.in0(g0), .in1(and0), .out(c3));
+    or2$ g_c4(.in0(g0), .in1(and0), .out(c4));
 
-    wire g3, p3;
-    CLA3 cla3(.a(a[5:3]), .b(b[5:3]), .Cin(c3), .Gg(g3), .Pg(p3), .s(s[5:3]), .Cout(dummy_carry));
-    //Lookahead logic for Cout
+    wire g4, p4, c5;
+    halfadder h4(.in0(a[4]), .in1(b[4]), .Cin(c4), .g(g4), .p(p4), .s(s[4]));
+    //Lookahead logic for c5
     wire and1, and2;
-    and2$ g_and1(.in0(p3), .in1(g0), .out(and1));
-    and3$ g_and2(.in0(p3), .in1(p0), .in2(Cin), .out(and2));
-    or3$ g_c2(.in0(g3), .in1(and1), .in2(and2), .out(Cout));
+    and2$ g_and1(.in0(p4), .in1(g0), .out(and1));
+    and3$ g_and2(.in0(p4), .in1(p0), .in2(Cin), .out(and2));
+    or3$ g_c5(.in0(g4), .in1(and1), .in2(and2), .out(c5));
+
+    wire g5, p5;
+    halfadder h5(.in0(a[5]), .in1(b[5]), .Cin(c5), .g(g5), .p(p5), .s(s[5]));
+    //Lookahead logic for Cout
+    wire and3, and4, and5;
+    and2$ g_and3(.in0(p5), .in1(g4), .out(and3));
+    and3$ g_and4(.in0(p5), .in1(p4), .in2(g0), .out(and4));
+    and4$ g_and5(.in0(p5), .in1(p4), .in2(p0), .in3(Cin), .out(and5));
+    or4$ g_c3(.in0(g5), .in1(and3), .in2(and4), .in3(and5), .out(Cout));
 
     wire input_signs, output_sign_not, in_out_signs;
     xnor2$ signs_xnor(.out(input_signs), .in0(a[5]), .in1(b[5]));
@@ -200,13 +205,32 @@ module CLA7(
     and2$ g_and0(.in0(p0), .in1(Cin), .out(and0));
     or2$ g_c4(.in0(g0), .in1(and0), .out(c4));
 
-    wire g4, p4;
-    CLA3 cla3(.a(a[6:4]), .b(b[6:4]), .Cin(c4), .Gg(g4), .Pg(p4), .s(s[6:4]), .Cout(dummy_carry));
-    //Lookahead logic for Cout
+    wire g4, p4, c5;
+    halfadder h4(.in0(a[4]), .in1(b[4]), .Cin(c4), .g(g4), .p(p4), .s(s[4]));
+    //Lookahead logic for c5
     wire and1, and2;
     and2$ g_and1(.in0(p4), .in1(g0), .out(and1));
     and3$ g_and2(.in0(p4), .in1(p0), .in2(Cin), .out(and2));
-    or3$ g_c2(.in0(g4), .in1(and1), .in2(and2), .out(Cout));
+    or3$ g_c5(.in0(g4), .in1(and1), .in2(and2), .out(c5));
+
+    wire g5, p5, c6;
+    halfadder h5(.in0(a[5]), .in1(b[5]), .Cin(c5), .g(g5), .p(p5), .s(s[5]));
+    //Lookahead logic for Cout
+    wire and3, and4, and5;
+    and2$ g_and3(.in0(p5), .in1(g4), .out(and3));
+    and3$ g_and4(.in0(p5), .in1(p4), .in2(g0), .out(and4));
+    and4$ g_and5(.in0(p5), .in1(p4), .in2(p0), .in3(Cin), .out(and5));
+    or4$ g_c3(.in0(g5), .in1(and3), .in2(and4), .in3(and5), .out(c6));
+
+    wire g6, p6;
+    halfadder h6(.in0(a[6]), .in1(b[6]), .Cin(c6), .g(g6), .p(p6), .s(s[6]));
+    //Lookahead logic for c4
+    wire and6, and7, and8, and9;
+    and2$ g_and6(.in0(p6), .in1(g5), .out(and6));
+    and3$ g_and7(.in0(p6), .in1(p5), .in2(g4), .out(and7));
+    and4$ g_and8(.in0(p6), .in1(p5), .in2(p4), .in3(g0), .out(and8));
+    and5$ g_and9(.in0(p6), .in1(p5), .in2(p4), .in3(p0), .in4(Cin), .out(and9));
+    or5$ g_Cout(.in0(g6), .in1(and6), .in2(and7), .in3(and8), .in4(and9), .out(Cout));
 
     wire input_signs, output_sign_not, in_out_signs;
     xnor2$ signs_xnor(.out(input_signs), .in0(a[6]), .in1(b[6]));
@@ -332,3 +356,4 @@ module CLA32(
     xnor2$ in_out_signs_xnor(.out(in_out_signs), .in0(output_sign_not), .in1(b[31]));
     and2$ overflow_and(.out(overflow), .in0(in_out_signs), .in1(input_signs));
 endmodule
+
