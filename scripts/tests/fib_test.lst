@@ -1,25 +1,29 @@
 // Fibonacci generator with stack
 // thought i could, but never thought if i should
 
-0x00: 66 B8 00 05         // MOV EAX 0 | Put x0500 in eax for ss
-0x04: 8E D0           // MOV SS, EAX | set SS
-0x06: BC 00 01 00 00          // MOV ESP, 0 Init stack pointer
-0x0B: 68 00 00 00 00  // push 0
-0x10: 68 00 00 00 01  // push 1
-0x15: 66 68 00 02     // push 16 bit value for ds
-0x19: 90              // no op
-0x1A: 1F              // pop 16 bit value for ds
-0x1B: B9 00 00 00 00  // MOV ECX, [ECX] | put address of N into ECX (0)
-0x20: 8B 09           // load N into C
-0x22: 8B EC           // Move ESP into EBP
-0x24: 8B 45 FC        // EAX <- [EBP-4]   Loop
-0x27: 03 45 F8        // ADD EAX [EBP-8]
-0x2A: 50              // Push EAX
-0x2B: 83 C9 FF        // add ECX, -1
-0x2E: 75 01 // JNE to halt
-0x30: EB F4 // JMP to loop
-0x32: F4              // Halt
+0x00: 66 B8 00 02         // MOV EAX 0x0200
+0x04: 8E D8               // MOV DS, EAX
+0x06: BA 00 00 00 00      // Move address into edx
+0x0B: 8B 0A               // Read value into ECX
+0x0D: C7 02 00 00 00 00   // Put 0 into mem location
+0x13: 83 C2 04            // Add 4 to EDX
+0x16: C7 02 01 00 00 00   // Put 1 in next mem location
+0x1C: 83 C2 04            // Add 4 to EDX
 
-0x00002000: 03 00 00 00
+// start actual program
+0x1F: 8B 42 FC            // MOV EAX, [EDX - 4] Load previous result
+0x22: 03 42 F8            // Add EAX, [EDX - 8]
+0x25: 89 02               // Save to EDX
+0x27: 83 C2 04            // Add 4 to EDX
+0x2A: 83 C1 FF            // add ECX -1
+
+0x2D: 75 F0 // JNE to halt
+
+0x2F: EB 00 // JMP to loop
+
+0x31: F4              // Halt
+
+
+0x00002000: 08 00 00 00
 
 // 0x00200000: // stack 
