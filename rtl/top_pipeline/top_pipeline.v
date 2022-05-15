@@ -103,7 +103,22 @@ module top_pipeline (
    output    [DSIZEW-1:0]  wmem_wr_size;
    input                   wmem_dp_valid;
    output                  wmem_dp_ready;
-   input    [DDATAW-1:0]   wmem_dp_read_data;   
+   input    [DDATAW-1:0]   wmem_dp_read_data;
+
+   /*
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_pipe;    
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_64;
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_32;
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_16;
+   wire [DDATAW-1:0] 	   wmem_wr_data_es_8;
+
+   assign wmem_wr_data_es_8  = wmem_wr_data_es_pipe;
+   assign wmem_wr_data_es_16 = {wmem_wr_data_es_pipe[63:16],wmem_wr_data_es_pipe[7:0],wmem_wr_data_es_pipe[15:8]} ;
+   assign wmem_wr_data_es_32 = {wmem_wr_data_es_pipe[63:32],wmem_wr_data_es_pipe[7:0],wmem_wr_data_es_pipe[15:8],wmem_wr_data_es_pipe[23:16],wmem_wr_data_es_pipe[31:24]} ;
+   assign wmem_wr_data_es_64 = {wmem_wr_data_es_pipe[7:0]  ,wmem_wr_data_es_pipe[15:8] ,wmem_wr_data_es_pipe[23:16] ,wmem_wr_data_es_pipe[31:24],
+                                wmem_wr_data_es_pipe[39:32],wmem_wr_data_es_pipe[47:40],wmem_wr_data_es_pipe[55:48] ,wmem_wr_data_es_pipe[63:56]} ;
+   
+   */
 
    // Interrupt Interface
    wire                    pending_int;
@@ -114,6 +129,8 @@ module top_pipeline (
    // Address Load Interface
    wire   [IADDRW-1:0]     load_address;
    wire  	           load;
+
+   wire 		   fetch_seg_limit_ex;
    
    // Flush Interface
    wire	                   fetch_flush;   
@@ -144,7 +161,7 @@ module top_pipeline (
    wire                    f_valid;
    wire                    f_ready;
    wire [5:0]              f_bytes_read;
-   wire [5:0]              f_valid_bytes;
+   wire [6:0]              f_valid_bytes;
    wire [255:0]            f_instruction;
    wire [IADDRW-1:0]       f_pc;
    wire                    f_branch_taken;
@@ -374,6 +391,7 @@ module top_pipeline (
       load_address,
       load,
       r_cs_bypass,
+      fetch_seg_limit_ex,
       f_eip,		
       f_set_eip,		  
       imem_valid,
@@ -563,9 +581,10 @@ module top_pipeline (
       .flag_df(eflags_reg[6]),
                
       .wb_reg_number(wb_reg_number),
-      .wb_reg_en(wb_reg_qual),   //(wb_op_a_is_reg & wb_valid),
+      .wb_reg_en(wb_reg_en),   //(wb_op_a_is_reg & wb_valid),
       .wb_stack(wb_stack),
-      .wb_reg_size(wb_opsize),
+      .wb_decode(dec_wb_valid),
+      .wb_reg_size(wb_reg_size),
       .wb_reg_data(wb_reg_data[31:0]),
       
       .wb_reg_number_2(wb_reg_number_2),
@@ -861,12 +880,15 @@ module top_pipeline (
 
   wire        sys_cont_val;
   and2$ (sys_cont_val, wb_to_sys_controller, wb_valid);
-      
+
+  wire       sel_limit_ex;
+  or2$( sel_limit_ex ,fetch_seg_limit_ex, segment_limit_int);
+   
   sys_cont_top uut_sys_cont (
      clk,
      reset,
-     //{3'b0, segment_limit_int, 12'b0},
-     {3'b0, 1'b0, 12'b0},			     
+     {2'b0, sel_limit_ex, 13'b0},
+     //{3'b0, 1'b0, 12'b0},			     
      r_cs,		     
      emem_valid,
      emem_ready,
@@ -911,13 +933,13 @@ module top_pipeline (
 
   or4$ ( busy_ahead_of_decode, wb_valid, a_valid, r_valid , e_valid);
    
-  or2$ (wb_reg_en, wb_valid, dec_wb_valid);
+  or2$ (wb_reg_en, wb_reg_qual, dec_wb_valid);
 
   //mux  #(.WIDTH(16),.INPUTS(2)) ( {wb_jump_load_cs[15:0], r_cs}        , r_cs_bypass  , wb_jump_load_cs);
   assign r_cs_bypass = r_cs;
  
   mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_reg, wb_dest_reg[2:0]} , wb_reg_number, dec_wb_valid);
-  mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, wb_opsize}       , wb_reg_size  , dec_wb_valid);
+  mux  #(.WIDTH(3),.INPUTS(2))  ( {dec_wb_size, {1'b0, wb_opsize}}       , wb_reg_size  , dec_wb_valid);
   mux  #(.WIDTH(32),.INPUTS(2)) ( {dec_wb_data, wb_result[31:0]} , wb_reg_data  , dec_wb_valid);   
    
   assign wb_seg_number = 'h0;
@@ -1006,13 +1028,13 @@ module top_pipeline (
 		 r_cs, r_ds, r_es, r_fs, r_gs, r_ss);
 	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
                  r_mm0, r_mm1, r_mm2, r_mm3, r_mm4, r_mm5, r_mm6, r_mm7);
-	$display(" Previous   ---------------------------");
-	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
-		 r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi);
-	$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
-		 r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss);
-	$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
-                 r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7);     	 
+	//$display(" Previous   ---------------------------");
+	//$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
+	//	 r0_eax, r0_ecx, r0_edx, r0_ebx, r0_esp, r0_ebp, r0_esi, r0_edi);
+	//$display(" r_cs  : %h, r_ds : %h, \n r_es  : %h, r_fs : %h, \n r_gs  : %h, r_ss : %h",
+	//	 r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss);
+	//$display(" r_mm0 : %h, r_mm1 : %h, \n r_mm2 : %h, r_mm3 : %h, \n r_mm4 : %h, r_mm5 : %h, \n r_mm6 : %h, r_mm7 : %h",
+        //         r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7);     	 
 	$display("====================================================== ");
 	$display("");
      end

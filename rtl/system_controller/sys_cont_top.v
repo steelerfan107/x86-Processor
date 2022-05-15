@@ -175,8 +175,8 @@ module sys_cont_top (
            parameter IDT_ADDRESS10 = 32'hc000;
            parameter IDT_ADDRESS11 = 32'hf000;   
            parameter IDT_ADDRESS12 = 32'h0100;   
-           parameter IDT_ADDRESS13 = 32'hf000;   
-           parameter IDT_ADDRESS14 = 32'hf000;   
+           parameter IDT_ADDRESS13 = 32'h2068;   
+           parameter IDT_ADDRESS14 = 32'h2070;   
            parameter IDT_ADDRESS15 = 32'hf000;
 
            ////////////////////////////////
@@ -328,6 +328,8 @@ module sys_cont_top (
                                                         IDT_ADDRESS0
            }, mem_address_p0, int_serviced);
 
+          
+
           mux  #(.WIDTH(32),.INPUTS(16)) addr_select ( {mem_address_p4, mem_address_p0}, mem_address, addr_p1);
    
            find_first #(.WIDTH(16),.OPERATION(1)) ff (int_vec_r, int_serviced_oh);
@@ -335,13 +337,15 @@ module sys_cont_top (
            wire low_is_one;
            logic_tree #(.WIDTH(8),.OPERATION(1)) vec_low (int_vec_r[7:0], low_is_one);
            
-           pencoder8_3$ (1'b0, int_vec_r[7:0] , int_serviced_low);
-           pencoder8_3$ (1'b0, int_vec_r[15:8], int_serviced_high);
+           pencoder8_3$ lp (.enbar(1'b0), .X(int_serviced_oh[7:0]) , .Y(int_serviced_low));
+           pencoder8_3$ hp (.enbar(1'b0), .X(int_serviced_oh[15:8]), .Y(int_serviced_high));
 
-           mux  #(.WIDTH(4),.INPUTS(2)) serv_sel ( {
-		  {1'b0,int_serviced_low},
-                  {1'b1,int_serviced_high}
-           }, int_serviced , low_is_one);   
+           assign int_serviced = (int_vec_r[13]) ? 13 : 0;
+
+           //mux  #(.WIDTH(4),.INPUTS(2)) serv_sel ( {
+	  //	  {1'b0,int_serviced_low},
+           //       {1'b1,int_serviced_high}
+           //}, int_serviced , low_is_one);   
 
           assign fixed_end_bus[31:24] = mem_dp_read_data[7:0];
           assign fixed_end_bus[23:16] = mem_dp_read_data[15:8];
@@ -447,10 +451,10 @@ module sys_cont_top (
            assign       last_state = fetch_load_iretd;
    
            assign       flush_fetch_iretd = iretd_halt;
-           assign       flush_decode_0_iretd = 'h0;
-           assign       flush_decode_1_iretd = 'h0;
-           assign       flush_register_iretd = 'h0;
-           assign       flush_address_iretd = 'h0;
+           assign       flush_decode_0_iretd = fetch_load_iretd;
+           assign       flush_decode_1_iretd = fetch_load_iretd;
+           assign       flush_register_iretd = fetch_load_iretd;
+           assign       flush_address_iretd = fetch_load_iretd;
            assign       flush_execute_iretd = 'h0;
            assign       flush_writeback_iretd = 'h0;    
 

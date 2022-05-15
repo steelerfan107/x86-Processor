@@ -14,7 +14,8 @@ module fetch_top (
    load,
    
    // Code Segment
-   cs_register,	
+   cs_register,
+   seg_limit_int, 
 
    // Set EIP
    eip,
@@ -66,6 +67,7 @@ module fetch_top (
  
    // Code Segment
    input [15:0] 	 cs_register;
+   output                seg_limit_int;
 
    output [31:0] 	 eip;
    output                set_eip;	
@@ -99,6 +101,31 @@ module fetch_top (
    output [IADDRW-1:0]   f_pc;
    output                f_branch_taken;
 
+
+   wire 		 flush_not;
+   
+   // ----------------------
+   //
+   //  Segment Limit Check
+   //
+
+   segment_limit_check i_seg_check (
+        seg_limit_int,
+        imem_address,
+        imem_v ,
+
+        3'b001,
+
+        r_cs,
+        16'b0,
+        16'b0,
+        16'b0,
+        16'b0,
+        16'b0,
+
+        3'd5
+    );
+   
    wire [127:0] 	 imem_dp_read_data_endian_corrected;
 
    assign imem_dp_read_data_endian_corrected = {imem_dp_read_data[31:0],
@@ -156,20 +183,28 @@ module fetch_top (
    wire                  outstanding_a_flush;
    wire                  not_outstanding;
    wire                  not_data_accept__and__outstanding;
-
+   wire                  not_cmd_accept;
+   wire                  not_cmd_accept_and_load;
+   wire 		 load_hold, load_hold_in;
+   
+   
    inv1$ ( not_outstanding, outstanding);
   
    
    and2$( memory_accept, imem_valid, imem_ready);
    nand2$( not_data_accept, imem_dp_valid, imem_dp_ready);
+   nand2$( not_cmd_accept, imem_valid, imem_ready);
+   
    and2$ (not_data_accept__and__outstanding,  not_data_accept, outstanding);
+
    
    mux2$ ( outstanding_in , memory_accept, not_data_accept, outstanding);
-
    and2$ ( outstanding_a_flush, outstanding, flush);
    mux2$ ( drop_in , outstanding_a_flush, not_data_accept__and__outstanding, drop);
 
-   
+   and2$ ( not_cmd_accept_and_load, not_cmd_accept, load);
+   mux2$ ( load_hold_in , not_cmd_accept_and_load, not_cmd_accept, load_hold);
+
    register #(.WIDTH(1)) outstanding_reg (
                clk,
                reset,
@@ -186,7 +221,16 @@ module fetch_top (
                drop,
                n_drop,	
                1'b1			    
-           ); 
+           );
+
+   register #(.WIDTH(1)) load_hold_reg (
+               clk,
+               reset,
+               load_hold_in,
+               load_hold,
+               ,	
+               1'b1			    
+           );    
 
    and2$ ( masked_dp_valid,  n_drop, imem_dp_valid);
   
@@ -223,9 +267,13 @@ module fetch_top (
    
    // Wrapper Tieoffs
    inv1$ finv (flush_not, flush);
-   or2$ imem_vo (imem_v, flush_not, load);   
+   or3$ imem_vo (imem_v, flush_not, load, load_hold);   
+
+   wire 		 not_ex;
+   inv1$ (not_ex, seg_limit_int);
+   and2$ (imem_valid, imem_v, not_ex);
    
-   assign imem_valid = imem_v;
+   //assign imem_valid = imem_v & ~;
    assign imem_wr_en = 'h0;
    assign imem_wr_data = 'h0;
    assign imem_wr_size = 'h0;

@@ -57,7 +57,7 @@ module decode_stage_0 (
    input                f_valid;
    output               f_ready;
    output [5:0]         f_bytes_read;
-   input [5:0]          f_valid_bytes;
+   input [6:0]          f_valid_bytes;
    input [127:0]        f_instruction;
    input [IADDRW-1:0]   f_pc;
    input                f_branch_taken;
@@ -116,7 +116,7 @@ module decode_stage_0 (
    byte_shifter_8B             addressing_shift ({8'b0,f_instruction[119:72],8'b0}, addressing_aligned , po_bytes);
 
    // Opcode Processing
-   opcode_rom_control     orc              (s0_addressing[5:3],size_prefix, opcode_aligned[63:48], s0_rom_control, s0_rom_in_control);   
+   opcode_rom_control     orc              (s0_addressing[13:11],size_prefix, opcode_aligned[63:48], s0_rom_control, s0_rom_in_control);   
    opcode_imm_size_detect osd              (opcode_aligned[63:48], s0_opcode, s0_opcode_bytes, s0_immediete_bytes, size_prefix, have_modrm);
    byte_shifter_8B        opcode_shifter   ({f_instruction[127:88],24'b0}, opcode_aligned, s0_prefix_bytes);
 
@@ -132,7 +132,7 @@ module decode_stage_0 (
    slow_addr  #(.WIDTH(4))      imm_disp_addr  (s0_displacement_bytes, s0_immediete_bytes, imm_p_disp[3:0], imm_p_disp[4]);
    slow_addr  #(.WIDTH(5))       ins_len_addr  ({1'b0,poa_bytes}, imm_p_disp, f_bytes_read, nc0);
     
-   mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {2'b0,f_valid_bytes}, vr_gate_byte, nc1);
+   mag_comp8$                  four_b_compare  ({2'b0,f_bytes_read}, {1'b0,f_valid_bytes}, vr_gate_byte, nc1);
 
    or2$ gate (vr_gate, vr_gate_byte, halt);
 

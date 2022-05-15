@@ -93,6 +93,7 @@ module register_access_top (
     wb_reg_number,
     wb_reg_en,
     wb_stack,
+    wb_decode,
     wb_reg_size,
     wb_reg_data,
     
@@ -204,7 +205,8 @@ module register_access_top (
     // register file writeback
     input [2:0] wb_reg_number;
     input wb_reg_en;
-    input wb_stack;   
+    input wb_stack;
+    input  wb_decode;
     input [2:0] wb_reg_size;
     input [31:0] wb_reg_data;
 
@@ -371,10 +373,10 @@ module register_access_top (
     seg_reg_valid_inv (seg_reg_valid, seg_reg_is_stall),
     mmx_valid_inv (mmx_valid, mmx_is_stall);
 
-    and4$ r_valid_and (r_valid, d_valid, reg_file_valid, seg_reg_valid, mmx_valid); 
-    and4$ d_ready_and (d_ready, r_ready, reg_file_valid, seg_reg_valid, mmx_valid);
-    // assign r_valid = d_valid;
-    // assign d_ready = r_ready;
+    //and3$ r_valid_and (r_valid, d_valid, reg_file_valid, seg_reg_valid); //, mmx_valid); 
+    //and3$ d_ready_and (d_ready, r_ready, reg_file_valid, seg_reg_valid); //, mmx_valid);, mmx_valid);
+    assign r_valid = d_valid;
+    assign d_ready = r_ready;
 
     //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), d_valid, d_ready, pipe_in_data, r_valid, r_ready, pipe_out_data);
    
@@ -393,7 +395,7 @@ module register_access_top (
         clk,
         reset,
 
-	    stack_operation,					  
+	stack_operation,					  
 
         d_size[1:0],
 
@@ -411,7 +413,7 @@ module register_access_top (
         ,    // not used...
         wb_reg_number,
         wb_reg_size[1:0],
-        wb_reg_en,
+        (wb_reg_en & (!wb_decode)),
 
         (in_accept  &  (d_alu_op != 6))   
     );

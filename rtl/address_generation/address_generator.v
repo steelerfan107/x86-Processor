@@ -80,7 +80,7 @@ module mod_rm (
     is_address,
 
     selected_seg_id,
-    
+	       
     mod_rm_byte,
     sib_byte,
 
@@ -160,12 +160,15 @@ module mod_rm (
 
 
     wire [31:0] sib_out;
-
+    wire [2:0] 	sib_seg_sel;
+   
     // sib value
     sib sib_block (
         sib_out,
 
         sib_byte,
+
+	sib_seg_sel,	   
 
         eax,
         ecx,
@@ -343,11 +346,11 @@ module mod_rm (
     );
 
     // pick what to use based on seg override
-    // wire [2:0] selected_seg_id;
+     wire [2:0] modrm_selected_seg_id;
 
     mux #(.WIDTH(3), .INPUTS(2)) seg_override_mux (
         {seg_sel, normal_segment},
-        selected_seg_id,
+        modrm_selected_seg_id,
         seg_override_valid
     );
 
@@ -357,8 +360,16 @@ module mod_rm (
     mux #(.WIDTH(16), .INPUTS(8)) seg_select_mux (
         {16'h0, 16'h0, gs, fs, ds, ss, cs, es},
         seg_select_out,
-        selected_seg_id
+        modrm_selected_seg_id						  
     );
+
+   
+    mux #(.WIDTH(3), .INPUTS(2)) seg_select_out_mux (
+        {modrm_selected_seg_id,sib_seg_sel},
+        selected_seg_id,
+        (rm != 4)						  
+    );
+    //assign selected_seg_id = modrm_selected_seg_id;
 
     // shift
     wire [31:0] seg_shift;
@@ -410,6 +421,8 @@ module sib (
 
     sib_byte,
 
+    sib_seg_sel,
+	    
     // no esp
     eax,
     ecx,
@@ -435,6 +448,8 @@ module sib (
     output [31:0] sib_out;
 
     input [7:0] sib_byte;
+
+    output [2:0] sib_seg_sel;
 
     // no esp
     input [31:0] eax;
@@ -744,6 +759,8 @@ module sib (
         seg_select_out,
         the_seg_with_the_value
     );
+
+    assign sib_seg_sel = the_seg_with_the_value;
 
     // shift output of segment select mux
     wire [31:0] shifted_seg_value;
