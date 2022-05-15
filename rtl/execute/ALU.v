@@ -263,7 +263,18 @@ mux2$ sal_of_mux(.outb(sal_of), .in0(1'bz), .in1(sal_xor), .s0(count_one));
 mux #(.WIDTH(6), .INPUTS(2)) sal_eflags_mux(.in({6'b000000, {count_one,5'b11z11}}), .out(sal_set_eflags), .select(shift_zero));
 mux #(.WIDTH(1), .INPUTS(2)) sal_oflag_mux(.in({sal_of, 1'bz}), .out(sal_eflags_out[5]), .select(count_one));
 assign sal_eflags_out[4] = sal_out[31];
-ucomp32 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
+//ucomp32 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
+//ucomp16 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
+//ucomp32 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
+//ucomp32 sal_zero(.a(sal_out), .b(32'h00000000), .eq(sal_eflags_out[3]));
+wire sal_z8, sal_z16, sal_z32;
+   
+compare #(.WIDTH(32)) (32'b0, sal_out, sal_z32);
+compare #(.WIDTH(16)) (16'b0, sal_out[15:0], sal_z16);
+compare #(.WIDTH(8))  (8'b0, sal_out[7:0], sal_z8);
+
+mux #(.WIDTH(1), .INPUTS(4)) sar_z_mux(.in({sal_z32, sal_z16, sal_z8,1'b0}), .out(sal_eflags_out[3]), .select(opsize)); 
+   
 assign sal_eflags_out[2] = 1'bz;
 assign sal_eflags_out[1] = sal_carry;
 

@@ -512,19 +512,19 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
 
         $readmemb("rom/dcache_interface_rom.bit", uut_pipeline.uut_memory_read.dcache_interface0.rom.mem);
      
-        //contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
-        //contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[4] = {20'h0c000,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
-        //contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
-
         contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
         contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
-        contents[4] = {20'h0b001,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
+        contents[4] = {20'h0c000,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
+
+        //contents[0] = {20'h00000,   20'h00000,   1'b1,   1'b1,   1'b0, 1'b0};
+        //contents[1] = {20'h02000,   20'h00002,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[2] = {20'h04000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[3] = {20'h0b000,   20'h00004,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[4] = {20'h0b001,   20'h00007,   1'b1,   1'b1,   1'b1, 1'b0};
+        //contents[5] = {20'h0a000,   20'h00005,   1'b1,   1'b1,   1'b1, 1'b0};
         contents[6] = 44'h12345123451;
         contents[7] = 44'h12344123441;
      
@@ -555,7 +555,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
         interrupt = 0;     	  
   end
    
-  initial #200000 $finish;
+  initial #2000000 $finish;
 
   always @ (posedge clk or posedge reset) begin
        if (reset) begin
@@ -575,7 +575,7 @@ $readmemh("rom/rom_control_255_0", uut_memory.main_memory_top.genblk1[7].genblk1
   //     emem_ready        = ~ememory_valid;     
   //end
    
-  always #10 clk          = ~clk;
+  always #11 clk          = ~clk;
 
   initial begin
         $vcdplusfile("fsys_reg.dump.vpd");

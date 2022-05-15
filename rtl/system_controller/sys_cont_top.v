@@ -336,10 +336,29 @@ module sys_cont_top (
 
           
 
-          mux  #(.WIDTH(32),.INPUTS(16)) addr_select ( {mem_address_p4, mem_address_p0}, mem_address, addr_p1);
-   
-           find_first #(.WIDTH(16),.OPERATION(1)) ff (int_vec_r, int_serviced_oh);
+           mux  #(.WIDTH(32),.INPUTS(16)) addr_select ( {mem_address_p4, mem_address_p0}, mem_address, addr_p1);
 
+           assign int_serviced_oh = int_vec_r;
+           //find_first #(.WIDTH(4),.OPERATION(1)) ff (int_vec_r[15:12], int_serviced_oh[15:12]);
+           /*
+           mux  #(.WIDTH(4),.INPUTS(16)) idt_select ( { ,
+                                                        , 
+                                                        , 
+                                                        ,
+                                                        ,
+                                                        , // 0000 
+                                                        , // 0000 
+                                                        , // 0000 
+                                                        , // 0000
+                                                        , // 0000
+                                                        , // 0000 
+                                                        , // 0000
+                                                        , // 0000
+                                                        , // 0000
+                                                        , // 0000
+                                                          // 0000
+           }, int_serviced_oh[15:12], int_vec_r[15:12]);      */    
+   
            wire low_is_one;
            logic_tree #(.WIDTH(8),.OPERATION(1)) vec_low (int_vec_r[7:0], low_is_one);
            

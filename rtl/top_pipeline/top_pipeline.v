@@ -960,7 +960,9 @@ module top_pipeline (
   reg [15:0] 	  r0_cs, r0_ds, r0_es, r0_fs, r0_gs, r0_ss;
   reg [63:0] 	  r0_mm0, r0_mm1, r0_mm2, r0_mm3, r0_mm4, r0_mm5, r0_mm6, r0_mm7;
    reg 		  wb_to_sys_controller0;
-
+   
+   reg [2:0] 	  wb_opsize0;
+   
    reg [3:0] 	  wb_reg;
    reg [31:0] 	  wb_address;
    reg [63:0] 	  wb_data;
@@ -971,6 +973,7 @@ module top_pipeline (
   always @ (posedge clk) begin
      begin
 	wb_reg0 <= wb_dest_reg;
+	wb_opsize0 <= wb_opsize;	
 	wb_address0 <= wb_dest_address;
 	wb_data0 <= wb_result;	
 	wb_accept0 <= wb_accept;
@@ -1020,7 +1023,8 @@ module top_pipeline (
 	$display(" Writeback  ---------------------");
 	$display(" WB Address : 0x%h", wb_address0);	
 	$display(" WB Reg     : 0x%h", wb_reg0);	
-	$display(" WB Data    : 0x%h", wb_data0);		
+	$display(" WB Data    : 0x%h", wb_data0);      	
+	$display(" WB Size    : 0x%h", wb_opsize0);		
 	$display(" Next ---------------------------");
 	$display(" r_eax : %h, r_ecx : %h, \n r_edx : %h, r_ebx : %h, \n r_esp : %h, r_ebp : %h, \n r_esi : %h, r_edi : %h",
 		 r_eax, r_ecx, r_edx, r_ebx, r_esp, r_ebp, r_esi, r_edi);

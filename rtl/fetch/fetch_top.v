@@ -150,20 +150,20 @@ module fetch_top (
    wire [31:0] 		 pc_in, pc_out, n_pc_out, pc_p_bytes_read;
 
    assign set_eip = load;
-   assign eip = minus_cs;
+   assign eip = load_address;
 
    //assign minus_cs = load_address - cs_register;
-   subtract #(.WIDTH(32)) (
-	load_address,
-        cs_register,
-        minus_cs	 
-   );
+  // subtract #(.WIDTH(32)) (
+//	load_address,
+   //     {cs_register,16'b0},
+   //     minus_cs	 
+   //);
    
    and2$ out_acc ( out_accept, f_valid, f_ready);
 
    slow_addr #(.WIDTH(32)) ({26'b0,f_bytes_read},pc_out,pc_p_bytes_read,nc0); 
    
-   mux  #(.WIDTH(32),.INPUTS(2)) idt_select ( {minus_cs, pc_p_bytes_read}, pc_in, load);
+   mux  #(.WIDTH(32),.INPUTS(2)) idt_select ( {load_address, pc_p_bytes_read}, pc_in, load);
 
    wire 		 out_accept_or_load;
 
