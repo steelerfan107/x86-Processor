@@ -38,9 +38,9 @@ module rom_block (
    localparam [4:0]  PROGRAM0_OFFSET = 0;
    localparam [4:0]  PROGRAM1_OFFSET = 6;
    localparam [4:0]  PROGRAM2_OFFSET = 7;
-   localparam [4:0]  PROGRAM3_OFFSET = 18;
+   localparam [4:0]  PROGRAM3_OFFSET = 25;
    localparam [4:0]  PROGRAM4_OFFSET = 4;
-   localparam [4:0]  PROGRAM5_OFFSET = 4;
+   localparam [4:0]  PROGRAM5_OFFSET = 21;
    localparam [4:0]  PROGRAM6_OFFSET = 4;
    localparam [4:0]  PROGRAM7_OFFSET = 4;
    localparam [4:0]  PROGRAM8_OFFSET = 10;
@@ -55,9 +55,9 @@ module rom_block (
    localparam [4:0]  PROGRAM0_LENGTH = 4-1;
    localparam [4:0]  PROGRAM1_LENGTH = 6-1;
    localparam [4:0]  PROGRAM2_LENGTH = 3-1;
-   localparam [4:0]  PROGRAM3_LENGTH = 2-1;
+   localparam [4:0]  PROGRAM3_LENGTH = 3-1;
    localparam [4:0]  PROGRAM4_LENGTH = 5-1;
-   localparam [4:0]  PROGRAM5_LENGTH = 3-1;
+   localparam [4:0]  PROGRAM5_LENGTH = 2-1;
    localparam [4:0]  PROGRAM6_LENGTH = 3-1;
    localparam [4:0]  PROGRAM7_LENGTH = 5-1;
    localparam [4:0]  PROGRAM8_LENGTH = 2-1;

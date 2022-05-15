@@ -340,23 +340,23 @@ module decode_stage_1 (
    inv1$ ( iretd_halt_mask, iretd_halt);
 
    wire 		ret_near0, ret_near1, ret_far0, ret_far1;
+   wire 		ret_near_non_mask;
+   wire 		ret_far_non_mask;
+   wire 		iretd_non_mask;
    
-   compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd);
+   compare #(.WIDTH(8)) iretd_comp (8'hCF, s0_opcode[15:8], iretd_non_mask);
    compare #(.WIDTH(8)) ret_n_comp (8'hC3, s0_opcode[15:8], ret_near0);
    compare #(.WIDTH(8)) ret_n0_comp (8'hC2, s0_opcode[15:8], ret_near1);
 
    compare #(.WIDTH(8)) ret_f_comp (8'hCB, s0_opcode[15:8], ret_far0);
    compare #(.WIDTH(8)) ret_f0_comp (8'hCA, s0_opcode[15:8], ret_far1);
-
-   wire 		ret_near_non_mask;
-   wire 		ret_far_non_mask;
-   
    
    or2$ (ret_near_non_mask,ret_near0, ret_near1);
    or2$ (ret_far_non_mask,ret_far0, ret_far1);
 
    and3$ (ret_near, ret_near_non_mask, s0_valid, not_busy);
    and3$ (ret_far, ret_far_non_mask, s0_valid, not_busy);
+   and2$ (iretd, iretd_non_mask, s0_valid);   
 
    wire 		rom_in_control_mask;
    and3$ ricm (rom_in_control_mask, not_movs, s0_rom_in_control, s0_valid);
@@ -365,9 +365,13 @@ module decode_stage_1 (
    mux #(.INPUTS(2),.WIDTH(4))  int_rc_mux ({4'd6,s0_rom_control}        , rom_control   , handle_int);   
    mux #(.INPUTS(2),.WIDTH(1))  int_ric_mux({1'b1,rom_in_control_mask}   , rom_in_control, handle_int);
 
+   wire [31:0] 		eip_in;
+   
+   mux #(.INPUTS(2),.WIDTH(32)) eip_mux ({eip, eip} , eip_in , handle_int);      
+
    assign curr_eip = eip_reg;
 
-   register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, write_eip);   
+   register  #(.WIDTH(32)) state_reg (clk, reset, eip, eip_reg, eip_reg_not, (write_eip & !(handle_int | ret_near | ret_far | iretd)) );   
    
    // Seperate Imm and Disp
    imm_disp_seperate imm_disp_seperate(
@@ -456,7 +460,7 @@ module decode_stage_1 (
    //mux #(.INPUTS(2),.WIDTH(IADDRW)) pc_mux({rom_pc,dec_pc},s1_pc, rom_in_control);   
    //mux #(.INPUTS(2),.WIDTH(1))      branch_taken_mux({rom_branch_taken,dec_branch_taken},s1_branch_taken, rom_in_control);
 
-   assign s1_pc = s0_pc;
+   assign s1_pc = (ret_near_non_mask | ret_far_non_mask) ? curr_eip : s0_pc;
    assign s1_branch_taken = s0_branch_taken;
    
    wire nc_ric;  

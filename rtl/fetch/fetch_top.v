@@ -116,7 +116,7 @@ module fetch_top (
 
         3'b001,
 
-        r_cs,
+        cs_register,
         16'b0,
         16'b0,
         16'b0,
