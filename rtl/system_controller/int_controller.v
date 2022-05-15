@@ -63,6 +63,12 @@ module int_controller (
    
    wire [2:0] 	     curr_state, next_state, n_curr_state;
 
+   assign reg_load_cs = (curr_state == 4) & mem_dp_valid;
+
+   wire [2:0] 	     next_state_c;
+
+   assign next_state = (curr_state == 5 && mem_ready) ? 6 : next_state_c;
+   
    register #(.WIDTH(3)) state_reg (
        clk,
        reset,
@@ -87,7 +93,7 @@ module int_controller (
        decode_start_int,
        mem_valid,
        fetch_load,
-       reg_load_cs,
+       ,//reg_load_cs,
        int_clear,
        capture_bottom_eip,
        addr_p1
@@ -101,9 +107,9 @@ module int_controller (
        decode_end_int,
        mem_ready,
        mem_dp_valid,	     
-       next_state[2],
-       next_state[1],
-       next_state[0]			     
+       next_state_c[2],
+       next_state_c[1],
+       next_state_c[0]			     
    );   
 
 endmodule  

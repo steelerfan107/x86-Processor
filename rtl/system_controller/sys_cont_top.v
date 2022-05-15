@@ -161,7 +161,10 @@ module sys_cont_top (
            wire              iretd_nc0;
            wire              not_iretd_pop_valid;
            wire              curr_state_iretd_one, curr_state_iretd_two, curr_state_iretd_three;
-           
+
+           wire 		     iretd_hold;
+   
+   
            parameter IDT_ADDRESS0 = 32'h4000;
            parameter IDT_ADDRESS1 = 32'h8000;
            parameter IDT_ADDRESS2 = 32'hc000;
@@ -201,9 +204,12 @@ module sys_cont_top (
                                                                               reg_eflags_iretd,
                                                                               reg_eflags_jmp},reg_eflags);
    
-           logic_tree_bus #(.WIDTH(16), .INPUTS(3), .OPERATION(1)) lbcs ({reg_cs_int,
-                                                                          reg_cs_iretd,
-                                                                          reg_cs_jmp},reg_cs);
+           //logic_tree_bus #(.WIDTH(16), .INPUTS(3), .OPERATION(1)) lbcs ({reg_cs_int,
+           //                                                               reg_cs_iretd,
+           //                                                               reg_cs_jmp},reg_cs);
+           ao_mux #(.WIDTH(16),.NINPUTS(3)) ({reg_cs_int, reg_cs_iretd, reg_cs_jmp}
+                                            , reg_cs
+                                            ,{or_int_vec, not_zero_state,jump_load});           
    
            logic_tree_bus #(.WIDTH(32), .INPUTS(3), .OPERATION(1)) lbeip ({reg_eip_int,
                                                                            reg_eip_iretd,
@@ -337,10 +343,32 @@ module sys_cont_top (
            wire low_is_one;
            logic_tree #(.WIDTH(8),.OPERATION(1)) vec_low (int_vec_r[7:0], low_is_one);
            
-           pencoder8_3$ lp (.enbar(1'b0), .X(int_serviced_oh[7:0]) , .Y(int_serviced_low));
-           pencoder8_3$ hp (.enbar(1'b0), .X(int_serviced_oh[15:8]), .Y(int_serviced_high));
+           //pencoder8_3$ lp (.enbar(~or_int_vec), .X(int_serviced_oh[7:0]) , .Y(int_serviced_low));
+           //pencoder8_3$ hp (.enbar(~or_int_vec), .X(int_serviced_oh[15:8]) , .Y(int_serviced_high));
 
-           assign int_serviced = (int_vec_r[13]) ? 13 : 0;
+           ao_mux #(.NINPUTS(16),.WIDTH(4)) (
+					    {
+					       4'd15,
+					       4'd14,
+					       4'd13,
+					       4'd12,
+					       4'd11,
+					       4'd10,
+					       4'd9,
+					       4'd8,
+					       4'd7,
+					       4'd6,
+					       4'd5,
+					       4'd4,
+					       4'd3,
+					       4'd2,
+					       4'd1,
+					       4'd0
+                                            },
+					    int_serviced,
+					    int_serviced_oh
+	     );
+   
 
            //mux  #(.WIDTH(4),.INPUTS(2)) serv_sel ( {
 	  //	  {1'b0,int_serviced_low},
@@ -353,9 +381,27 @@ module sys_cont_top (
           assign fixed_end_bus[7:0] = mem_dp_read_data[31:24];
    
           slow_addr #(.WIDTH(32)) ( {bottom_entry[31:16],16'b0}, {fixed_end_bus[31:16],bottom_entry[15:0]},comb_adddress,);
+
+          wire [15:0] 	masked_fixed_end_bus_top;
+          and2$ (masked_fixed_end_bus_top[15], fixed_end_bus[31], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[14], fixed_end_bus[30], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[13], fixed_end_bus[29], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[12], fixed_end_bus[28], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[11], fixed_end_bus[27], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[10], fixed_end_bus[26], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[9], fixed_end_bus[25], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[8], fixed_end_bus[24], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[7], fixed_end_bus[23], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[6], fixed_end_bus[22], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[5], fixed_end_bus[21], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[4], fixed_end_bus[20], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[3], fixed_end_bus[19], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[2], fixed_end_bus[18], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[1], fixed_end_bus[17], mem_dp_valid);
+          and2$ (masked_fixed_end_bus_top[0], fixed_end_bus[16], mem_dp_valid);
     
-          assign fetch_load_address_int = {fixed_end_bus[31:16],bottom_entry[15:0]};
-          assign reg_cs_int = fixed_end_bus[31:16];
+          assign fetch_load_address_int = {16'd0,bottom_entry[15:0]};
+          assign reg_cs_int = mem_dp_valid ? fixed_end_bus[31:16] : 'h0;
 
           always @ (posedge or_int_vec) begin
               if (or_int_vec) begin
@@ -420,16 +466,16 @@ module sys_cont_top (
                n_temp_cs,
                reg_load_cs_iretd				    
            );
-      
-           //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_one;
-           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, curr_state_iretd_three);
-           assign       reg_eip_iretd = iretd_pop_data;
-	     
-           //assign       reg_load_cs_iretd = iretd_pop_valid & curr_state_iretd_two;
-           and2$ load_cs_and (reg_load_cs_iretd, iretd_pop_valid, curr_state_iretd_two);
-           assign       reg_cs_iretd = iretd_pop_data[15:0];
 
-           //assign       fetch_load_iretd = iretd_pop_valid & curr_state_iretd_three;
+           wire 		  commit_eip, commit_eflags, commit_cs; 
+           wire [31:0] 			  captured_eip, captured_cs;   
+   
+           and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, commit_eip);
+           assign       reg_eip_iretd = iretd_hold ?  captured_eip : iretd_pop_data;
+	     
+           and2$ load_cs_and (reg_load_cs_iretd, iretd_pop_valid, commit_cs);
+           assign       reg_cs_iretd = iretd_hold ?  captured_cs : iretd_pop_data[15:0];
+
            wire           not_ret_near;
            wire [15:0]    used_cs;
            inv1$ (not_ret_near,  ret_near);      
@@ -440,12 +486,9 @@ module sys_cont_top (
    
            and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
 
-           assign fetch_load_address_iretd = iretd_pop_data;
-           //slow_addr #(.WIDTH(32)) ({16'b0,used_cs},iretd_pop_data,fetch_load_address_iretd,nc0);
-           //assign       fetch_load_address_iretd = iretd_pop_data;  
+           assign fetch_load_address_iretd = iretd_hold ? captured_eip : iretd_pop_data;
 
-           //assign       reg_load_eip_iretd = iretd_pop_valid & curr_state_iretd_three;
-           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, curr_state_iretd_one);
+           and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, commit_eflags);
            assign       reg_eflags_iretd = iretd_pop_data;   
    
            assign       last_state = fetch_load_iretd;
@@ -459,6 +502,40 @@ module sys_cont_top (
            assign       flush_writeback_iretd = 'h0;    
 
            assign       iretd_halt = not_zero_state;
+
+           assign commit_eip    = iretd_hold ? curr_state_iretd_three : curr_state_iretd_three;
+           assign commit_eflags = iretd_hold ? curr_state_iretd_three : curr_state_iretd_one;
+           assign commit_cs     = iretd_hold ? curr_state_iretd_three : curr_state_iretd_two;
+           
+
+           register #(.WIDTH(32)) EIP (
+              clk,
+              reset,
+              iretd_pop_data[31:0],
+              captured_eip,
+              ,
+              curr_state_iretd_one & iretd_pop_valid		    
+            ); 
+
+            register #(.WIDTH(32)) CS (
+              clk,
+              reset,
+              iretd_pop_data[15:0],
+              captured_cs,
+              ,
+              curr_state_iretd_two & iretd_pop_valid				    
+            );
+
+            assign iretd_hold_in = (iretd_hold) ? ~zero_state : (iretd & not_zero_state);
+   
+            register #(.WIDTH()) iretd_hold_reg (
+              clk,
+              reset,
+              iretd_hold_in,
+              iretd_hold,
+              ,
+              1'b1				    
+            ); 
    
            compare #(.WIDTH(3)) zero_state_comp  (curr_state_iretd, 0, zero_state);
            compare #(.WIDTH(3)) one_state_comp   (curr_state_iretd, 1, curr_state_iretd_one);
