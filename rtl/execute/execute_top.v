@@ -248,7 +248,11 @@ module execute_top (
     } = pipe_out_data; 
 
     pipestage #(.WIDTH(PIPEWIDTH)) stage ( clk, (reset | flush), e_valid, e_ready, pipe_in_data, wb_valid, wb_ready, pipe_out_data);
-
+    //assign wb_valid = e_valid;
+    //assign e_ready = wb_ready;
+    //assign pipe_out_data = pipe_in_data;
+   
+   
     // XCHANGE Inner Register
    
     wire opsize_is_8, opcode_is_xchg, check_reg_a_b, a_and_b_regs, xchg_reg_select;

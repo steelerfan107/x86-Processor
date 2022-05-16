@@ -259,8 +259,12 @@ module address_generation_top (
       p_to_sys_controller		    
     };   
  
-    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
-
+    //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, (reset | flush), r_valid, r_ready, pipe_in_data, a_valid, a_ready, pipe_out_data);
+   assign a_valid = r_valid;
+   assign r_ready = a_ready;
+   assign pipe_out_data = pipe_in_data;
+   //a_ready
+   
     // -------                    //
     // Indicate What Dest Op0 is  //
     // -------                    //

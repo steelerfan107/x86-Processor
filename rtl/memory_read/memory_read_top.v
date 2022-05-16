@@ -301,8 +301,11 @@ module memory_read_top (
     wire pipestage_reset;
     or2$ or_pipestage (pipestage_reset, reset, flush);
 
-    pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pipe_in_data, e_valid, e_ready, pipe_out_data);
-   
+    //pipestage #(.WIDTH(PIPEWIDTH)) stage0 ( clk, pipestage_reset, p_valid, p_ready, pipe_in_data, e_valid, e_ready, pipe_out_data);
+    assign e_valid = p_valid;
+    assign p_ready = e_ready;
+    assign pipe_out_data = pipe_in_data;
+     
     wire    pop_address_dependency;
     wire    push_address_dependency;   
     wire    addr0_match;

@@ -408,5 +408,8 @@ module decode_top (
    } = s1_data_r;     
    
    pipestage #(.WIDTH(S1_PIPEWIDTH)) stage1 ( clk, (reset| flush_1), s1_valid, s1_ready, s1_data, d_valid, d_ready, s1_data_r);
-
+   //assign d_valid = s1_valid;
+   //assign s1_ready = d_ready;
+   //assign s1_data_r = s1_data;
+   
 endmodule  
