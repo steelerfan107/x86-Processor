@@ -17,8 +17,18 @@ module register (
    input              en;
 
    wire               clk_en;
+   wire               q_en;
 
-   //and2$ clk_gate(clk_en, clk, en);
+   /*
+   dff$(clk,
+        en,
+        q_en,
+        , 
+        reset_n, 
+        1'b1);	 
+   */
+   
+   and2$ clk_gate(clk_en, clk, q_en);
    inv1$ inv_reset(reset_n, reset);
    
    genvar 	     i;
@@ -27,13 +37,14 @@ module register (
 	    wire bit_data;
 		 
 	    mux2$ data_in(bit_data, q[i], din[i], en);
+            //assign bit_data = (en) ? din[i] : q[i];	 
 	 
 	    dff$(clk,
 	    	 bit_data,
                  q[i],
                  q_bar[i], 
                  reset_n, 
-                 1'b1);	 
+                 1'b1);	 	 
       end
    endgenerate
 

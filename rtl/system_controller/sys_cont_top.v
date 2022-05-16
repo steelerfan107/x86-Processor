@@ -420,8 +420,11 @@ module sys_cont_top (
           and2$ (masked_fixed_end_bus_top[0], fixed_end_bus[16], mem_dp_valid);
     
           assign fetch_load_address_int = {16'd0,bottom_entry[15:0]};
-          assign reg_cs_int = mem_dp_valid ? fixed_end_bus[31:16] : 'h0;
+   
+          //assign reg_cs_int = mem_dp_valid ? fixed_end_bus[31:16] : 'h0;
 
+          mux #(.WIDTH(16),.INPUTS(2)) ({fixed_end_bus[31:16], 16'b0}, reg_cs_int, mem_dp_valid);
+   
           always @ (posedge or_int_vec) begin
               if (or_int_vec) begin
 	         $display("=================== ");	 		 
@@ -490,11 +493,14 @@ module sys_cont_top (
            wire [31:0] 			  captured_eip, captured_cs;   
    
            and2$ load_eip_and (reg_load_eip_iretd, iretd_pop_valid, commit_eip);
-           assign       reg_eip_iretd = iretd_hold ?  captured_eip : iretd_pop_data;
+           //assign       reg_eip_iretd = iretd_hold ?  captured_eip : iretd_pop_data;
+           mux #(.WIDTH(32), .INPUTS(2)) ({captured_eip , iretd_pop_data},  reg_eip_iretd   , iretd_hold);
+   
 	     
            and2$ load_cs_and (reg_load_cs_iretd, iretd_pop_valid, commit_cs);
-           assign       reg_cs_iretd = iretd_hold ? iretd_pop_data[15:0] : iretd_pop_data[15:0];
-
+           //assign       reg_cs_iretd = iretd_hold ? iretd_pop_data[15:0] : iretd_pop_data[15:0];
+           mux #(.WIDTH(16), .INPUTS(2)) ({iretd_pop_data[15:0] , iretd_pop_data[15:0]},     reg_cs_iretd, iretd_hold);
+   
            wire           not_ret_near;
            wire [15:0]    used_cs;
            inv1$ (not_ret_near,  ret_near);      
@@ -505,8 +511,9 @@ module sys_cont_top (
    
            and2$ load_iretd_and (fetch_load_iretd, iretd_pop_valid, curr_state_iretd_three);
 
-           assign fetch_load_address_iretd = iretd_hold ? captured_eip : iretd_pop_data;
-
+           //assign fetch_load_address_iretd = iretd_hold ? captured_eip : iretd_pop_data;
+           mux #(.WIDTH(32), .INPUTS(2)) ({captured_eip , iretd_pop_data},  fetch_load_address_iretd   , iretd_hold);
+   
            and2$ load_eflags_and (reg_load_eflags_iretd, iretd_pop_valid, commit_eflags);
            assign       reg_eflags_iretd = iretd_pop_data;   
    
@@ -522,18 +529,25 @@ module sys_cont_top (
 
            assign       iretd_halt = not_zero_state;
 
-           assign commit_eip    = iretd_hold ? curr_state_iretd_three : curr_state_iretd_three;
-           assign commit_eflags = iretd_hold ? curr_state_iretd_three : curr_state_iretd_one;
-           assign commit_cs     = iretd_hold ? curr_state_iretd_two   : curr_state_iretd_two;
+           //assign commit_eip    = iretd_hold ? curr_state_iretd_three : curr_state_iretd_three;
+           //assign commit_eflags = iretd_hold ? curr_state_iretd_three : curr_state_iretd_one;
+           //assign commit_cs     = iretd_hold ? curr_state_iretd_two   : curr_state_iretd_two;
            
+           mux #(.WIDTH(1), .INPUTS(2)) ({ curr_state_iretd_three, curr_state_iretd_three}, commit_eip    , iretd_hold);
+           mux #(.WIDTH(1), .INPUTS(2)) ({ curr_state_iretd_three, curr_state_iretd_one}  , commit_eflags , iretd_hold);
+           mux #(.WIDTH(1), .INPUTS(2)) ({ curr_state_iretd_two  , curr_state_iretd_two}  , commit_cs     , iretd_hold);
 
+           wire 		  one_and_valid, two_and_valid;
+           and2$ (one_and_valid, curr_state_iretd_one, iretd_pop_valid);
+           and2$ (two_and_valid, curr_state_iretd_two, iretd_pop_valid);   
+   
            register #(.WIDTH(32)) EIP (
               clk,
               reset,
               iretd_pop_data[31:0],
               captured_eip,
               ,
-              curr_state_iretd_one & iretd_pop_valid		    
+              one_and_valid		    
             ); 
 
             register #(.WIDTH(32)) CS (
@@ -542,12 +556,16 @@ module sys_cont_top (
               iretd_pop_data[15:0],
               captured_cs,
               ,
-              curr_state_iretd_two & iretd_pop_valid				    
+              two_and_valid				    
             );
 
-            assign iretd_hold_in = (iretd_hold) ? ~zero_state : (iretd & not_zero_state);
+            //assign iretd_hold_in = (iretd_hold) ? ~zero_state : (iretd & not_zero_state);
+
+            wire 		  iretd_and_non_zero;
+            and2$ (iretd_and_non_zero, iretd, not_zero_state); 
+            mux #(.WIDTH(1), .INPUTS(2)) ({ ~zero_state, iretd_and_non_zero}, iretd_hold_in, iretd_hold);
    
-            register #(.WIDTH()) iretd_hold_reg (
+            register #(.WIDTH(1)) iretd_hold_reg (
               clk,
               reset,
               iretd_hold_in,
